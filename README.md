@@ -1,8 +1,10 @@
 # 📌 WaterPath
 
 ## 📖 Descrição
+WaterPath é o Trabalho de Conclusão de Curso(TCC) focado em criar um sistema capaz de analísar a  qualidade de rios e lagos relacionando com as imagens do corpo hídrico para realizar uma predição de sua qualidade ao longo do tempo
 
 ## 🎯 Objetivo
+O Projeto propôe-se cria
 
 ## 🧠 Problema que o Projeto Resolve
 
@@ -37,8 +39,6 @@
 ## 📸 Demonstração / Screenshots
 
 ## 🚀 Funcionalidades
-
-## 🔮 Trabalhos Futuros
 
 ## 👨‍🏫 Orientador(a)
 
