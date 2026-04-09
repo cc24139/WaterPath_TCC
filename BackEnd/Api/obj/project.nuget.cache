@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "koBJ6z0hwzk=",
+  "success": true,
+  "projectFilePath": "/Users/u24139/Documents/GitHub/WaterPath_TCC/BackEnd/Api/Api.csproj",
+  "expectedPackageFiles": [
+    "/Users/u24139/.nuget/packages/microsoft.aspnetcore.openapi/10.0.1/microsoft.aspnetcore.openapi.10.0.1.nupkg.sha512",
+    "/Users/u24139/.nuget/packages/microsoft.openapi/2.0.0/microsoft.openapi.2.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
