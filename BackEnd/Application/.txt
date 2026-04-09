@@ -1,6 +1,0 @@
-A pasta de aplicação tem a responsabilidade de receber os dados da API e executar a ação de acordo com as regras definidas no Core  
-
-#Commands: Executa comandos como Insert, Updae Delete
-#Queries: Faz consultas
-#Mappins: Converte objetos da api para usar na aplicação
-

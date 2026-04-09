@@ -1,6 +1,0 @@
-Core é a modelagem das entidades do banco de dados e suas ações no sistema
-
-#Entities: São as entidades do banco de dados, cada classe deve conter seus atributos do BD e as 
-regras de negocios
-
-#Interfaces: Devem especificar oque o sistema deve fazer com as entidades(define suas funções)
