@@ -1,0 +1,8 @@
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\obj\Debug\net9.0\back-end.csproj.AssemblyReference.cache
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\obj\Debug\net9.0\back-end.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\obj\Debug\net9.0\back-end.AssemblyInfoInputs.cache
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\obj\Debug\net9.0\back-end.AssemblyInfo.cs
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\obj\Debug\net9.0\back-end.csproj.CoreCompileInputs.cache
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\obj\Debug\net9.0\back-end.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\obj\Debug\net9.0\back-end.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\obj\Debug\net9.0\back-end.sourcelink.json
