@@ -10,7 +10,7 @@ namespace back_end.src.Domain.CorpoHidrico
         void Cadastrar(CorpoHidricoEntity corpoHidrico);
         void Atualizar(CorpoHidricoEntity corpoHidrico);
         void Deletar(int id);
-        CorpoHidricoEntity ObterPorId(int id);
+        CorpoHidricoEntity ObterCorpoHidricoPorId(int id);
         List<CorpoHidricoEntity> ObterTodos();
     }
 }
