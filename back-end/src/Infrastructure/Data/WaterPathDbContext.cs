@@ -16,10 +16,7 @@ namespace Infrastructure.Data
         {
             modelBuilder.Entity<User>(entity =>
             {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Nome).IsRequired();
-                entity.Property(e => e.Senha).IsRequired();
-                entity.Property(e => e.Email).IsRequired();
+               new UserTableConfigure().Configure(entity);
             }
             );
 
