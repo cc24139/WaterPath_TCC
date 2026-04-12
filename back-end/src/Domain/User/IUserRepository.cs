@@ -4,11 +4,11 @@ namespace Domain.User
 {
     public interface IUserRepository
     {
-        void Cadastrar(User user);
-        void Atualizar(User user);
+        void Cadastrar(UserEntity user);
+        void Atualizar(UserEntity user);
         void Deletar(int id);
-        User ObterUsuarioPorId(int id);
-        User ObterUsuarioPorEmail(string email);
-        List<User> ObterTodos();
+        UserEntity ObterUsuarioPorId(int id);
+        UserEntity ObterUsuarioPorEmail(string email);
+        List<UserEntity> ObterTodos();
     }
 }

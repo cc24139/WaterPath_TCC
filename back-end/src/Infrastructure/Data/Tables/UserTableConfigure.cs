@@ -5,9 +5,9 @@ using Domain.User;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-public class UserTableConfigure : IEntityTypeConfiguration<User>
+public class UserTableConfigure : IEntityTypeConfiguration<UserEntity>
 {
-    public void Configure(EntityTypeBuilder<User> builder)
+    public void Configure(EntityTypeBuilder<UserEntity> builder)
     {
         builder.ToTable("Usuarios", "waterPath");
         builder.HasKey(e => e.Id);
@@ -27,7 +27,7 @@ public class UserTableConfigure : IEntityTypeConfiguration<User>
                         .HasForeignKey("CorpoHidricoId")
                         .OnDelete(DeleteBehavior.Cascade),
                 left =>
-                    left.HasOne<User>()
+                    left.HasOne<UserEntity>()
                         .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade),

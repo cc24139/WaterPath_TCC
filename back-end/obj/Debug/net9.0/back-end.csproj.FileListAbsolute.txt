@@ -131,3 +131,9 @@ C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\obj\Debug\net9.
 C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\obj\Debug\net9.0\back-end.pdb
 C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\obj\Debug\net9.0\back-end.genruntimeconfig.cache
 C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\obj\Debug\net9.0\ref\back-end.dll
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\bin\Debug\net9.0\BCrypt.Net-Next.dll
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\bin\Debug\net9.0\MediatR.dll
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\bin\Debug\net9.0\MediatR.Contracts.dll
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\bin\Debug\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\bin\Debug\net9.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\bin\Debug\net9.0\System.Diagnostics.DiagnosticSource.dll

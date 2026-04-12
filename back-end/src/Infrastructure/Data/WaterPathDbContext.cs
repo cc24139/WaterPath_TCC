@@ -16,7 +16,7 @@ namespace Infrastructure.Data
         public WaterPathDbContext(DbContextOptions<WaterPathDbContext> options)
             : base(options) { }
 
-        public DbSet<User> Usuarios { get; set; }
+        public DbSet<UserEntity> Usuarios { get; set; }
         public DbSet<CorpoHidricoEntity> CorposHidricos { get; set; }
         public DbSet<ColetaEntity> Coletas { get; set; }
         public DbSet<ImagemEntity> Imagens { get; set; }

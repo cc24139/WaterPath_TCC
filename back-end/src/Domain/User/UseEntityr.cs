@@ -3,7 +3,7 @@ namespace Domain.User
     using System.ComponentModel.DataAnnotations;
     using back_end.src.Domain.CorpoHidrico;
 
-    public class User
+    public class UserEntity
     {
         public int Id { get; private set; }
         public string Nome { get; private set; }
@@ -11,9 +11,9 @@ namespace Domain.User
         public string Email { get; private set; }
         public List<CorpoHidricoEntity> CorpoHidricos { get; private set; }
 
-        public User() { }
+        public UserEntity() { }
 
-        public User(string nome, string senha, string email)
+        public UserEntity(string nome, string senha, string email)
         {
             if (string.IsNullOrEmpty(nome))
                 throw new ArgumentException("O nome do usuário é obrigatório.");

@@ -3,7 +3,6 @@ namespace Application.Handler.HandlerUser;
 using Application.Queries.User;
 using Domain.User;
 
-
 public class HandlerBuscarUserId
 {
     private readonly IUserRepository userRepository;
@@ -13,9 +12,9 @@ public class HandlerBuscarUserId
         this.userRepository = userRepository;
     }
 
-    public User Handle(QueryUserId query)
+    public UserEntity Handle(QueryUserId query)
     {
-        var user =  userRepository.ObterUsuarioPorId(query.Id);
+        var user = userRepository.ObterUsuarioPorId(query.Id);
         if (user == null)
         {
             throw new ArgumentException("Usuário não encontrado");

@@ -14,7 +14,7 @@ namespace back_end.src.Domain.CorpoHidrico
         public double Tamanho { get; private set; }
         private bool EhPrivado { get; set; }
 
-        public List<User> users { get; private set; }
+        public List<UserEntity> users { get; private set; }
         public List<Coleta.ColetaEntity> Coletas { get; private set; }
         public List<Imagem.ImagemEntity> Imagens { get; private set; }
 

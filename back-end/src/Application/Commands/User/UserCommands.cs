@@ -1,6 +1,8 @@
+using MediatR;
+
 namespace Application.Commands.User;
 
-public class CommandCriarConta
+public class CommandCriarConta : IRequest<string>
 {
     public string Nome { get; set; }
     public string Email { get; set; }
