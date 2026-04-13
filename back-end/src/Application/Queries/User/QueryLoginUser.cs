@@ -9,6 +9,7 @@ namespace back_end.src.Application.Queries.User
 
     public class UserLoginResponse
     {
+        public int Id { get; set; }
         public string token { get; set; }
         public string email { get; set; }
         public string nome { get; set; }

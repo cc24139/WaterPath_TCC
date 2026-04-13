@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using back_end.src.Application.Queries.User;
+using back_end.src.Infrastructure.Repository;
 using back_end.src.Infrastructure.Services;
 using Domain.User;
 using MediatR;
@@ -29,7 +30,7 @@ namespace back_end.src.Application.Handler.User
             {
                 throw new ArgumentException("Email ou senha inválidos");
             }
-            return Task.FromResult(new UserLoginResponse { email = user.Email, nome = user.Nome });
+            return Task.FromResult(new UserLoginResponse { Id = user.Id, email = user.Email, nome = user.Nome });
         }
     }
 }

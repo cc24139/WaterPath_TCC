@@ -1,6 +1,7 @@
 namespace Infrastructure.Data
 {
     using back_end.src.Domain.CianoBacteria;
+    using back_end.src.Domain.Codigo;
     using back_end.src.Domain.Coleta;
     using back_end.src.Domain.CorpoHidrico;
     using back_end.src.Domain.Imagem;
@@ -24,6 +25,7 @@ namespace Infrastructure.Data
         public DbSet<CianoBacteriaEntity> CianoBacterias { get; set; }
         public DbSet<QualidadeEntity> Qualidades { get; set; }
         public DbSet<QualidadeFuturaEntity> QualidadesFuturas { get; set; }
+        public DbSet<CodigoEntity> Codigos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,6 +37,7 @@ namespace Infrastructure.Data
             modelBuilder.ApplyConfiguration(new CianoBacteriaTableConfigure());
             modelBuilder.ApplyConfiguration(new QualidadeTableConfigure());
             modelBuilder.ApplyConfiguration(new QualidadeFuturaTableConfigure());
+            modelBuilder.ApplyConfiguration(new CodigoTableConfigure());
 
             base.OnModelCreating(modelBuilder);
         }

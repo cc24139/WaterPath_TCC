@@ -1,5 +1,6 @@
 using System.Reflection;
 using back_end.src.Domain.CianoBacteria;
+using back_end.src.Domain.Codigo;
 using back_end.src.Domain.Coleta;
 using back_end.src.Domain.CorpoHidrico;
 using back_end.src.Domain.Imagem;
@@ -8,10 +9,12 @@ using back_end.src.Domain.Qualidade;
 using back_end.src.Domain.QualidadeFutura;
 using back_end.src.Infrastructure.Repository;
 using Domain.User;
+using DotNetEnv;
 using Infrastructure.Data;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
+Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -20,8 +23,9 @@ builder.Services.AddOpenApi();
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
 );
+var connectionString = Environment.GetEnvironmentVariable("ConnectionString");
 builder.Services.AddDbContext<WaterPathDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+    options.UseSqlServer(connectionString)
 );
 
 // Registro dos repositórios
@@ -33,6 +37,7 @@ builder.Services.AddScoped<IImagemRepository, ImagemRepository>();
 builder.Services.AddScoped<IMetalPesadoRepository, MetalPesadoRepository>();
 builder.Services.AddScoped<IQualidadeRepository, QualidadeRepository>();
 builder.Services.AddScoped<IQualidadeFuturaRepository, QualidadeFuturaRepository>();
+builder.Services.AddScoped<ICodigoRepository, CodigoRepository>();
 
 builder.Services.AddControllers();
 var app = builder.Build();

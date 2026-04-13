@@ -137,3 +137,5 @@ C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\bin\Debug\net9.
 C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\bin\Debug\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
 C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\bin\Debug\net9.0\Microsoft.Extensions.Logging.Abstractions.dll
 C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\bin\Debug\net9.0\System.Diagnostics.DiagnosticSource.dll
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\bin\Debug\net9.0\DotNetEnv.dll
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\bin\Debug\net9.0\Sprache.dll

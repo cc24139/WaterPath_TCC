@@ -1,13 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Application.Commands.Codigo;
 using Application.Commands.User;
-using Application.Handler.HandlerUser;
-using back_end.src.Application.Handler.User;
+using Application.Handler.Codigo;
+using Application.Queries.Codigo;
 using back_end.src.Application.Queries.User;
 using back_end.src.Infrastructure.Services;
-using back_end.src.Infrastructure.Services.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,6 +27,11 @@ namespace back_end.src.Controllers.User
             try
             {
                 var result = await mediator.Send(query);
+                var existeCodigoPendente = await mediator.Send(new QueryCodigoPendente(result.Id));
+                if (existeCodigoPendente)
+                {
+                    return BadRequest(new { id = result.Id, email = result.email, nome = result.nome, pendente = true });
+                }
                 return Ok(result);
             }
             catch (ArgumentException ex)
@@ -46,7 +48,10 @@ namespace back_end.src.Controllers.User
                 var hash = new HashServices();
                 command.Senha = hash.ComputeHash(command.Senha);
                 var result = await mediator.Send(command);
-                return Ok(result);
+                var emailService = new EmailServices();
+                await mediator.Send(new CommandGerarCodigo { UsuarioId = result.UsuarioId });
+                await emailService.EnviarCodigoCadastro(command.Email, "123456");
+                return Ok(new { id = result.UsuarioId, mensagem = result.Mensagem });
             }
             catch (ArgumentException ex)
             {
