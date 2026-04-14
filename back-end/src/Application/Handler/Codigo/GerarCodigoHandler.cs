@@ -33,8 +33,9 @@ public class GerarCodigoHandler : IRequestHandler<CommandGerarCodigo, string>
         }
 
         var codigo = new CodigoEntity(usuario);
-        codigoRepository.GerarCodigo(codigo);
+        codigo.Codigo = Guid.NewGuid().ToString().Substring(0, 6).ToUpper();
+        var codigoGerado = codigoRepository.GerarCodigo(codigo);
 
-        return Task.FromResult(codigo.Codigo);
+        return Task.FromResult(codigoGerado);
     }
 }

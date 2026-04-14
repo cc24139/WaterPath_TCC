@@ -14,10 +14,11 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
-        public void GerarCodigo(CodigoEntity codigo)
+        public string GerarCodigo(CodigoEntity codigo)
         {
             context.Codigos.Add(codigo);
             context.SaveChanges();
+            return codigo.Codigo;
         }
 
         public bool MarcarCodigoComoUsado(int usuarioId, string codigo)
@@ -35,7 +36,7 @@ namespace back_end.src.Infrastructure.Repository
             }
 
             codigoEntity.Usado = true;
-            context.Codigos.Update(codigoEntity);
+            context.Codigos.Remove(codigoEntity);
             context.SaveChanges();
             return true;
         }

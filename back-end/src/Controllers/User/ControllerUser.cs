@@ -49,8 +49,8 @@ namespace back_end.src.Controllers.User
                 command.Senha = hash.ComputeHash(command.Senha);
                 var result = await mediator.Send(command);
                 var emailService = new EmailServices();
-                await mediator.Send(new CommandGerarCodigo { UsuarioId = result.UsuarioId });
-                await emailService.EnviarCodigoCadastro(command.Email, "123456");
+                var codResult = await mediator.Send(new CommandGerarCodigo { UsuarioId = result.UsuarioId });
+                await emailService.EnviarCodigoCadastro(command.Email, codResult.ToString());
                 return Ok(new { id = result.UsuarioId, mensagem = result.Mensagem });
             }
             catch (ArgumentException ex)

@@ -5,6 +5,7 @@ namespace Application.Commands.Codigo;
 public class CommandGerarCodigo : IRequest<string>
 {
     public int UsuarioId { get; set; }
+    public string Codigo { get; set; } = string.Empty;
 
     public CommandGerarCodigo() { }
 

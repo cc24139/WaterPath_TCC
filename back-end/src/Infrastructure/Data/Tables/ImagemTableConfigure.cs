@@ -18,7 +18,7 @@ public class ImagemTableConfigure : IEntityTypeConfiguration<ImagemEntity>
             .HasOne(e => e.CorpoHidrico)
             .WithMany(e => e.Imagens)
             .HasForeignKey("CorpoHidricoId")
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder
             .HasOne(e => e.Coleta)

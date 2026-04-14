@@ -17,7 +17,7 @@ public class QualidadeTableConfigure : IEntityTypeConfiguration<QualidadeEntity>
             .HasOne(e => e.CorpoHidrico)
             .WithMany()
             .HasForeignKey("CorpoHidricoId")
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder
             .HasOne(e => e.QualidadeFutura)
@@ -40,7 +40,7 @@ public class QualidadeTableConfigure : IEntityTypeConfiguration<QualidadeEntity>
                     left.HasOne<QualidadeEntity>()
                         .WithMany()
                         .HasForeignKey("QualidadeId")
-                        .OnDelete(DeleteBehavior.Cascade),
+                        .OnDelete(DeleteBehavior.NoAction),
                 join =>
                 {
                     join.ToTable("QualidadeMetaisPesados", "waterPath");
@@ -63,7 +63,7 @@ public class QualidadeTableConfigure : IEntityTypeConfiguration<QualidadeEntity>
                     left.HasOne<QualidadeEntity>()
                         .WithMany()
                         .HasForeignKey("QualidadeId")
-                        .OnDelete(DeleteBehavior.Cascade),
+                        .OnDelete(DeleteBehavior.NoAction),
                 join =>
                 {
                     join.ToTable("QualidadeCianoBacterias", "waterPath");

@@ -16,24 +16,27 @@ namespace back_end.Migrations
                 schema: "waterPath",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    Id = table
+                        .Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Nome = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Localizacao = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Tamanho = table.Column<double>(type: "float", nullable: false),
-                    EhPrivado = table.Column<bool>(type: "bit", nullable: false)
+                    EhPrivado = table.Column<bool>(type: "bit", nullable: false),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CorposHidricos", x => x.Id);
-                });
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "Coletas",
                 schema: "waterPath",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    Id = table
+                        .Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Nome = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Data = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -44,7 +47,7 @@ namespace back_end.Migrations
                     Floretos = table.Column<float>(type: "real", nullable: false),
                     ColiformesTotais = table.Column<float>(type: "real", nullable: false),
                     EscherichiaColi = table.Column<bool>(type: "bit", nullable: false),
-                    CorpoHidricoId = table.Column<int>(type: "int", nullable: false)
+                    CorpoHidricoId = table.Column<int>(type: "int", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -55,15 +58,18 @@ namespace back_end.Migrations
                         principalSchema: "waterPath",
                         principalTable: "CorposHidricos",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "QualidadesFuturas",
                 schema: "waterPath",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    Id = table
+                        .Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Nome = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Data = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -74,7 +80,7 @@ namespace back_end.Migrations
                     Floretos = table.Column<float>(type: "real", nullable: false),
                     ColiformesTotais = table.Column<float>(type: "real", nullable: false),
                     EscherichiaColi = table.Column<bool>(type: "bit", nullable: false),
-                    CorpoHidricoId = table.Column<int>(type: "int", nullable: false)
+                    CorpoHidricoId = table.Column<int>(type: "int", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -85,8 +91,10 @@ namespace back_end.Migrations
                         principalSchema: "waterPath",
                         principalTable: "CorposHidricos",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "UsuarioCorpoHidricos",
@@ -94,39 +102,46 @@ namespace back_end.Migrations
                 columns: table => new
                 {
                     UsuarioId = table.Column<int>(type: "int", nullable: false),
-                    CorpoHidricoId = table.Column<int>(type: "int", nullable: false)
+                    CorpoHidricoId = table.Column<int>(type: "int", nullable: false),
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UsuarioCorpoHidricos", x => new { x.UsuarioId, x.CorpoHidricoId });
+                    table.PrimaryKey(
+                        "PK_UsuarioCorpoHidricos",
+                        x => new { x.UsuarioId, x.CorpoHidricoId }
+                    );
                     table.ForeignKey(
                         name: "FK_UsuarioCorpoHidricos_CorposHidricos_CorpoHidricoId",
                         column: x => x.CorpoHidricoId,
                         principalSchema: "waterPath",
                         principalTable: "CorposHidricos",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade
+                    );
                     table.ForeignKey(
                         name: "FK_UsuarioCorpoHidricos_Usuarios_UsuarioId",
                         column: x => x.UsuarioId,
                         principalSchema: "waterPath",
                         principalTable: "Usuarios",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "CianoBacterias",
                 schema: "waterPath",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    Id = table
+                        .Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Tipo = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Concentracao = table.Column<float>(type: "real", nullable: false),
                     Unidade = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ColetaId = table.Column<int>(type: "int", nullable: false),
-                    QualidadeFuturaEntityId = table.Column<int>(type: "int", nullable: true)
+                    QualidadeFuturaEntityId = table.Column<int>(type: "int", nullable: true),
                 },
                 constraints: table =>
                 {
@@ -137,27 +152,31 @@ namespace back_end.Migrations
                         principalSchema: "waterPath",
                         principalTable: "Coletas",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade
+                    );
                     table.ForeignKey(
                         name: "FK_CianoBacterias_QualidadesFuturas_QualidadeFuturaEntityId",
                         column: x => x.QualidadeFuturaEntityId,
                         principalSchema: "waterPath",
                         principalTable: "QualidadesFuturas",
-                        principalColumn: "Id");
-                });
+                        principalColumn: "Id"
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "Imagens",
                 schema: "waterPath",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    Id = table
+                        .Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CorpoHidricoId = table.Column<int>(type: "int", nullable: false),
                     ColetaId = table.Column<int>(type: "int", nullable: true),
                     DataUpload = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    QualidadeFuturaEntityId = table.Column<int>(type: "int", nullable: true)
+                    QualidadeFuturaEntityId = table.Column<int>(type: "int", nullable: true),
                 },
                 constraints: table =>
                 {
@@ -168,34 +187,39 @@ namespace back_end.Migrations
                         principalSchema: "waterPath",
                         principalTable: "Coletas",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.SetNull
+                    );
                     table.ForeignKey(
                         name: "FK_Imagens_CorposHidricos_CorpoHidricoId",
                         column: x => x.CorpoHidricoId,
                         principalSchema: "waterPath",
                         principalTable: "CorposHidricos",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction
+                    );
                     table.ForeignKey(
                         name: "FK_Imagens_QualidadesFuturas_QualidadeFuturaEntityId",
                         column: x => x.QualidadeFuturaEntityId,
                         principalSchema: "waterPath",
                         principalTable: "QualidadesFuturas",
-                        principalColumn: "Id");
-                });
+                        principalColumn: "Id"
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "MetaisPesados",
                 schema: "waterPath",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    Id = table
+                        .Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Nome = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Concentracao = table.Column<float>(type: "real", nullable: false),
                     Unidade = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ColetaId = table.Column<int>(type: "int", nullable: false),
-                    QualidadeFuturaEntityId = table.Column<int>(type: "int", nullable: true)
+                    QualidadeFuturaEntityId = table.Column<int>(type: "int", nullable: true),
                 },
                 constraints: table =>
                 {
@@ -206,25 +230,29 @@ namespace back_end.Migrations
                         principalSchema: "waterPath",
                         principalTable: "Coletas",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade
+                    );
                     table.ForeignKey(
                         name: "FK_MetaisPesados_QualidadesFuturas_QualidadeFuturaEntityId",
                         column: x => x.QualidadeFuturaEntityId,
                         principalSchema: "waterPath",
                         principalTable: "QualidadesFuturas",
-                        principalColumn: "Id");
-                });
+                        principalColumn: "Id"
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "Qualidades",
                 schema: "waterPath",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    Id = table
+                        .Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CorpoHidricoId = table.Column<int>(type: "int", nullable: false),
                     IQA = table.Column<int>(type: "int", nullable: false),
-                    QualidadeFuturaId = table.Column<int>(type: "int", nullable: false)
+                    QualidadeFuturaId = table.Column<int>(type: "int", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -235,15 +263,18 @@ namespace back_end.Migrations
                         principalSchema: "waterPath",
                         principalTable: "CorposHidricos",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction
+                    );
                     table.ForeignKey(
                         name: "FK_Qualidades_QualidadesFuturas_QualidadeFuturaId",
                         column: x => x.QualidadeFuturaId,
                         principalSchema: "waterPath",
                         principalTable: "QualidadesFuturas",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "QualidadeCianoBacterias",
@@ -251,26 +282,32 @@ namespace back_end.Migrations
                 columns: table => new
                 {
                     QualidadeId = table.Column<int>(type: "int", nullable: false),
-                    CianoBacteriaId = table.Column<int>(type: "int", nullable: false)
+                    CianoBacteriaId = table.Column<int>(type: "int", nullable: false),
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_QualidadeCianoBacterias", x => new { x.QualidadeId, x.CianoBacteriaId });
+                    table.PrimaryKey(
+                        "PK_QualidadeCianoBacterias",
+                        x => new { x.QualidadeId, x.CianoBacteriaId }
+                    );
                     table.ForeignKey(
                         name: "FK_QualidadeCianoBacterias_CianoBacterias_CianoBacteriaId",
                         column: x => x.CianoBacteriaId,
                         principalSchema: "waterPath",
                         principalTable: "CianoBacterias",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade
+                    );
                     table.ForeignKey(
                         name: "FK_QualidadeCianoBacterias_Qualidades_QualidadeId",
                         column: x => x.QualidadeId,
                         principalSchema: "waterPath",
                         principalTable: "Qualidades",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.NoAction
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "QualidadeMetaisPesados",
@@ -278,154 +315,154 @@ namespace back_end.Migrations
                 columns: table => new
                 {
                     QualidadeId = table.Column<int>(type: "int", nullable: false),
-                    MetalPesadoId = table.Column<int>(type: "int", nullable: false)
+                    MetalPesadoId = table.Column<int>(type: "int", nullable: false),
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_QualidadeMetaisPesados", x => new { x.QualidadeId, x.MetalPesadoId });
+                    table.PrimaryKey(
+                        "PK_QualidadeMetaisPesados",
+                        x => new { x.QualidadeId, x.MetalPesadoId }
+                    );
                     table.ForeignKey(
                         name: "FK_QualidadeMetaisPesados_MetaisPesados_MetalPesadoId",
                         column: x => x.MetalPesadoId,
                         principalSchema: "waterPath",
                         principalTable: "MetaisPesados",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade
+                    );
                     table.ForeignKey(
                         name: "FK_QualidadeMetaisPesados_Qualidades_QualidadeId",
                         column: x => x.QualidadeId,
                         principalSchema: "waterPath",
                         principalTable: "Qualidades",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.NoAction
+                    );
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_CianoBacterias_ColetaId",
                 schema: "waterPath",
                 table: "CianoBacterias",
-                column: "ColetaId");
+                column: "ColetaId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_CianoBacterias_QualidadeFuturaEntityId",
                 schema: "waterPath",
                 table: "CianoBacterias",
-                column: "QualidadeFuturaEntityId");
+                column: "QualidadeFuturaEntityId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Coletas_CorpoHidricoId",
                 schema: "waterPath",
                 table: "Coletas",
-                column: "CorpoHidricoId");
+                column: "CorpoHidricoId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Imagens_ColetaId",
                 schema: "waterPath",
                 table: "Imagens",
-                column: "ColetaId");
+                column: "ColetaId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Imagens_CorpoHidricoId",
                 schema: "waterPath",
                 table: "Imagens",
-                column: "CorpoHidricoId");
+                column: "CorpoHidricoId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Imagens_QualidadeFuturaEntityId",
                 schema: "waterPath",
                 table: "Imagens",
-                column: "QualidadeFuturaEntityId");
+                column: "QualidadeFuturaEntityId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_MetaisPesados_ColetaId",
                 schema: "waterPath",
                 table: "MetaisPesados",
-                column: "ColetaId");
+                column: "ColetaId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_MetaisPesados_QualidadeFuturaEntityId",
                 schema: "waterPath",
                 table: "MetaisPesados",
-                column: "QualidadeFuturaEntityId");
+                column: "QualidadeFuturaEntityId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_QualidadeCianoBacterias_CianoBacteriaId",
                 schema: "waterPath",
                 table: "QualidadeCianoBacterias",
-                column: "CianoBacteriaId");
+                column: "CianoBacteriaId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_QualidadeMetaisPesados_MetalPesadoId",
                 schema: "waterPath",
                 table: "QualidadeMetaisPesados",
-                column: "MetalPesadoId");
+                column: "MetalPesadoId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Qualidades_CorpoHidricoId",
                 schema: "waterPath",
                 table: "Qualidades",
-                column: "CorpoHidricoId");
+                column: "CorpoHidricoId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Qualidades_QualidadeFuturaId",
                 schema: "waterPath",
                 table: "Qualidades",
-                column: "QualidadeFuturaId");
+                column: "QualidadeFuturaId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_QualidadesFuturas_CorpoHidricoId",
                 schema: "waterPath",
                 table: "QualidadesFuturas",
-                column: "CorpoHidricoId");
+                column: "CorpoHidricoId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_UsuarioCorpoHidricos_CorpoHidricoId",
                 schema: "waterPath",
                 table: "UsuarioCorpoHidricos",
-                column: "CorpoHidricoId");
+                column: "CorpoHidricoId"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Imagens",
-                schema: "waterPath");
+            migrationBuilder.DropTable(name: "Imagens", schema: "waterPath");
 
-            migrationBuilder.DropTable(
-                name: "QualidadeCianoBacterias",
-                schema: "waterPath");
+            migrationBuilder.DropTable(name: "QualidadeCianoBacterias", schema: "waterPath");
 
-            migrationBuilder.DropTable(
-                name: "QualidadeMetaisPesados",
-                schema: "waterPath");
+            migrationBuilder.DropTable(name: "QualidadeMetaisPesados", schema: "waterPath");
 
-            migrationBuilder.DropTable(
-                name: "UsuarioCorpoHidricos",
-                schema: "waterPath");
+            migrationBuilder.DropTable(name: "UsuarioCorpoHidricos", schema: "waterPath");
 
-            migrationBuilder.DropTable(
-                name: "CianoBacterias",
-                schema: "waterPath");
+            migrationBuilder.DropTable(name: "CianoBacterias", schema: "waterPath");
 
-            migrationBuilder.DropTable(
-                name: "MetaisPesados",
-                schema: "waterPath");
+            migrationBuilder.DropTable(name: "MetaisPesados", schema: "waterPath");
 
-            migrationBuilder.DropTable(
-                name: "Qualidades",
-                schema: "waterPath");
+            migrationBuilder.DropTable(name: "Qualidades", schema: "waterPath");
 
-            migrationBuilder.DropTable(
-                name: "Coletas",
-                schema: "waterPath");
+            migrationBuilder.DropTable(name: "Coletas", schema: "waterPath");
 
-            migrationBuilder.DropTable(
-                name: "QualidadesFuturas",
-                schema: "waterPath");
+            migrationBuilder.DropTable(name: "QualidadesFuturas", schema: "waterPath");
 
-            migrationBuilder.DropTable(
-                name: "CorposHidricos",
-                schema: "waterPath");
+            migrationBuilder.DropTable(name: "CorposHidricos", schema: "waterPath");
         }
     }
 }

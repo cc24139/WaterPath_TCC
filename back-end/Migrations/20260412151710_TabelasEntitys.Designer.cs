@@ -355,7 +355,7 @@ namespace back_end.Migrations
                     b.HasOne("back_end.src.Domain.Qualidade.QualidadeEntity", null)
                         .WithMany()
                         .HasForeignKey("QualidadeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -370,7 +370,7 @@ namespace back_end.Migrations
                     b.HasOne("back_end.src.Domain.Qualidade.QualidadeEntity", null)
                         .WithMany()
                         .HasForeignKey("QualidadeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -425,7 +425,7 @@ namespace back_end.Migrations
                     b.HasOne("back_end.src.Domain.CorpoHidrico.CorpoHidricoEntity", "CorpoHidrico")
                         .WithMany("Imagens")
                         .HasForeignKey("CorpoHidricoId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("back_end.src.Domain.QualidadeFutura.QualidadeFuturaEntity", null)
@@ -457,7 +457,7 @@ namespace back_end.Migrations
                     b.HasOne("back_end.src.Domain.CorpoHidrico.CorpoHidricoEntity", "CorpoHidrico")
                         .WithMany()
                         .HasForeignKey("CorpoHidricoId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("back_end.src.Domain.QualidadeFutura.QualidadeFuturaEntity", "QualidadeFutura")
