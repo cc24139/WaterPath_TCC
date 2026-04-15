@@ -1,31 +1,26 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\lf446\\OneDrive\\Documentos\\GitHub\\WaterPath_TCC\\back-end\\back-end.csproj": {}
+    "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/back-end.csproj": {}
   },
   "projects": {
-    "C:\\Users\\lf446\\OneDrive\\Documentos\\GitHub\\WaterPath_TCC\\back-end\\back-end.csproj": {
+    "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/back-end.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\lf446\\OneDrive\\Documentos\\GitHub\\WaterPath_TCC\\back-end\\back-end.csproj",
+        "projectUniqueName": "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/back-end.csproj",
         "projectName": "back-end",
-        "projectPath": "C:\\Users\\lf446\\OneDrive\\Documentos\\GitHub\\WaterPath_TCC\\back-end\\back-end.csproj",
-        "packagesPath": "C:\\Users\\lf446\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\lf446\\OneDrive\\Documentos\\GitHub\\WaterPath_TCC\\back-end\\obj\\",
+        "projectPath": "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/back-end.csproj",
+        "packagesPath": "/Users/u24139/.nuget/packages/",
+        "outputPath": "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\lf446\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/u24139/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "/usr/local/share/dotnet/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -44,7 +39,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -92,6 +87,20 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.11, 9.0.11]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.osx-arm64",
+              "version": "[9.0.11, 9.0.11]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[9.0.11, 9.0.11]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -100,7 +109,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.101/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

@@ -9,3 +9,17 @@ public class QueryObterCorpoHidricoPorId : IRequest<CorpoHidricoEntity?>
 }
 
 public class QueryObterTodosCorposHidricos : IRequest<List<CorpoHidricoEntity>> { }
+public class QueryObterCorposHidricosPorUsuario : IRequest<List<CorpoHidricoEntity>>
+{
+    public int UserId { get; set; }
+}
+
+public class QueryObterUsuarioDOCorpoHidrico : IRequest<List<int>>
+{
+    public int CorpoHidricoId { get; set; }
+}
+
+public class QueryObterColetasDoCorpoHidrico : IRequest<List<int>>
+{
+    public int CorpoHidricoId { get; set; }
+}   

@@ -17,3 +17,15 @@ public class CommandDeletarCorpoHidrico : IRequest<Unit>
 {
     public int Id { get; set; }
 }
+
+public class CommandAdicionarUsuario : IRequest<Unit>
+{
+    public int CorpoHidricoId { get; set; } = new();
+    public int UserId { get; set; } = new();
+}
+
+public class CommandDeletarUsuario : IRequest<Unit>
+{
+    public int CorpoHidricoId { get; set; } = new();
+    public int UserId { get; set; } = new();
+}

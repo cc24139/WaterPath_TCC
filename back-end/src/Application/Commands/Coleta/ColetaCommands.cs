@@ -17,3 +17,4 @@ public class CommandDeletarColeta : IRequest<Unit>
 {
     public int Id { get; set; }
 }
+
