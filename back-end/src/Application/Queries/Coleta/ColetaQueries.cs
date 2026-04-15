@@ -9,12 +9,26 @@ public class QueryObterColetaPorId : IRequest<ColetaEntity?>
 }
 
 public class QueryObterTodasColetas : IRequest<List<ColetaEntity>> { }
+
+public class QueryObterColetasPorPeriodo : IRequest<List<ColetaEntity>>
+{
+    public int CorpoHidricoId { get; set; }
+    public DateTime DataInicio { get; set; }
+    public DateTime DataFim { get; set; }
+}
+
 public class QueryObterColetasPeriodo : IRequest<List<ColetaEntity>>
 {
     public int CorpoHidricoId { get; set; }
     public DateTime DataInicio { get; set; }
     public DateTime DataFim { get; set; }
 }
+
+public class QueryObterColetasPorCorpoHidrico : IRequest<List<ColetaEntity>>
+{
+    public int CorpoHidricoId { get; set; }
+}
+
 public class QueryObterColetaRecente : IRequest<ColetaEntity?>
 {
     public int CorpoHidricoId { get; set; }

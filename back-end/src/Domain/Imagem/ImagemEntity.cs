@@ -9,6 +9,7 @@ namespace back_end.src.Domain.Imagem
 {
     public class ImagemEntity
     {
+        private const string UrlBase = "src/resources/imagens/";
         public int Id { get; private set; }
         public string Url { get; private set; }
         public CorpoHidricoEntity CorpoHidrico { get; private set; }
