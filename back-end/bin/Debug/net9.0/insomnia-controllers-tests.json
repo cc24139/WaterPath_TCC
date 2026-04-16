@@ -1,0 +1,586 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-04-16T00:00:00.000Z",
+  "__export_source": "github-copilot",
+  "resources": [
+    {
+      "_id": "wrk_waterpath_controllers",
+      "_type": "workspace",
+      "name": "WaterPath Controllers Tests",
+      "description": "Colecao para testar os controllers com body e parametros preenchidos"
+    },
+    {
+      "_id": "env_waterpath_controllers_base",
+      "_type": "environment",
+      "parentId": "wrk_waterpath_controllers",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:5189"
+      }
+    },
+
+    {
+      "_id": "fld_user",
+      "_type": "request_group",
+      "parentId": "wrk_waterpath_controllers",
+      "name": "User"
+    },
+    {
+      "_id": "req_user_cadastro",
+      "_type": "request",
+      "parentId": "fld_user",
+      "name": "Cadastro",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/user/cadastro",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Usuario Teste\",\n  \"email\": \"usuario.teste@waterpath.com\",\n  \"senha\": \"Teste@123\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_user_login",
+      "_type": "request",
+      "parentId": "fld_user",
+      "name": "Login",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/user/login",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"usuario.teste@waterpath.com\",\n  \"senha\": \"Teste@123\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+
+    {
+      "_id": "fld_codigo",
+      "_type": "request_group",
+      "parentId": "wrk_waterpath_controllers",
+      "name": "Codigo"
+    },
+    {
+      "_id": "req_codigo_gerar",
+      "_type": "request",
+      "parentId": "fld_codigo",
+      "name": "Gerar Codigo",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/codigo/gerar",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"usuarioId\": 1\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_codigo_validar",
+      "_type": "request",
+      "parentId": "fld_codigo",
+      "name": "Validar Codigo",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/codigo/validar",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"usuarioId\": 1,\n  \"codigo\": \"ABC123\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_codigo_pendente",
+      "_type": "request",
+      "parentId": "fld_codigo",
+      "name": "Codigo Pendente",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/codigo/pendente/1"
+    },
+
+    {
+      "_id": "fld_corpohidrico",
+      "_type": "request_group",
+      "parentId": "wrk_waterpath_controllers",
+      "name": "CorpoHidrico"
+    },
+    {
+      "_id": "req_corpohidrico_post",
+      "_type": "request",
+      "parentId": "fld_corpohidrico",
+      "name": "Cadastrar",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/corpohidrico",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Rio Azul\",\n  \"localizacao\": \"Cidade A\",\n  \"tamanho\": 120.5,\n  \"ehPrivado\": false\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_corpohidrico_getall",
+      "_type": "request",
+      "parentId": "fld_corpohidrico",
+      "name": "Obter Todos",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/corpohidrico"
+    },
+    {
+      "_id": "req_corpohidrico_getid",
+      "_type": "request",
+      "parentId": "fld_corpohidrico",
+      "name": "Obter Por Id",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/corpohidrico/1"
+    },
+    {
+      "_id": "req_corpohidrico_put",
+      "_type": "request",
+      "parentId": "fld_corpohidrico",
+      "name": "Atualizar",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/corpohidrico/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Rio Azul Atualizado\",\n  \"localizacao\": \"Cidade B\",\n  \"tamanho\": 130.0,\n  \"ehPrivado\": true\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_corpohidrico_delete",
+      "_type": "request",
+      "parentId": "fld_corpohidrico",
+      "name": "Deletar",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/corpohidrico/1"
+    },
+
+    {
+      "_id": "fld_coleta",
+      "_type": "request_group",
+      "parentId": "wrk_waterpath_controllers",
+      "name": "Coleta"
+    },
+    {
+      "_id": "req_coleta_post",
+      "_type": "request",
+      "parentId": "fld_coleta",
+      "name": "Cadastrar",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/coleta",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Coleta 01\",\n  \"data\": \"2026-04-16T10:00:00\",\n  \"ph\": 7.2,\n  \"oxigenioDissolvido\": 6.1,\n  \"turbidez\": 1.2,\n  \"cloroResidual\": 0.3,\n  \"floretos\": 0.2,\n  \"coliformesTotais\": 9.0,\n  \"escherichiaColi\": false,\n  \"corpoHidrico\": {\n    \"id\": 1\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_coleta_getall",
+      "_type": "request",
+      "parentId": "fld_coleta",
+      "name": "Obter Todos",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coleta"
+    },
+    {
+      "_id": "req_coleta_getid",
+      "_type": "request",
+      "parentId": "fld_coleta",
+      "name": "Obter Por Id",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coleta/1"
+    },
+    {
+      "_id": "req_coleta_put",
+      "_type": "request",
+      "parentId": "fld_coleta",
+      "name": "Atualizar",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/coleta/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Coleta 01 Atualizada\",\n  \"data\": \"2026-04-17T10:00:00\",\n  \"ph\": 7.0,\n  \"oxigenioDissolvido\": 6.0,\n  \"turbidez\": 1.0,\n  \"cloroResidual\": 0.2,\n  \"floretos\": 0.2,\n  \"coliformesTotais\": 8.5,\n  \"escherichiaColi\": false,\n  \"corpoHidrico\": {\n    \"id\": 1\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_coleta_delete",
+      "_type": "request",
+      "parentId": "fld_coleta",
+      "name": "Deletar",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/coleta/1"
+    },
+
+    {
+      "_id": "fld_imagem",
+      "_type": "request_group",
+      "parentId": "wrk_waterpath_controllers",
+      "name": "Imagem"
+    },
+    {
+      "_id": "req_imagem_post",
+      "_type": "request",
+      "parentId": "fld_imagem",
+      "name": "Cadastrar",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/imagem",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"url\": \"https://example.com/imagem-01.jpg\",\n  \"corpoHidrico\": {\n    \"id\": 1\n  },\n  \"coleta\": {\n    \"id\": 1\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_imagem_getall",
+      "_type": "request",
+      "parentId": "fld_imagem",
+      "name": "Obter Todos",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/imagem"
+    },
+    {
+      "_id": "req_imagem_getid",
+      "_type": "request",
+      "parentId": "fld_imagem",
+      "name": "Obter Por Id",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/imagem/1"
+    },
+    {
+      "_id": "req_imagem_put",
+      "_type": "request",
+      "parentId": "fld_imagem",
+      "name": "Atualizar",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/imagem/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"url\": \"https://example.com/imagem-01-atualizada.jpg\",\n  \"corpoHidrico\": {\n    \"id\": 1\n  },\n  \"coleta\": {\n    \"id\": 1\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_imagem_delete",
+      "_type": "request",
+      "parentId": "fld_imagem",
+      "name": "Deletar",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/imagem/1"
+    },
+
+    {
+      "_id": "fld_metalpesado",
+      "_type": "request_group",
+      "parentId": "wrk_waterpath_controllers",
+      "name": "MetalPesado"
+    },
+    {
+      "_id": "req_metalpesado_post",
+      "_type": "request",
+      "parentId": "fld_metalpesado",
+      "name": "Cadastrar",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/metalpesado",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Chumbo\",\n  \"concentracao\": 0.04,\n  \"unidade\": \"mg/L\",\n  \"coleta\": {\n    \"id\": 1\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_metalpesado_getall",
+      "_type": "request",
+      "parentId": "fld_metalpesado",
+      "name": "Obter Todos",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/metalpesado"
+    },
+    {
+      "_id": "req_metalpesado_getid",
+      "_type": "request",
+      "parentId": "fld_metalpesado",
+      "name": "Obter Por Id",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/metalpesado/1"
+    },
+    {
+      "_id": "req_metalpesado_put",
+      "_type": "request",
+      "parentId": "fld_metalpesado",
+      "name": "Atualizar",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/metalpesado/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Chumbo\",\n  \"concentracao\": 0.03,\n  \"unidade\": \"mg/L\",\n  \"coleta\": {\n    \"id\": 1\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_metalpesado_delete",
+      "_type": "request",
+      "parentId": "fld_metalpesado",
+      "name": "Deletar",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/metalpesado/1"
+    },
+
+    {
+      "_id": "fld_cianobacteria",
+      "_type": "request_group",
+      "parentId": "wrk_waterpath_controllers",
+      "name": "CianoBacteria"
+    },
+    {
+      "_id": "req_cianobacteria_post",
+      "_type": "request",
+      "parentId": "fld_cianobacteria",
+      "name": "Cadastrar",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/cianobacteria",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"Microcystis\",\n  \"concentracao\": 2.5,\n  \"unidade\": \"cel/mL\",\n  \"coleta\": {\n    \"id\": 1\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_cianobacteria_getall",
+      "_type": "request",
+      "parentId": "fld_cianobacteria",
+      "name": "Obter Todos",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/cianobacteria"
+    },
+    {
+      "_id": "req_cianobacteria_getid",
+      "_type": "request",
+      "parentId": "fld_cianobacteria",
+      "name": "Obter Por Id",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/cianobacteria/1"
+    },
+    {
+      "_id": "req_cianobacteria_put",
+      "_type": "request",
+      "parentId": "fld_cianobacteria",
+      "name": "Atualizar",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/cianobacteria/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"Anabaena\",\n  \"concentracao\": 1.8,\n  \"unidade\": \"cel/mL\",\n  \"coleta\": {\n    \"id\": 1\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_cianobacteria_delete",
+      "_type": "request",
+      "parentId": "fld_cianobacteria",
+      "name": "Deletar",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/cianobacteria/1"
+    },
+
+    {
+      "_id": "fld_qualidade",
+      "_type": "request_group",
+      "parentId": "wrk_waterpath_controllers",
+      "name": "Qualidade"
+    },
+    {
+      "_id": "req_qualidade_post",
+      "_type": "request",
+      "parentId": "fld_qualidade",
+      "name": "Cadastrar",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/qualidade",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"iqa\": 78,\n  \"corpoHidrico\": {\n    \"id\": 1\n  },\n  \"metaisPesados\": [\n    {\n      \"nome\": \"Chumbo\",\n      \"concentracao\": 0.04,\n      \"unidade\": \"mg/L\"\n    }\n  ],\n  \"cianoBacterias\": [\n    {\n      \"tipo\": \"Microcystis\",\n      \"concentracao\": 2.5,\n      \"unidade\": \"cel/mL\"\n    }\n  ],\n  \"qualidadeFutura\": {\n    \"nome\": \"Previsao A\",\n    \"data\": \"2026-04-20T10:00:00\"\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_qualidade_getall",
+      "_type": "request",
+      "parentId": "fld_qualidade",
+      "name": "Obter Todos",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/qualidade"
+    },
+    {
+      "_id": "req_qualidade_getid",
+      "_type": "request",
+      "parentId": "fld_qualidade",
+      "name": "Obter Por Id",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/qualidade/1"
+    },
+    {
+      "_id": "req_qualidade_put",
+      "_type": "request",
+      "parentId": "fld_qualidade",
+      "name": "Atualizar",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/qualidade/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"iqa\": 82,\n  \"corpoHidrico\": {\n    \"id\": 1\n  },\n  \"metaisPesados\": [],\n  \"cianoBacterias\": []\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_qualidade_delete",
+      "_type": "request",
+      "parentId": "fld_qualidade",
+      "name": "Deletar",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/qualidade/1"
+    },
+
+    {
+      "_id": "fld_qualidadefutura",
+      "_type": "request_group",
+      "parentId": "wrk_waterpath_controllers",
+      "name": "QualidadeFutura"
+    },
+    {
+      "_id": "req_qualidadefutura_post",
+      "_type": "request",
+      "parentId": "fld_qualidadefutura",
+      "name": "Cadastrar",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/qualidadefutura",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Previsao A\",\n  \"data\": \"2026-04-20T10:00:00\",\n  \"ph\": 7.1,\n  \"oxigenioDissolvido\": 6.2,\n  \"turbidez\": 1.1,\n  \"cloroResidual\": 0.2,\n  \"floretos\": 0.2,\n  \"coliformesTotais\": 8.0,\n  \"escherichiaColi\": false,\n  \"corpoHidrico\": {\n    \"id\": 1\n  },\n  \"imagens\": [],\n  \"metaisPesados\": [],\n  \"cianoBacterias\": [],\n  \"qualidade\": []\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_qualidadefutura_getall",
+      "_type": "request",
+      "parentId": "fld_qualidadefutura",
+      "name": "Obter Todos",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/qualidadefutura"
+    },
+    {
+      "_id": "req_qualidadefutura_getid",
+      "_type": "request",
+      "parentId": "fld_qualidadefutura",
+      "name": "Obter Por Id",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/qualidadefutura/1"
+    },
+    {
+      "_id": "req_qualidadefutura_put",
+      "_type": "request",
+      "parentId": "fld_qualidadefutura",
+      "name": "Atualizar",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/qualidadefutura/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Previsao A Atualizada\",\n  \"data\": \"2026-04-21T10:00:00\",\n  \"ph\": 7.0,\n  \"oxigenioDissolvido\": 6.0,\n  \"turbidez\": 1.0,\n  \"cloroResidual\": 0.2,\n  \"floretos\": 0.2,\n  \"coliformesTotais\": 7.5,\n  \"escherichiaColi\": false,\n  \"corpoHidrico\": {\n    \"id\": 1\n  },\n  \"imagens\": [],\n  \"metaisPesados\": [],\n  \"cianoBacterias\": [],\n  \"qualidade\": []\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_qualidadefutura_delete",
+      "_type": "request",
+      "parentId": "fld_qualidadefutura",
+      "name": "Deletar",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/qualidadefutura/1"
+    }
+  ]
+}

@@ -24,9 +24,7 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
 );
 var connectionString = Environment.GetEnvironmentVariable("ConnectionString");
-builder.Services.AddDbContext<WaterPathDbContext>(options =>
-    options.UseSqlServer(connectionString)
-);
+builder.Services.AddDbContext<WaterPathDbContext>(optins => optins.UseNpgsql(connectionString));
 
 // Registro dos repositórios
 builder.Services.AddScoped<IUserRepository, UserRepository>();
