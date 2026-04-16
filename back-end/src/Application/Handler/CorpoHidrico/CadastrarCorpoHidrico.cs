@@ -18,12 +18,19 @@ namespace back_end.src.Application.Handler.CorpoHidrico
             this.corpoHidricoRepository = corpoHidricoRepository;
         }
 
-        public Task<Unit> Handle(CommandCadastrarCorpoHidrico request, CancellationToken cancellationToken)
+        public Task<Unit> Handle(
+            CommandCadastrarCorpoHidrico request,
+            CancellationToken cancellationToken
+        )
         {
-            if(request.CorpoHidrico == null)
-                throw new ArgumentNullException(nameof(request.CorpoHidrico));
+            var corpoHidrico = new CorpoHidricoEntity(
+                request.Nome,
+                request.Localizacao,
+                request.Tamanho,
+                request.EhPrivado
+            );
 
-            corpoHidricoRepository.Cadastrar(request.CorpoHidrico);
+            corpoHidricoRepository.Cadastrar(corpoHidrico);
             return Task.FromResult(Unit.Value);
         }
     }

@@ -5,12 +5,19 @@ namespace Application.Commands.CorpoHidrico;
 
 public class CommandCadastrarCorpoHidrico : IRequest<Unit>
 {
-    public CorpoHidricoEntity CorpoHidrico { get; set; } = new();
+    public string Nome { get; set; } = string.Empty;
+    public string Localizacao { get; set; } = string.Empty;
+    public double Tamanho { get; set; }
+    public bool EhPrivado { get; set; }
 }
 
 public class CommandAtualizarCorpoHidrico : IRequest<Unit>
 {
-    public CorpoHidricoEntity CorpoHidrico { get; set; } = new();
+    public int Id { get; set; }
+    public string Nome { get; set; } = string.Empty;
+    public string Localizacao { get; set; } = string.Empty;
+    public double Tamanho { get; set; }
+    public bool EhPrivado { get; set; }
 }
 
 public class CommandDeletarCorpoHidrico : IRequest<Unit>

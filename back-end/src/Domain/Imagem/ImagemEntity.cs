@@ -23,7 +23,7 @@ namespace back_end.src.Domain.Imagem
             if (string.IsNullOrEmpty(url))
                 throw new ArgumentException("A URL da imagem é obrigatória.");
 
-            Url = url;
+            Url = $"{UrlBase}{url}";
             this.CorpoHidrico = corpoHidrico;
         }
     }

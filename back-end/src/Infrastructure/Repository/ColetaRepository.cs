@@ -15,9 +15,9 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
-        public void Atualizar(ColetaEntity coleta)
+        public virtual void Atualizar(ColetaEntity coleta, int idColeta)
         {
-            var entityToUpdate = context.Coletas.Find(coleta.Id);
+            var entityToUpdate = context.Coletas.Find(idColeta);
             if (entityToUpdate == null)
             {
                 throw new ArgumentException("Coleta não encontrada");
@@ -26,9 +26,22 @@ namespace back_end.src.Infrastructure.Repository
             context.SaveChanges();
         }
 
-        public void Cadastrar(ColetaEntity coleta)
+        public void Cadastrar(ColetaEntity coleta, int idCorpoHidrico)
         {
+            var corpoHidrico = context.CorposHidricos.Find(idCorpoHidrico);
+            if (corpoHidrico == null)
+            {
+                throw new ArgumentException("Corpo Hídrico não encontrado");
+            }
+
+            coleta.CorpoHidrico = corpoHidrico;
             context.Coletas.Add(coleta);
+            context.SaveChanges();
+        }
+
+        public void CadastrarListaColetas(List<ColetaEntity> coletas)
+        {
+            context.Coletas.AddRange(coletas);
             context.SaveChanges();
         }
 
@@ -43,14 +56,34 @@ namespace back_end.src.Infrastructure.Repository
             context.SaveChanges();
         }
 
-        public List<ColetaEntity> ObterTodos()
+        public List<ColetaEntity> ObterPorCorpoHidrico(int corpoHidricoId)
         {
-            return context.Coletas.ToList();
+            return context.Coletas.Where(c => c.CorpoHidrico.Id == corpoHidricoId).ToList();
         }
 
         public ColetaEntity ObterPorId(int id)
         {
-            return context.Coletas.FirstOrDefault(c => c.Id == id);
+            return context.Coletas.Find(id);
+        }
+
+        public List<ColetaEntity> ObterPorPeriodo(
+            int corpoHidricoId,
+            string dataInicio,
+            string dataFim
+        )
+        {
+            return context
+                .Coletas.Where(c =>
+                    c.CorpoHidrico.Id == corpoHidricoId
+                    && c.Data >= DateTime.Parse(dataInicio)
+                    && c.Data <= DateTime.Parse(dataFim)
+                )
+                .ToList();
+        }
+
+        public List<ColetaEntity> ObterTodos()
+        {
+            return context.Coletas.ToList();
         }
     }
 }

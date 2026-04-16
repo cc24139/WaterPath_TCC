@@ -10,7 +10,7 @@ namespace back_end.src.Domain.Coleta
         ColetaEntity ObterPorId(int id);
         List<ColetaEntity> ObterTodos();
         void CadastrarListaColetas(List<ColetaEntity> coletas);
-        void ObterPorPeriodo(int corpoHidricoId, string dataInicio, string dataFim);
-        void ObterPorCorpoHidrico(int corpoHidricoId);
+        List<ColetaEntity> ObterPorPeriodo(int corpoHidricoId, string dataInicio, string dataFim);
+        List<ColetaEntity> ObterPorCorpoHidrico(int corpoHidricoId);
     }
 }

@@ -35,6 +35,9 @@ namespace back_end.src.Domain.CorpoHidrico
             Localizacao = localizacao;
             Tamanho = tamanho;
             EhPrivado = ehPrivado;
+            users = new List<UserEntity>();
+            Coletas = new List<Coleta.ColetaEntity>();
+            Imagens = new List<Imagem.ImagemEntity>();
         }
     }
 }

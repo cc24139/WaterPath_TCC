@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using back_end.src.Domain.Coleta;
 
 namespace back_end.src.Domain.MetalPesado
 {
@@ -15,7 +16,7 @@ namespace back_end.src.Domain.MetalPesado
 
         public MetalPesadoEntity() { }
 
-        public MetalPesadoEntity(string nome, float concentracao, string unidade)
+        public MetalPesadoEntity(string nome, float concentracao, string unidade, ColetaEntity coleta)
         {
             if (string.IsNullOrEmpty(nome))
                 throw new ArgumentException("O nome do metal pesado é obrigatório.");
@@ -31,6 +32,7 @@ namespace back_end.src.Domain.MetalPesado
             Nome = nome;
             Concentracao = concentracao;
             Unidade = unidade;
+            Coleta = coleta;
         }
     }
 }

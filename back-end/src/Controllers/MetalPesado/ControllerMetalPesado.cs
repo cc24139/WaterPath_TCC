@@ -1,7 +1,8 @@
 using System;
-using System.Collections.Generic;
+using Application.Commands.MetalPesado;
+using Application.Queries.MetalPesado;
 using back_end.src.Domain.MetalPesado;
-using back_end.src.Infrastructure.Repository;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace back_end.src.Controllers.MetalPesado
@@ -10,19 +11,19 @@ namespace back_end.src.Controllers.MetalPesado
     [Route("api/metalpesado")]
     public class ControllerMetalPesado : ControllerBase
     {
-        private readonly IMetalPesadoRepository repository;
+        private readonly IMediator mediator;
 
-        public ControllerMetalPesado(IMetalPesadoRepository repository)
+        public ControllerMetalPesado(IMediator mediator)
         {
-            this.repository = repository;
+            this.mediator = mediator;
         }
 
         [HttpPost]
-        public IActionResult Cadastrar([FromBody] MetalPesadoEntity metalPesado)
+        public async Task<IActionResult> Cadastrar([FromBody] MetalPesadoEntity metalPesado)
         {
             try
             {
-                repository.Cadastrar(metalPesado);
+                await mediator.Send(new CommandCadastrarMetalPesado { MetalPesado = metalPesado });
                 return Created($"api/metalpesado/{metalPesado.Id}", metalPesado);
             }
             catch (ArgumentException ex)
@@ -32,11 +33,11 @@ namespace back_end.src.Controllers.MetalPesado
         }
 
         [HttpGet("{id}")]
-        public IActionResult ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id)
         {
             try
             {
-                var metalPesado = repository.ObterPorId(id);
+                var metalPesado = await mediator.Send(new QueryObterMetalPesadoPorId { Id = id });
                 if (metalPesado == null)
                     return NotFound("Metal pesado não encontrado");
                 return Ok(metalPesado);
@@ -48,11 +49,11 @@ namespace back_end.src.Controllers.MetalPesado
         }
 
         [HttpGet]
-        public IActionResult ObterTodos()
+        public async Task<IActionResult> ObterTodos()
         {
             try
             {
-                var metaisPesados = repository.ObterTodos();
+                var metaisPesados = await mediator.Send(new QueryObterTodosMetaisPesados());
                 return Ok(metaisPesados);
             }
             catch (ArgumentException ex)
@@ -62,11 +63,11 @@ namespace back_end.src.Controllers.MetalPesado
         }
 
         [HttpPut("{id}")]
-        public IActionResult Atualizar(int id, [FromBody] MetalPesadoEntity metalPesado)
+        public async Task<IActionResult> Atualizar(int id, [FromBody] MetalPesadoEntity metalPesado)
         {
             try
             {
-                repository.Atualizar(metalPesado);
+                await mediator.Send(new CommandAtualizarMetalPesado { MetalPesado = metalPesado });
                 return Ok("Metal pesado atualizado com sucesso");
             }
             catch (ArgumentException ex)
@@ -76,11 +77,11 @@ namespace back_end.src.Controllers.MetalPesado
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Deletar(int id)
+        public async Task<IActionResult> Deletar(int id)
         {
             try
             {
-                repository.Deletar(id);
+                await mediator.Send(new CommandDeletarMetalPesado { Id = id });
                 return Ok("Metal pesado deletado com sucesso");
             }
             catch (ArgumentException ex)

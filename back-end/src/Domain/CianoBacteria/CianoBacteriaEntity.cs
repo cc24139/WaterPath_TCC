@@ -16,7 +16,7 @@ namespace back_end.src.Domain.CianoBacteria
 
         public CianoBacteriaEntity() { }
 
-        public CianoBacteriaEntity(string tipo, float concentracao, string unidade)
+        public CianoBacteriaEntity(string tipo, float concentracao, string unidade, ColetaEntity coleta)
         {
             if (string.IsNullOrEmpty(tipo))
                 throw new ArgumentException("O tipo de cianobactéria é obrigatório.");
@@ -32,6 +32,7 @@ namespace back_end.src.Domain.CianoBacteria
             Tipo = tipo;
             Concentracao = concentracao;
             Unidade = unidade;
+            Coleta = coleta;
         }
     }
 }

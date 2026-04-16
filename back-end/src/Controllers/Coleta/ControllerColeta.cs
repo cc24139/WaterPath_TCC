@@ -1,7 +1,8 @@
 using System;
-using System.Collections.Generic;
+using Application.Commands.Coleta;
+using Application.Queries.Coleta;
 using back_end.src.Domain.Coleta;
-using back_end.src.Infrastructure.Repository;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace back_end.src.Controllers.Coleta
@@ -10,19 +11,25 @@ namespace back_end.src.Controllers.Coleta
     [Route("api/coleta")]
     public class ControllerColeta : ControllerBase
     {
-        private readonly IColetaRepository repository;
+        private readonly IMediator mediator;
 
-        public ControllerColeta(IColetaRepository repository)
+        public ControllerColeta(IMediator mediator)
         {
-            this.repository = repository;
+            this.mediator = mediator;
         }
 
         [HttpPost]
-        public IActionResult Cadastrar([FromBody] ColetaEntity coleta)
+        public async Task<IActionResult> Cadastrar([FromBody] ColetaEntity coleta)
         {
             try
             {
-                repository.Cadastrar(coleta);
+                await mediator.Send(
+                    new CommandCadastrarColeta
+                    {
+                        Coleta = coleta,
+                        CorpoHidricoId = coleta.CorpoHidrico.Id,
+                    }
+                );
                 return Created($"api/coleta/{coleta.Id}", coleta);
             }
             catch (ArgumentException ex)
@@ -32,11 +39,11 @@ namespace back_end.src.Controllers.Coleta
         }
 
         [HttpGet("{id}")]
-        public IActionResult ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id)
         {
             try
             {
-                var coleta = repository.ObterPorId(id);
+                var coleta = await mediator.Send(new QueryObterColetaPorId { Id = id });
                 if (coleta == null)
                     return NotFound("Coleta não encontrada");
                 return Ok(coleta);
@@ -48,11 +55,11 @@ namespace back_end.src.Controllers.Coleta
         }
 
         [HttpGet]
-        public IActionResult ObterTodos()
+        public async Task<IActionResult> ObterTodos()
         {
             try
             {
-                var coletas = repository.ObterTodos();
+                var coletas = await mediator.Send(new QueryObterTodasColetas());
                 return Ok(coletas);
             }
             catch (ArgumentException ex)
@@ -62,11 +69,11 @@ namespace back_end.src.Controllers.Coleta
         }
 
         [HttpPut("{id}")]
-        public IActionResult Atualizar(int id, [FromBody] ColetaEntity coleta)
+        public async Task<IActionResult> Atualizar(int id, [FromBody] ColetaEntity coleta)
         {
             try
             {
-                repository.Atualizar(coleta);
+                await mediator.Send(new CommandAtualizarColeta { Coleta = coleta, ColetaId = id });
                 return Ok("Coleta atualizada com sucesso");
             }
             catch (ArgumentException ex)
@@ -76,11 +83,11 @@ namespace back_end.src.Controllers.Coleta
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Deletar(int id)
+        public async Task<IActionResult> Deletar(int id)
         {
             try
             {
-                repository.Deletar(id);
+                await mediator.Send(new CommandDeletarColeta { Id = id });
                 return Ok("Coleta deletada com sucesso");
             }
             catch (ArgumentException ex)

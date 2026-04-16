@@ -25,7 +25,8 @@ namespace back_end.src.Infrastructure.Repository
             entityToUpdate = new CianoBacteriaEntity(
                 cianoBacteria.Tipo,
                 cianoBacteria.Concentracao,
-                cianoBacteria.Unidade
+                cianoBacteria.Unidade,
+                cianoBacteria.Coleta
             );
             context.CianoBacterias.Update(entityToUpdate);
             context.SaveChanges();

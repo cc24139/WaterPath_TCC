@@ -21,7 +21,7 @@ namespace back_end.src.Domain.Codigo
             Usuario = usuario;
             UsuarioId = usuario.Id;
             DataGeracao = DateTime.UtcNow;
-            DataExpiracao = DataGeracao.AddMinutes(15);
+            DataExpiracao = DateTime.UtcNow.AddMinutes(15);
             Usado = false;
         }
     }

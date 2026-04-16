@@ -1,7 +1,8 @@
 using System;
-using System.Collections.Generic;
+using Application.Commands.Qualidade;
+using Application.Queries.Qualidade;
 using back_end.src.Domain.Qualidade;
-using back_end.src.Infrastructure.Repository;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace back_end.src.Controllers.Qualidade
@@ -10,19 +11,19 @@ namespace back_end.src.Controllers.Qualidade
     [Route("api/qualidade")]
     public class ControllerQualidade : ControllerBase
     {
-        private readonly IQualidadeRepository repository;
+        private readonly IMediator mediator;
 
-        public ControllerQualidade(IQualidadeRepository repository)
+        public ControllerQualidade(IMediator mediator)
         {
-            this.repository = repository;
+            this.mediator = mediator;
         }
 
         [HttpPost]
-        public IActionResult Cadastrar([FromBody] QualidadeEntity qualidade)
+        public async Task<IActionResult> Cadastrar([FromBody] QualidadeEntity qualidade)
         {
             try
             {
-                repository.Cadastrar(qualidade);
+                await mediator.Send(new CommandCadastrarQualidade { Qualidade = qualidade });
                 return Created($"api/qualidade/{qualidade.Id}", qualidade);
             }
             catch (ArgumentException ex)
@@ -32,11 +33,11 @@ namespace back_end.src.Controllers.Qualidade
         }
 
         [HttpGet("{id}")]
-        public IActionResult ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id)
         {
             try
             {
-                var qualidade = repository.ObterPorId(id);
+                var qualidade = await mediator.Send(new QueryObterQualidadePorId { Id = id });
                 if (qualidade == null)
                     return NotFound("Qualidade não encontrada");
                 return Ok(qualidade);
@@ -48,11 +49,11 @@ namespace back_end.src.Controllers.Qualidade
         }
 
         [HttpGet]
-        public IActionResult ObterTodos()
+        public async Task<IActionResult> ObterTodos()
         {
             try
             {
-                var qualidades = repository.ObterTodos();
+                var qualidades = await mediator.Send(new QueryObterTodasQualidades());
                 return Ok(qualidades);
             }
             catch (ArgumentException ex)
@@ -62,11 +63,11 @@ namespace back_end.src.Controllers.Qualidade
         }
 
         [HttpPut("{id}")]
-        public IActionResult Atualizar(int id, [FromBody] QualidadeEntity qualidade)
+        public async Task<IActionResult> Atualizar(int id, [FromBody] QualidadeEntity qualidade)
         {
             try
             {
-                repository.Atualizar(qualidade);
+                await mediator.Send(new CommandAtualizarQualidade { Qualidade = qualidade });
                 return Ok("Qualidade atualizada com sucesso");
             }
             catch (ArgumentException ex)
@@ -76,11 +77,11 @@ namespace back_end.src.Controllers.Qualidade
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Deletar(int id)
+        public async Task<IActionResult> Deletar(int id)
         {
             try
             {
-                repository.Deletar(id);
+                await mediator.Send(new CommandDeletarQualidade { Id = id });
                 return Ok("Qualidade deletada com sucesso");
             }
             catch (ArgumentException ex)

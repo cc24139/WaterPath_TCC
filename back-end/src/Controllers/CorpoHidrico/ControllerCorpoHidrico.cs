@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
-using back_end.src.Domain.CorpoHidrico;
-using back_end.src.Infrastructure.Repository;
+using Application.Commands.CorpoHidrico;
+using Application.Queries.CorpoHidrico;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace back_end.src.Controllers.CorpoHidrico
@@ -10,20 +10,20 @@ namespace back_end.src.Controllers.CorpoHidrico
     [Route("api/corpohidrico")]
     public class ControllerCorpoHidrico : ControllerBase
     {
-        private readonly ICorpoHidricoRepository repository;
+        private readonly IMediator mediator;
 
-        public ControllerCorpoHidrico(ICorpoHidricoRepository repository)
+        public ControllerCorpoHidrico(IMediator mediator)
         {
-            this.repository = repository;
+            this.mediator = mediator;
         }
 
         [HttpPost]
-        public IActionResult Cadastrar([FromBody] CorpoHidricoEntity corpoHidrico)
+        public async Task<IActionResult> Cadastrar([FromBody] CommandCadastrarCorpoHidrico command)
         {
             try
             {
-                repository.Cadastrar(corpoHidrico);
-                return Created($"api/corpohidrico/{corpoHidrico.Id}", corpoHidrico);
+                await mediator.Send(command);
+                return Ok("Corpo hídrico cadastrado com sucesso");
             }
             catch (ArgumentException ex)
             {
@@ -32,11 +32,11 @@ namespace back_end.src.Controllers.CorpoHidrico
         }
 
         [HttpGet("{id}")]
-        public IActionResult ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id)
         {
             try
             {
-                var corpoHidrico = repository.ObterCorpoHidricoPorId(id);
+                var corpoHidrico = await mediator.Send(new QueryObterCorpoHidricoPorId { Id = id });
                 if (corpoHidrico == null)
                     return NotFound("Corpo hídrico não encontrado");
                 return Ok(corpoHidrico);
@@ -48,11 +48,11 @@ namespace back_end.src.Controllers.CorpoHidrico
         }
 
         [HttpGet]
-        public IActionResult ObterTodos()
+        public async Task<IActionResult> ObterTodos()
         {
             try
             {
-                var corposHidricos = repository.ObterTodos();
+                var corposHidricos = await mediator.Send(new QueryObterTodosCorposHidricos());
                 return Ok(corposHidricos);
             }
             catch (ArgumentException ex)
@@ -62,11 +62,15 @@ namespace back_end.src.Controllers.CorpoHidrico
         }
 
         [HttpPut("{id}")]
-        public IActionResult Atualizar(int id, [FromBody] CorpoHidricoEntity corpoHidrico)
+        public async Task<IActionResult> Atualizar(
+            int id,
+            [FromBody] CommandAtualizarCorpoHidrico corpoHidrico
+        )
         {
             try
             {
-                repository.Atualizar(corpoHidrico);
+                corpoHidrico.Id = id;
+                await mediator.Send(corpoHidrico);
                 return Ok("Corpo hídrico atualizado com sucesso");
             }
             catch (ArgumentException ex)
@@ -76,11 +80,11 @@ namespace back_end.src.Controllers.CorpoHidrico
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Deletar(int id)
+        public async Task<IActionResult> Deletar(int id)
         {
             try
             {
-                repository.Deletar(id);
+                await mediator.Send(new CommandDeletarCorpoHidrico { Id = id });
                 return Ok("Corpo hídrico deletado com sucesso");
             }
             catch (ArgumentException ex)

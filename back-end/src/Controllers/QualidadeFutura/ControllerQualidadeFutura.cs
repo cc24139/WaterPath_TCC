@@ -1,7 +1,8 @@
 using System;
-using System.Collections.Generic;
+using Application.Commands.QualidadeFutura;
+using Application.Queries.QualidadeFutura;
 using back_end.src.Domain.QualidadeFutura;
-using back_end.src.Infrastructure.Repository;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace back_end.src.Controllers.QualidadeFutura
@@ -10,19 +11,21 @@ namespace back_end.src.Controllers.QualidadeFutura
     [Route("api/qualidadefutura")]
     public class ControllerQualidadeFutura : ControllerBase
     {
-        private readonly IQualidadeFuturaRepository repository;
+        private readonly IMediator mediator;
 
-        public ControllerQualidadeFutura(IQualidadeFuturaRepository repository)
+        public ControllerQualidadeFutura(IMediator mediator)
         {
-            this.repository = repository;
+            this.mediator = mediator;
         }
 
         [HttpPost]
-        public IActionResult Cadastrar([FromBody] QualidadeFuturaEntity qualidadeFutura)
+        public async Task<IActionResult> Cadastrar([FromBody] QualidadeFuturaEntity qualidadeFutura)
         {
             try
             {
-                repository.Cadastrar(qualidadeFutura);
+                await mediator.Send(
+                    new CommandCadastrarQualidadeFutura { QualidadeFutura = qualidadeFutura }
+                );
                 return Created($"api/qualidadefutura/{qualidadeFutura.Id}", qualidadeFutura);
             }
             catch (ArgumentException ex)
@@ -32,11 +35,13 @@ namespace back_end.src.Controllers.QualidadeFutura
         }
 
         [HttpGet("{id}")]
-        public IActionResult ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id)
         {
             try
             {
-                var qualidadeFutura = repository.ObterPorId(id);
+                var qualidadeFutura = await mediator.Send(
+                    new QueryObterQualidadeFuturaPorId { Id = id }
+                );
                 if (qualidadeFutura == null)
                     return NotFound("Qualidade futura não encontrada");
                 return Ok(qualidadeFutura);
@@ -48,11 +53,11 @@ namespace back_end.src.Controllers.QualidadeFutura
         }
 
         [HttpGet]
-        public IActionResult ObterTodos()
+        public async Task<IActionResult> ObterTodos()
         {
             try
             {
-                var qualidadesFuturas = repository.ObterTodos();
+                var qualidadesFuturas = await mediator.Send(new QueryObterTodasQualidadesFuturas());
                 return Ok(qualidadesFuturas);
             }
             catch (ArgumentException ex)
@@ -62,11 +67,16 @@ namespace back_end.src.Controllers.QualidadeFutura
         }
 
         [HttpPut("{id}")]
-        public IActionResult Atualizar(int id, [FromBody] QualidadeFuturaEntity qualidadeFutura)
+        public async Task<IActionResult> Atualizar(
+            int id,
+            [FromBody] QualidadeFuturaEntity qualidadeFutura
+        )
         {
             try
             {
-                repository.Atualizar(qualidadeFutura);
+                await mediator.Send(
+                    new CommandAtualizarQualidadeFutura { QualidadeFutura = qualidadeFutura }
+                );
                 return Ok("Qualidade futura atualizada com sucesso");
             }
             catch (ArgumentException ex)
@@ -76,11 +86,11 @@ namespace back_end.src.Controllers.QualidadeFutura
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Deletar(int id)
+        public async Task<IActionResult> Deletar(int id)
         {
             try
             {
-                repository.Deletar(id);
+                await mediator.Send(new CommandDeletarQualidadeFutura { Id = id });
                 return Ok("Qualidade futura deletada com sucesso");
             }
             catch (ArgumentException ex)

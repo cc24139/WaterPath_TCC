@@ -25,7 +25,8 @@ namespace back_end.src.Infrastructure.Repository
             entityToUpdate = new MetalPesadoEntity(
                 metalPesado.Nome,
                 metalPesado.Concentracao,
-                metalPesado.Unidade
+                metalPesado.Unidade,
+                metalPesado.Coleta
             );
             context.MetaisPesados.Update(entityToUpdate);
             context.SaveChanges();
@@ -55,7 +56,7 @@ namespace back_end.src.Infrastructure.Repository
 
         public MetalPesadoEntity ObterPorId(int id)
         {
-            return context.MetaisPesados.FirstOrDefault(m => m.Id == id);
+            return context.MetaisPesados.Find(id);
         }
     }
 }

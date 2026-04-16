@@ -23,7 +23,14 @@ namespace back_end.src.Application.Handler.CorpoHidrico
             CancellationToken cancellationToken
         )
         {
-            corpoHidricoRepository.Atualizar(request.CorpoHidrico);
+            var corpoHidrico = new CorpoHidricoEntity(
+                request.Nome,
+                request.Localizacao,
+                request.Tamanho,
+                request.EhPrivado
+            );
+
+            corpoHidricoRepository.Atualizar(corpoHidrico);
             return Task.FromResult(Unit.Value);
         }
     }

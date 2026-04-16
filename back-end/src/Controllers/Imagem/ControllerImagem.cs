@@ -1,7 +1,8 @@
 using System;
-using System.Collections.Generic;
+using Application.Commands.Imagem;
+using Application.Queries.Imagem;
 using back_end.src.Domain.Imagem;
-using back_end.src.Infrastructure.Repository;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace back_end.src.Controllers.Imagem
@@ -10,19 +11,19 @@ namespace back_end.src.Controllers.Imagem
     [Route("api/imagem")]
     public class ControllerImagem : ControllerBase
     {
-        private readonly IImagemRepository repository;
+        private readonly IMediator mediator;
 
-        public ControllerImagem(IImagemRepository repository)
+        public ControllerImagem(IMediator mediator)
         {
-            this.repository = repository;
+            this.mediator = mediator;
         }
 
         [HttpPost]
-        public IActionResult Cadastrar([FromBody] ImagemEntity imagem)
+        public async Task<IActionResult> Cadastrar([FromBody] ImagemEntity imagem)
         {
             try
             {
-                repository.Cadastrar(imagem);
+                await mediator.Send(new CommandCadastrarImagem { Imagem = imagem });
                 return Created($"api/imagem/{imagem.Id}", imagem);
             }
             catch (ArgumentException ex)
@@ -32,11 +33,11 @@ namespace back_end.src.Controllers.Imagem
         }
 
         [HttpGet("{id}")]
-        public IActionResult ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id)
         {
             try
             {
-                var imagem = repository.ObterPorId(id);
+                var imagem = await mediator.Send(new QueryObterImagemPorId { Id = id });
                 if (imagem == null)
                     return NotFound("Imagem não encontrada");
                 return Ok(imagem);
@@ -48,11 +49,11 @@ namespace back_end.src.Controllers.Imagem
         }
 
         [HttpGet]
-        public IActionResult ObterTodos()
+        public async Task<IActionResult> ObterTodos()
         {
             try
             {
-                var imagens = repository.ObterTodos();
+                var imagens = await mediator.Send(new QueryObterTodasImagens());
                 return Ok(imagens);
             }
             catch (ArgumentException ex)
@@ -62,11 +63,11 @@ namespace back_end.src.Controllers.Imagem
         }
 
         [HttpPut("{id}")]
-        public IActionResult Atualizar(int id, [FromBody] ImagemEntity imagem)
+        public async Task<IActionResult> Atualizar(int id, [FromBody] ImagemEntity imagem)
         {
             try
             {
-                repository.Atualizar(imagem);
+                await mediator.Send(new CommandAtualizarImagem { Imagem = imagem });
                 return Ok("Imagem atualizada com sucesso");
             }
             catch (ArgumentException ex)
@@ -76,11 +77,11 @@ namespace back_end.src.Controllers.Imagem
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Deletar(int id)
+        public async Task<IActionResult> Deletar(int id)
         {
             try
             {
-                repository.Deletar(id);
+                await mediator.Send(new CommandDeletarImagem { Id = id });
                 return Ok("Imagem deletada com sucesso");
             }
             catch (ArgumentException ex)

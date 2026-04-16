@@ -28,5 +28,36 @@ namespace back_end.src.Domain.QualidadeFutura
         public List<MetalPesadoEntity> MetaisPesados { get; private set; }
         public List<CianoBacteriaEntity> CianoBacterias { get; private set; }
         public List<QualidadeEntity> Qualidade { get; private set; }
+
+        public QualidadeFuturaEntity() { }
+
+        public QualidadeFuturaEntity(
+            string nome,
+            DateTime data,
+            float ph,
+            float oxigenioDissolvido,
+            float turbidez,
+            float cloroResidual,
+            float floretos,
+            float coliformesTotais,
+            bool escherichiaColi,
+            CorpoHidricoEntity corpoHidrico
+        )
+        {
+            Nome = nome;
+            Data = data;
+            Ph = ph;
+            OxigenioDissolvido = oxigenioDissolvido;
+            Turbidez = turbidez;
+            CloroResidual = cloroResidual;
+            Floretos = floretos;
+            ColiformesTotais = coliformesTotais;
+            EscherichiaColi = escherichiaColi;
+            CorpoHidrico = corpoHidrico;
+            Imagens = new List<ImagemEntity>();
+            MetaisPesados = new List<MetalPesadoEntity>();
+            CianoBacterias = new List<CianoBacteriaEntity>();
+            Qualidade = new List<QualidadeEntity>();
+        }
     }
 }

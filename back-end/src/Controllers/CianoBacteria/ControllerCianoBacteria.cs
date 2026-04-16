@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
+using Application.Commands.CianoBacteria;
+using Application.Queries.CianoBacteria;
 using back_end.src.Domain.CianoBacteria;
-using back_end.src.Infrastructure.Repository;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace back_end.src.Controllers.CianoBacteria
@@ -10,19 +10,21 @@ namespace back_end.src.Controllers.CianoBacteria
     [Route("api/cianobacteria")]
     public class ControllerCianoBacteria : ControllerBase
     {
-        private readonly ICianoBacteriaRepository repository;
+        private readonly IMediator mediator;
 
-        public ControllerCianoBacteria(ICianoBacteriaRepository repository)
+        public ControllerCianoBacteria(IMediator mediator)
         {
-            this.repository = repository;
+            this.mediator = mediator;
         }
 
         [HttpPost]
-        public IActionResult Cadastrar([FromBody] CianoBacteriaEntity cianoBacteria)
+        public async Task<IActionResult> Cadastrar([FromBody] CianoBacteriaEntity cianoBacteria)
         {
             try
             {
-                repository.Cadastrar(cianoBacteria);
+                await mediator.Send(
+                    new CommandCadastrarCianoBacteria { CianoBacteria = cianoBacteria }
+                );
                 return Created($"api/cianobacteria/{cianoBacteria.Id}", cianoBacteria);
             }
             catch (ArgumentException ex)
@@ -32,11 +34,13 @@ namespace back_end.src.Controllers.CianoBacteria
         }
 
         [HttpGet("{id}")]
-        public IActionResult ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id)
         {
             try
             {
-                var cianoBacteria = repository.ObterPorId(id);
+                var cianoBacteria = await mediator.Send(
+                    new QueryObterCianoBacteriaPorId { Id = id }
+                );
                 if (cianoBacteria == null)
                     return NotFound("Cianobactéria não encontrada");
                 return Ok(cianoBacteria);
@@ -48,11 +52,11 @@ namespace back_end.src.Controllers.CianoBacteria
         }
 
         [HttpGet]
-        public IActionResult ObterTodos()
+        public async Task<IActionResult> ObterTodos()
         {
             try
             {
-                var cianoBacterias = repository.ObterTodos();
+                var cianoBacterias = await mediator.Send(new QueryObterTodasCianoBacterias());
                 return Ok(cianoBacterias);
             }
             catch (ArgumentException ex)
@@ -62,11 +66,16 @@ namespace back_end.src.Controllers.CianoBacteria
         }
 
         [HttpPut("{id}")]
-        public IActionResult Atualizar(int id, [FromBody] CianoBacteriaEntity cianoBacteria)
+        public async Task<IActionResult> Atualizar(
+            int id,
+            [FromBody] CianoBacteriaEntity cianoBacteria
+        )
         {
             try
             {
-                repository.Atualizar(cianoBacteria);
+                await mediator.Send(
+                    new CommandAtualizarCianoBacteria { CianoBacteria = cianoBacteria }
+                );
                 return Ok("Cianobactéria atualizada com sucesso");
             }
             catch (ArgumentException ex)
@@ -76,11 +85,11 @@ namespace back_end.src.Controllers.CianoBacteria
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Deletar(int id)
+        public async Task<IActionResult> Deletar(int id)
         {
             try
             {
-                repository.Deletar(id);
+                await mediator.Send(new CommandDeletarCianoBacteria { Id = id });
                 return Ok("Cianobactéria deletada com sucesso");
             }
             catch (ArgumentException ex)
