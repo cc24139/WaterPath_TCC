@@ -7796,25 +7796,31 @@
     ]
   },
   "packageFolders": {
-    "/Users/u24139/.nuget/packages/": {}
+    "C:\\Users\\king_\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/back-end.csproj",
+      "projectUniqueName": "C:\\Users\\king_\\Documents\\GitHub\\WaterPath_TCC\\back-end\\back-end.csproj",
       "projectName": "back-end",
-      "projectPath": "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/back-end.csproj",
-      "packagesPath": "/Users/u24139/.nuget/packages/",
-      "outputPath": "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/obj/",
+      "projectPath": "C:\\Users\\king_\\Documents\\GitHub\\WaterPath_TCC\\back-end\\back-end.csproj",
+      "packagesPath": "C:\\Users\\king_\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\king_\\Documents\\GitHub\\WaterPath_TCC\\back-end\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/Users/u24139/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\king_\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
-        "/usr/local/share/dotnet/library-packs": {},
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -7833,7 +7839,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.100"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
@@ -7881,20 +7887,6 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[9.0.11, 9.0.11]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Host.osx-arm64",
-            "version": "[9.0.11, 9.0.11]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Ref",
-            "version": "[9.0.11, 9.0.11]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.AspNetCore.App": {
             "privateAssets": "none"
@@ -7903,7 +7895,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.101/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
