@@ -4,13 +4,21 @@ interface InputFieldProps {
 }
  
 export function InputField({ placeholder }: InputFieldProps) {
+    
+    const boarder = "border border-[#DADADA] rounded-[5px] focus:border-[#DADADA]  focus:outline-none focus:ring-0"
+    
+    const size = "w-full mx-auto max-w-[300px] sm:max-w-[400px] md:max-w-[460px] px-3 py-0.5 sm:px-4 sm:py-1 md:px-5 md:py-1.5"
+    
+    const fontsize = "text-[12px] sm:text-[14px] md:text-[16px]"
+
+
     return (
-        <div className="w-full max-w-[465px] mx-auto h-full max-h-[54px]">
+        <div className={`${size}`}>
             <input type="text" placeholder={placeholder} 
-            className="placeholder-[#DADADA] placeholder:font-bold
-            border border-[#DADADA] rounded-[5px] focus:border-[#DADADA]  focus:outline-none focus:ring-0  
+            className={`placeholder-placeholder
+            ${boarder}  
             w-full h-full p-4 
-            text-[16px] font-bold text-[#222222]" />
+            ${fontsize} font-bold text-text-primary`} />
         </div>
     );
 }   

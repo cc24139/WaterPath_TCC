@@ -4,13 +4,16 @@ interface ButtonProps{
 }
 
 export function Button({ text, variant }: ButtonProps){
-    const size = "w-full h-full max-w-[180px] mx-auto max-h-[75px]"
     
+    const size = "w-full mx-auto max-w-[100px] sm:max-w-[120px] md:max-w-[180px] px-3 py-0.5 sm:px-4 sm:py-1 md:px-5 md:py-1.5"
+    
+    const fontsize = "text-[18px] sm:text-[20px] md:text-[24px]"
+
     return(
-            <button className={`${size} font-semibold text-[28px] rounded-[10px]
+            <button className={`${size} font-semibold ${fontsize} rounded-lg
              ${variant === "primary"
-                ? "bg-[#FF8A5B] text-[#FFFFFF]"
-                : "bg-[#ffffff] text-[#FF8A5B] border border-[#DADADA]"
+                ? "bg-contrast text-[#FFFFFF]"
+                : "bg-transparent text-contrast border border-placeholder"
               }
             `}
             >
