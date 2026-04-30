@@ -13,6 +13,10 @@ using DotNetEnv;
 using Infrastructure.Data;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +29,20 @@ builder.Services.AddMediatR(cfg =>
 );
 var connectionString = Environment.GetEnvironmentVariable("ConnectionString");
 builder.Services.AddDbContext<WaterPathDbContext>(optins => optins.UseNpgsql(connectionString));
+
+//Token
+var key = Environment.GetEnvironmentVariable("JWT_KEY");
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
+    });
 
 // Registro dos repositórios
 builder.Services.AddScoped<IUserRepository, UserRepository>();
