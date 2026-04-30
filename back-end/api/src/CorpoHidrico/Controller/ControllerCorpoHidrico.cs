@@ -2,6 +2,7 @@ using System;
 using Application.Commands.CorpoHidrico;
 using Application.Queries.CorpoHidrico;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace back_end.src.Controllers.CorpoHidrico
@@ -17,6 +18,7 @@ namespace back_end.src.Controllers.CorpoHidrico
             this.mediator = mediator;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Cadastrar([FromBody] CommandCadastrarCorpoHidrico command)
         {

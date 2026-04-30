@@ -30,7 +30,8 @@ namespace back_end.src.Application.Handler.User
             {
                 throw new ArgumentException("Email ou senha inválidos");
             }
-            return Task.FromResult(new UserLoginResponse { Id = user.Id, email = user.Email, nome = user.Nome });
+            var token = new JWTService().GenerateToken(user.Nome, user.Id, user.Email);
+            return Task.FromResult(new UserLoginResponse { Id = user.Id, email = user.Email, nome = user.Nome, token = token });
         }
     }
 }
