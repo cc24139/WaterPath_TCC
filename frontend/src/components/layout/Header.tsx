@@ -30,7 +30,7 @@ export function Header({ variant = 'default' }: HeaderProps) {
                 <li className={`md:text-[16px] sm:text-[12px] ${text} font-light`}>Metodologias</li>
             </ul> 
             
-            <div className="flex flex-row justify-between items-center gap-0.5 md:gap-2">
+            <div className="flex flex-row justify-between items-center gap-1.5 md:gap-2">
                 <h1 className={`md:text-[16px] sm:text-[12px] text-[10px] font-semibold text-contrast`}>Criar Conta</h1>
                 <button className="px-4 py-1 rounded-lg bg-contrast text-white text-[11px] sm:text-[12px] md:text-[16px] font-semibold shadow-[0_4px_8px_rgba(0,0,0,0.25)]">Comece agora</button>
             </div>
