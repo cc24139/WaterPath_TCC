@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../train/images
+test: ../train/images
+
+nc: 4
+names: ['Esgoto', 'Lixo', 'turbidez', 'urbano']
+
+roboflow:
+  workspace: luiss-workspace-wjnfb
+  project: luiss-workspace-wjnfb
+  version: dataset
+  license: Private
+  url: https://app.roboflow.com/luiss-workspace-wjnfb/luiss-workspace-wjnfb/dataset

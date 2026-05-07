@@ -1,0 +1,6 @@
+Tabelas Relacionais:
+Usuario <-> corpo Hidrico
+Corpo Hidrico <--> Coletas,Imagem
+Coleta <--> Metal pesado,CianoBacteria
+Qualidae <--> Metal pesado,CianoBacteria
+Predição<--> Qualidade
