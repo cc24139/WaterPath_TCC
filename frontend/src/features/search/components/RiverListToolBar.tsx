@@ -1,124 +1,108 @@
 import { CiSearch } from "react-icons/ci";
+import { LuChevronDown } from "react-icons/lu";
 
 export function RiverListToolBar() {
   const inputStyle =
-    "placeholder:font-extrabold placeholder:text-placeholder font-semibold text-text-primary";
+    "placeholder:font-semibold placeholder:text-placeholder font-medium text-text-primary";
+  const filterButtonClass =
+    "h-7 lg:h-8 min-w-0 flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-3 lg:px-4 rounded-md border border-placeholder bg-white text-text-primary font-heading font-semibold text-[10px] lg:text-[11px] transition-colors hover:border-primary";
 
   return (
     <section
       className="
-        bg-white w-full max-w-[1400px] mx-auto
+        bg-white max-w-[930px] lg:max-w-[1040px] xl:max-w-[1120px] mx-4 sm:mx-auto
         flex flex-col gap-3
-        sm:gap-4
-        lg:flex-row lg:items-center lg:justify-between
-        px-3 py-3
-        sm:px-5 sm:py-4
-        lg:py-5
+        md:grid md:grid-cols-[minmax(150px,190px)_minmax(240px,1fr)_auto]
+        lg:grid-cols-[minmax(180px,230px)_minmax(360px,1fr)_auto]
+        md:items-center md:gap-5
+        lg:gap-8
+        px-4 py-4
+        sm:px-5 lg:px-6
         rounded-xl sm:rounded-2xl shadow-default
       "
     >
-      <div className="lg:min-w-[220px]">
-        <h1 className="font-heading text-text-secondary text-[22px] sm:text-[26px] lg:text-[30px] leading-tight">
-          Rios Analisados
-        </h1>
+      <div className="min-w-0">
+        <div>
+          <h1 className="font-heading text-text-secondary text-[20px] sm:text-[21px] lg:text-[23px] leading-tight">
+            Rios Analisados
+          </h1>
 
-        <p className="font-heading text-[#767676] font-semibold text-[12px] sm:text-[14px] lg:text-[15px] leading-snug">
-          Veja o status atual e previsões dos
-          <br className="hidden sm:block" /> corpos hídricos
-        </p>
+          <p className="font-heading text-[#767676] font-semibold text-[10px] sm:text-[11px] lg:text-[12px] leading-snug">
+            Veja o status atual e previsões dos corpos hídricos
+          </p>
+        </div>
       </div>
 
-      <div className="relative w-full lg:max-w-[450px]">
+      <div className="relative w-full min-w-0">
         <input
           type="text"
           placeholder="Pesquise os rios"
           className={`
-            w-full h-10
-            sm:h-12
+            w-full h-8
+            lg:h-9
             pl-4 pr-10
-            sm:pl-5 sm:pr-12
             outline-none
             border border-placeholder
             rounded-full
             bg-white
-            text-[13px] sm:text-[14px]
+            text-[11px] lg:text-[12px]
             ${inputStyle}
           `}
         />
 
         <CiSearch
-          size={20}
+          size={18}
           className="
             text-text-primary
-            absolute right-3 sm:right-4 top-1/2 -translate-y-1/2
+            absolute right-3 top-1/2 -translate-y-1/2
             pointer-events-none
           "
         />
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-        <div className="flex gap-2 sm:gap-3">
-          <button
-            className="
-              h-8 flex-1 px-3
-              sm:h-9 sm:flex-none sm:px-5
-              rounded-lg
-              border border-placeholder
-              bg-white
-              text-text-primary
-              font-heading font-semibold text-[12px] sm:text-[14px]
-            "
-          >
-            Status ▼
+      <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+        <div className="flex min-w-[180px] flex-1 gap-2 sm:min-w-fit sm:flex-none">
+          <button className={filterButtonClass}>
+            Status
+            <LuChevronDown className="h-3 w-3 shrink-0" />
           </button>
 
-          <button
-            className="
-              h-8 flex-1 px-3
-              sm:h-9 sm:flex-none sm:px-5
-              rounded-lg
-              border border-placeholder
-              bg-white
-              text-text-primary
-              font-heading font-semibold text-[12px] sm:text-[14px]
-            "
-          >
-            Região ▼
+          <button className={filterButtonClass}>
+            Região
+            <LuChevronDown className="h-3 w-3 shrink-0" />
           </button>
         </div>
+        
+        <section>
+          <label className="flex h-8 flex-1 items-center justify-between gap-2 sm:h-auto sm:flex-none sm:flex-col sm:items-center sm:gap-0.5 cursor-pointer">
+            <span className="font-heading text-[#767676] text-[9px] leading-none whitespace-nowrap">
+              Minhas Análises
+            </span>
 
-        <label className="flex items-center justify-between gap-2 cursor-pointer sm:justify-start">
-          <span className="font-heading text-[#767676] text-[10px] sm:text-[11px]">
-            Minhas Análises
-          </span>
+            <input type="checkbox" defaultChecked className="peer sr-only" />
 
-          <input type="checkbox" className="peer sr-only" />
-
-          <div
-            className="
-              w-10 h-5
-              sm:w-12 sm:h-6
-              rounded-full
-              bg-placeholder
-              relative
-              transition-colors
-              peer-checked:bg-secondary
-              after:content-['']
-              after:absolute
-              after:top-1
-              after:left-1
-              after:w-3
-              after:h-3
-              sm:after:w-4
-              sm:after:h-4
-              after:bg-white
-              after:rounded-full
-              after:transition-transform
-              peer-checked:after:translate-x-5
-              sm:peer-checked:after:translate-x-6
-            "
-          />
-        </label>
+            <div
+              className="
+                w-8 h-4
+                rounded-full
+                bg-placeholder
+                relative
+                transition-colors
+                peer-checked:bg-secondary
+                after:content-['']
+                after:absolute
+                after:top-0.5
+                after:left-0.5
+                after:w-3
+                after:h-3
+                after:bg-white
+                after:rounded-full
+                after:transition-transform
+                peer-checked:after:translate-x-4
+              "
+            />
+          </label>
+        </section>
       </div>
     </section>
   );

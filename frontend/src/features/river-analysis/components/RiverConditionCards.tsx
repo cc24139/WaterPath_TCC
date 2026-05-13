@@ -46,6 +46,7 @@ export function RiverConditionCards() {
         gap-3
         sm:gap-4
         xl:gap-8
+        px-4
       "
     >
       {riverConditions.map((condition) => (
