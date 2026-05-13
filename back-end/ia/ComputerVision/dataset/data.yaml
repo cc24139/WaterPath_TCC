@@ -1,9 +1,9 @@
 train: ../train/images
 val: ../train/images
-test: ../train/images
+test: ../test/images
 
-nc: 4
-names: ['Esgoto', 'Lixo', 'turbidez', 'urbano']
+nc: 3
+names: ['Lixo', 'drainage connection', 'urbano']
 
 roboflow:
   workspace: luiss-workspace-wjnfb

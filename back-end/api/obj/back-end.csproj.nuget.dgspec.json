@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/Users/u24123/Documents/GitHub/WaterPath_TCC/back-end/api/back-end.csproj": {}
+    "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/back-end.csproj": {}
   },
   "projects": {
-    "/Users/u24123/Documents/GitHub/WaterPath_TCC/back-end/api/back-end.csproj": {
+    "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/back-end.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/u24123/Documents/GitHub/WaterPath_TCC/back-end/api/back-end.csproj",
+        "projectUniqueName": "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/back-end.csproj",
         "projectName": "back-end",
-        "projectPath": "/Users/u24123/Documents/GitHub/WaterPath_TCC/back-end/api/back-end.csproj",
-        "packagesPath": "/Users/u24123/.nuget/packages/",
-        "outputPath": "/Users/u24123/Documents/GitHub/WaterPath_TCC/back-end/api/obj/",
+        "projectPath": "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/back-end.csproj",
+        "packagesPath": "/Users/u24139/.nuget/packages/",
+        "outputPath": "/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/u24123/.nuget/NuGet/NuGet.Config"
+          "/Users/u24139/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"

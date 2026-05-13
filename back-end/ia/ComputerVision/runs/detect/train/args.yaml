@@ -6,7 +6,7 @@ epochs: 20
 time: null
 patience: 100
 batch: 16
-imgsz: 640
+imgsz: 800
 save: true
 save_period: -1
 cache: false
@@ -107,4 +107,4 @@ auto_augment: randaugment
 erasing: 0.4
 cfg: null
 tracker: botsort.yaml
-save_dir: /Users/u24139/Documents/GitHub/WaterPath_TCC/ia/ComputerVision/runs/detect/train
+save_dir: /Users/u24139/Documents/GitHub/WaterPath_TCC/runs/detect/train
