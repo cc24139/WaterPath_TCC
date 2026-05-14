@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { Card } from "@/components/ui/Card";
+
 interface RiverConditionCardProps {
   icon: ReactNode;
   title: string;
@@ -16,19 +18,15 @@ export function RiverConditionCard({
   colorClass,
 }: RiverConditionCardProps) {
   return (
-    <div
+    <Card
       className="
-        bg-white
         w-full
         min-h-[115px]
         sm:min-h-[125px]
         xl:min-h-[110px]
-        rounded-xl
-        sm:rounded-2xl
-        shadow-default
-        px-3 py-3
-        sm:px-4 sm:py-4
-        xl:px-6 xl:py-5
+        !px-3 !py-3
+        sm:!px-4 sm:!py-4
+        xl:!px-6 xl:!py-5
         flex flex-col items-center justify-center text-center gap-2
         xl:flex-row xl:text-left xl:justify-start xl:gap-5
       "
@@ -86,6 +84,6 @@ export function RiverConditionCard({
           {description}
         </span>
       </div>
-    </div>
+    </Card>
   );
 }

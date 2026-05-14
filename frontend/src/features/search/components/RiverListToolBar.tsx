@@ -1,6 +1,8 @@
 import { CiSearch } from "react-icons/ci";
 import { LuChevronDown } from "react-icons/lu";
 
+import { Card } from "@/components/ui/Card";
+
 export function RiverListToolBar() {
   const inputStyle =
     "placeholder:font-semibold placeholder:text-placeholder font-medium text-text-primary";
@@ -8,17 +10,16 @@ export function RiverListToolBar() {
     "h-7 lg:h-8 min-w-0 flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-3 lg:px-4 rounded-md border border-placeholder bg-white text-text-primary font-heading font-semibold text-[10px] lg:text-[11px] transition-colors hover:border-primary";
 
   return (
-    <section
+    <Card
       className="
-        bg-white max-w-[930px] lg:max-w-[1040px] xl:max-w-[1120px] mx-4 sm:mx-auto
+        max-w-[930px] lg:max-w-[1040px] xl:max-w-[1120px] mx-4 sm:mx-auto
         flex flex-col gap-3
         md:grid md:grid-cols-[minmax(150px,190px)_minmax(240px,1fr)_auto]
         lg:grid-cols-[minmax(180px,230px)_minmax(360px,1fr)_auto]
         md:items-center md:gap-5
         lg:gap-8
-        px-4 py-4
-        sm:px-5 lg:px-6
-        rounded-xl sm:rounded-2xl shadow-default
+        !px-4 !py-4
+        sm:!px-5 lg:!px-6
       "
     >
       <div className="min-w-0">
@@ -104,6 +105,6 @@ export function RiverListToolBar() {
           </label>
         </section>
       </div>
-    </section>
+    </Card>
   );
 }
