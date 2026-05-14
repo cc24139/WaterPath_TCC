@@ -1,0 +1,24 @@
+# Imagem base
+FROM python:3.10-slim
+
+# Evita arquivos .pyc e buffer
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Diretório de trabalho
+WORKDIR /app
+
+# Copiar dependências primeiro (melhora cache)
+COPY requirements.txt .
+
+# Instalar dependências
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar o restante dos arquivos
+COPY . .
+
+# Expor porta
+EXPOSE 10000
+
+# Rodar API
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
