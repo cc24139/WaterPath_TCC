@@ -7,5 +7,5 @@ pillow
 
 ultralytics
 
-torch==2.2.2+cpu --index-url https://download.pytorch.org/whl/cpu
-torchvision==0.17.2+cpu --index-url https://download.pytorch.org/whl/cpu
+torch==2.2.2
+torchvision==0.17.2
