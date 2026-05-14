@@ -1,0 +1,20 @@
+# Imagem base
+FROM python:3.14.3-slim
+
+# Diretório de trabalho
+WORKDIR /app
+
+# Copiar dependências
+COPY requirements.txt .
+
+# Instalar dependências
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar o resto do projeto
+COPY . .
+
+# Expor porta
+EXPOSE 10000
+
+# Rodar API
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000"]
