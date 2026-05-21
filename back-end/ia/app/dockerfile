@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
 
 COPY requirements.txt .
 
+ENV YOLO_CONFIG_DIR=/tmp
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
