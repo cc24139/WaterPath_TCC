@@ -3,8 +3,6 @@ import { Button } from "@/features/auth/components/Button";
 
 
 type LoginProps = {
-    // Define any props if needed
-    id: string;
     token: string;
     email: string;
     password: string;
