@@ -1,9 +1,10 @@
 
 interface InputFieldProps {
-    placeholder: string
+    placeholder: string;
+    type?: string;
 }
  
-export function InputField({ placeholder }: InputFieldProps) {
+export function InputField({ placeholder, type }: InputFieldProps) {
     
     const boarder = "border border-[#DADADA] rounded-[5px] focus:border-[#DADADA]  focus:outline-none focus:ring-0"
     
@@ -14,7 +15,7 @@ export function InputField({ placeholder }: InputFieldProps) {
 
     return (
         <div className={`${size}`}>
-            <input type="text" placeholder={placeholder} 
+            <input type={type} placeholder={placeholder} 
             className={`placeholder-placeholder
             ${boarder}  
             w-full h-full p-4 
