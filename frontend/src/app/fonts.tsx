@@ -1,4 +1,4 @@
-import { Inter,Comic_Neue }  from "next/font/google";
+import { Inter,Comic_Neue,Kenia }  from "next/font/google";
 
 export const inter = Inter({
   subsets: ["latin"],
@@ -10,3 +10,8 @@ export const comicNeue = Comic_Neue({
     variable: "--font-comic-neue",
 });
 
+export const kenia = Kenia({
+    subsets: ["latin"],
+    weight: ["400", "400"],
+    variable: "--font-kenia",
+})

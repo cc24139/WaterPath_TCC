@@ -9,12 +9,16 @@ import { SideBar} from "@/components/layout/SideBar";
 import LoginPage from "./loginPage";
 import {inter,comicNeue} from "./fonts";
 import ButtonComponent from "@/components/ui/Button";
+import LogoParabola from "@/components/ui/logoParabola";
 export default function Home() {
 
   return (
+    <div>
+      <LogoParabola />
       <ButtonComponent onClick={() => console.log("Button clicked")} 
       className={`bg-white text-contrast px-4 py-2 rounded ${inter.className}`}>
         Cadastrar
       </ButtonComponent>
+    </div>
   );
 }
