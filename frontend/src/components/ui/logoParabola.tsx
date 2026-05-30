@@ -1,38 +1,51 @@
 import { kenia } from "../../app/fonts";
 import { Logo } from "./Logo";
 
-export  function LogoParabola() {
-    return (
-      <div className={`text-2xl font-bold text-primary ${kenia.className}`}>
-        <svg width="469" height="1032" viewBox="0 0 469 1032" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g filter="url(#filter0_d_116_388)">
-            <path d="M401 1024H4V0H401C592.762 439.673 279 700.501 401 1024Z" fill="url(#paint0_linear_116_388)"/>
-            <path d="M400.672 0.5C496.328 220.045 465.869 394.952 426.675 555.447C387.524 715.768 339.6 861.842 400.278 1023.5H4.5V0.5H400.672Z" stroke="black"/>
-            </g>
-            <defs>
-            <filter id="filter0_d_116_388" x="0" y="0" width="468.756" height="1032" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-            <feOffset dy="4"/>
-            <feGaussianBlur stdDeviation="2"/>
-            <feComposite in2="hardAlpha" operator="out"/>
-            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
-            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_116_388"/>
-            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_116_388" result="shape"/>
-            </filter>
-            <linearGradient id="paint0_linear_116_388" x1="234.378" y1="0" x2="234.378" y2="1024" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#0F2F35"/>
-            <stop offset="1" stop-color="#2C899B"/>
-            </linearGradient>
-            </defs>  
-            <text x="37%" y="10%" textAnchor="middle" fill="white" fontSize="70" dy=".3em">Water</text>
-            <br/>
-            <text x="37%" y="20%" textAnchor="middle" fill="white" fontSize="70" dy=".3em">Path</text>
-            <text x="37%" y="30%" textAnchor="middle" fill="white" fontSize="25" dy=".3em">Monitoramento inteligente </text>
-            <text x="37%" y="35%" textAnchor="middle" fill="white" fontSize="25" dy=".3em">da qualidade da água</text>
-        </svg>
+type LogoParabolaProps = {
+  className?: string;
+};
+
+export function LogoParabola({ className = "" }: LogoParabolaProps) {
+  return (
+    <section
+      aria-label="Water Path - Monitoramento inteligente da qualidade da água"
+      className={`relative min-h-[320px] w-full max-w-[360px] shrink-0 overflow-hidden sm:min-h-[420px] sm:max-w-[420px] md:min-h-screen md:max-w-[440px] lg:max-w-[470px] xl:max-w-[500px] ${className}`}
+    >
+      <svg
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full"
+        preserveAspectRatio="xMinYMid slice"
+        viewBox="0 0 304 720"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="logo-parabola-fill" x1="136" x2="136" y1="0" y2="720">
+            <stop stopColor="#15515A" />
+            <stop offset="1" stopColor="#24828B" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M0 0H244C292 74 304 168 286 294C264 446 247 564 248 720H0V0Z"
+          fill="url(#logo-parabola-fill)"
+        />
+      </svg>
+
+      <Logo className="pointer-events-none absolute left-[-7%] top-[32%] z-0 h-[220px] w-auto opacity-[0.04] brightness-0 sm:left-[-4%] sm:h-[280px] md:left-[-3%] md:top-[33%] md:h-[34vh] lg:left-[2%] lg:top-[30%] lg:h-[44vh]" />
+
+      <div className="relative z-10 flex min-h-[320px] flex-col px-8 pt-10 sm:min-h-[420px] sm:px-12 sm:pt-14 md:min-h-screen md:px-8 md:pt-16 lg:px-14 lg:pt-20 xl:px-20">
+        <h1
+          className={`${kenia.className} text-[48px] leading-[0.82] text-white sm:text-[58px] md:text-[54px] lg:text-[64px] xl:text-[74px]`}
+        >
+          Water
+          <br />
+          Path
+        </h1>
+        <p className="mt-6 max-w-[210px] text-xs font-bold leading-tight text-white sm:text-sm lg:mt-7">
+          Monitoramento inteligente da qualidade da água
+        </p>
       </div>
-    );
+    </section>
+  );
 }
 
-export default LogoParabola;
+

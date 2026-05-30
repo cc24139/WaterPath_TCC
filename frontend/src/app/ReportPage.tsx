@@ -1,11 +1,10 @@
 "use client";
 
 import { SideBar } from "@/components/layout/SideBar";
-
-import { useReportConfig } from "../hooks/useReportConfig";
-import { ReportActions } from "./ReportActions";
-import { ReportPreviewPlaceholder } from "./ReportPreviewPlaceholder";
-import { ReportSettingsPanel } from "./ReportSettingsPanel";
+import { ReportActions } from "@/features/report/components/ReportActions";
+import { ReportPreviewPlaceholder } from "@/features/report/components/ReportPreviewPlaceholder";
+import { ReportSettingsPanel } from "@/features/report/components/ReportSettingsPanel";
+import { useReportConfig } from "@/features/report/hooks/useReportConfig";
 
 export function ReportPage() {
   const {
