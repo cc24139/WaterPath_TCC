@@ -12,9 +12,9 @@ import {
   LuShieldCheck,
 } from "react-icons/lu";
 
+import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
-import { Logo } from "@/components/ui/Logo";
 
 const offers = [
   {
@@ -83,7 +83,7 @@ const stats = [
   },
 ];
 
-export function HomePage() {
+export default function HomePage() {
   return (
     <div className="min-h-screen bg-background text-text-primary">
       <Header />
@@ -291,34 +291,5 @@ function StatItem({
         </span>
       </div>
     </div>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="border-t border-placeholder bg-background px-6 py-5 sm:px-10">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <Logo className="h-8 w-auto" />
-          <span className="font-heading text-[16px] font-bold text-primary">
-            Water Path
-          </span>
-        </div>
-
-        <nav aria-label="Links do rodapé">
-          <ul className="flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-text-secondary">
-            <li>
-              <a href="#">Sobre nós</a>
-            </li>
-            <li>
-              <a href="#">Metodologias</a>
-            </li>
-            <li>
-              <a href="/rivers">Rios</a>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </footer>
   );
 }

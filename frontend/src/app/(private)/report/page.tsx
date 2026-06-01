@@ -6,7 +6,7 @@ import { ReportPreviewPlaceholder } from "@/features/report/components/ReportPre
 import { ReportSettingsPanel } from "@/features/report/components/ReportSettingsPanel";
 import { useReportConfig } from "@/features/report/hooks/useReportConfig";
 
-export function ReportPage() {
+export default function Report() {
   const {
     config,
     resetConfig,
