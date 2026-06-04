@@ -1,6 +1,6 @@
 export interface LoginDTO {
-    email: string;
-    password: string;
+  email: string;
+  senha: string;
 }
 
 export interface LoginResponseDTO {
@@ -8,4 +8,10 @@ export interface LoginResponseDTO {
     token: string;
     email: string;
     nome: string;
-}   
+} 
+
+export interface UserRegisterDTO {
+  nome: string;
+  email: string;
+  senha: string;
+}

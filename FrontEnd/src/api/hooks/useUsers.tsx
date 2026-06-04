@@ -1,4 +1,4 @@
-import { LoginResponseDTO } from "../dtos/userDTO";
+import { LoginDTO, LoginResponseDTO } from "../dtos/userDTO";
 import {userServices} from "../services/userServices";
 import {useState,useEffect} from "react";
 
@@ -8,19 +8,23 @@ interface state{
     error: string | null;
 }
 
-export const useLogin = (email: string, password: string) => {
-    const [state, setState] = useState<state>({
-        user: null,
-        loading: false,
-        error: null
-    });
-    const login = async () => {
+export const useLogin = () => {
+    const [loading,setLoading] = useState(false);
+    const [error,setError] = useState<string | null>(null);
+
+    const login = async (dados : LoginDTO) => {
+        console.log("Login iniciado com dados:", dados);
+        setLoading(true);
+        setError(null);
         try{
-            const data = await userServices.login({email, password});
-            setState({user: data, loading: false, error: null});
-        }catch (error ){
-            setState({user: null, loading: false, error:(error as Error).message});
+            const response = await userServices.login(dados);
+            return response;
+        } catch (err) {
+            setError((err as Error).message);
+        } finally {
+            setLoading(false);
         }
     };
-    return {state, login};
-}
+
+    return { login, loading, error };
+};

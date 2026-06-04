@@ -30,13 +30,13 @@ namespace back_end.src.Controllers.User
                 var existeCodigoPendente = await mediator.Send(new QueryCodigoPendente(result.Id));
                 if (existeCodigoPendente)
                 {
-                    return BadRequest(new { id = result.Id, email = result.email, nome = result.nome, pendente = true });
+                    return BadRequest(new { mensagem = "Código de verificação pendente. Por favor, verifique seu email." });
                 }
                 return Ok(result);
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new{ mensagem = ex.Message });
             }
         }
 
@@ -55,7 +55,7 @@ namespace back_end.src.Controllers.User
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { mensagem = ex.Message });
             }
         }
     }
