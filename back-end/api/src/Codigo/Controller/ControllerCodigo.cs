@@ -44,12 +44,12 @@ namespace back_end.src.Controllers.Codigo
             }
         }
 
-        [HttpGet("pendente/{usuarioId}")]
-        public async Task<IActionResult> VerificarCodigoPendente(int usuarioId)
+        [HttpGet("pendente/{usuarioEmail}")]
+        public async Task<IActionResult> VerificarCodigoPendente(string usuarioEmail)
         {
             try
             {
-                var query = new QueryCodigoPendente(usuarioId);
+                var query = new QueryCodigoPendente(usuarioEmail);
                 var existePendente = await mediator.Send(query);
                 return Ok(new { pendente = existePendente });
             }

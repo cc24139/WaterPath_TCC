@@ -3,7 +3,7 @@ import {LoginDTO, LoginResponseDTO,} from "../dtos/userDTO";
 
 export const userServices = {
 
-  async login(data: LoginDTO): Promise<LoginResponseDTO> {
+  async login(data: LoginDTO): Promise<Response> {
     const response = await fetch(routes.user + "login", {
       method: "POST",
       headers: {
@@ -11,7 +11,6 @@ export const userServices = {
       },
       body: JSON.stringify(data),
     });
-    const result = await response.json();
-    return result;
+    return response;
   }
 };

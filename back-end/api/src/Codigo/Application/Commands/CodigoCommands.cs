@@ -4,27 +4,28 @@ namespace Application.Commands.Codigo;
 
 public class CommandGerarCodigo : IRequest<string>
 {
-    public int UsuarioId { get; set; }
+    public string UsuarioEmail { get; set; }
     public string Codigo { get; set; } = string.Empty;
 
     public CommandGerarCodigo() { }
 
-    public CommandGerarCodigo(int usuarioId)
+    public CommandGerarCodigo(string usuarioEmail)
     {
-        UsuarioId = usuarioId;
+        UsuarioEmail = usuarioEmail;
     }
+
 }
 
 public class CommandValidarCodigo : IRequest<string>
 {
-    public int UsuarioId { get; set; }
+    public string UsuarioEmail { get; set; }
     public string Codigo { get; set; } = string.Empty;
 
     public CommandValidarCodigo() { }
 
-    public CommandValidarCodigo(int usuarioId, string codigo)
+    public CommandValidarCodigo(string usuarioEmail, string codigo)
     {
-        UsuarioId = usuarioId;
+        UsuarioEmail = usuarioEmail;
         Codigo = codigo;
     }
 }

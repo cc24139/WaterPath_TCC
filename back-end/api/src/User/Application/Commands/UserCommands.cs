@@ -26,5 +26,7 @@ public class CommandCriarConta : IRequest<CriarContaResponse>
 public class CriarContaResponse
 {
     public int UsuarioId { get; set; }
+
+    public string Email { get; set; } = string.Empty;
     public string Mensagem { get; set; } = string.Empty;
 }

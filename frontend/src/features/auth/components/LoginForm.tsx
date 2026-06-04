@@ -17,18 +17,20 @@ export function LoginForm() {
   };
 
   const handleLogin = async () => {
-    const response: LoginResponseDTO | undefined = await login(form);
-    console.log("Resposta do login:", response);
-    if (response) {
-      console.log("Login bem-sucedido:", response);
-      // Aqui você pode redirecionar o usuário ou armazenar o token, etc.
-      localStorage.setItem("token", response.token);
-      alert("Login bem-sucedido!");
-    } else {
-      console.error("Erro no login: resposta vazia");
-      alert("Usuario e senha invalidos");
+    const response = await login(form);
+    if(error){
+      alert(error);
+      return;
     }
-  };
+    console.log("Resposta do login no componente:", response);
+    const dto = response as unknown as LoginResponseDTO;
+    localStorage.setItem("token", dto.token);
+    localStorage.setItem("userId", dto.id.toString());
+    localStorage.setItem("userEmail", dto.email);
+    localStorage.setItem("userName", dto.nome);
+    alert("Login bem-sucedido! Redirecionando para a página inicial...");
+    window.location.href = "/home";
+    }
 
   return (
     <AuthFormCard
@@ -69,4 +71,5 @@ export function LoginForm() {
       primaryActionText="Entrar"
     />
   );
+
 }

@@ -27,10 +27,10 @@ namespace back_end.src.Controllers.User
             try
             {
                 var result = await mediator.Send(query);
-                var existeCodigoPendente = await mediator.Send(new QueryCodigoPendente(result.Id));
+                var existeCodigoPendente = await mediator.Send(new QueryCodigoPendente(result.email));
                 if (existeCodigoPendente)
                 {
-                    return BadRequest(new { mensagem = "Código de verificação pendente. Por favor, verifique seu email." });
+                    return Unauthorized(new { mensagem = "Código de verificação pendente. Por favor, verifique seu email." });
                 }
                 return Ok(result);
             }
@@ -49,9 +49,9 @@ namespace back_end.src.Controllers.User
                 command.Senha = hash.ComputeHash(command.Senha);
                 var result = await mediator.Send(command);
                 var emailService = new EmailServices();
-                var codResult = await mediator.Send(new CommandGerarCodigo { UsuarioId = result.UsuarioId });
+                var codResult = await mediator.Send(new CommandGerarCodigo { UsuarioEmail = result.Email });
                 await emailService.EnviarCodigoCadastro(command.Email, codResult.ToString());
-                return Ok(new { id = result.UsuarioId, mensagem = result.Mensagem });
+                return Ok(new { id = result.UsuarioId, email = result.Email, mensagem = result.Mensagem });
             }
             catch (ArgumentException ex)
             {

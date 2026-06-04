@@ -15,7 +15,8 @@ public class CodigoTableConfigure : IEntityTypeConfiguration<CodigoEntity>
         builder.Property(e => e.DataGeracao).IsRequired();
         builder.Property(e => e.DataExpiracao).IsRequired();
         builder.Property(e => e.Usado).IsRequired();
-        builder.Property(e => e.UsuarioId).IsRequired();
+        builder.Property(e => e.UsuarioId);
+        builder.Property(e => e.emailUsuario).IsRequired().HasMaxLength(255);
 
         builder
             .HasOne(e => e.Usuario)

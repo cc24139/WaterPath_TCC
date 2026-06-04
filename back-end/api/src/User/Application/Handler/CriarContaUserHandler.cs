@@ -30,7 +30,7 @@ public class CriarContaUserHandler : IRequestHandler<CommandCriarConta, CriarCon
         userRepository.Cadastrar(user);
 
         return Task.FromResult(
-            new CriarContaResponse { UsuarioId = user.Id, Mensagem = "Conta criada com sucesso" }
+            new CriarContaResponse { UsuarioId = user.Id, Email = user.Email, Mensagem = "Conta criada com sucesso" }
         );
     }
 }

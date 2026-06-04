@@ -3,7 +3,7 @@ namespace back_end.src.Domain.Codigo
     public interface ICodigoRepository
     {
         string GerarCodigo(CodigoEntity codigo);
-        bool MarcarCodigoComoUsado(int usuarioId, string codigo);
-        bool VerificarPendenciaCodigo(int usuarioId);
+        bool MarcarCodigoComoUsado(string emailUsuario, string codigo);
+        bool VerificarPendenciaCodigo(string emailUsuario);
     }
 }

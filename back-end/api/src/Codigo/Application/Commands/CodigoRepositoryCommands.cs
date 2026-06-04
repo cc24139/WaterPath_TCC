@@ -10,6 +10,6 @@ public class CommandGerarCodigoRepository : IRequest<string>
 
 public class CommandMarcarCodigoComoUsado : IRequest<bool>
 {
-    public int UsuarioId { get; set; }
+    public string UsuarioEmail { get; set; }
     public string Codigo { get; set; } = string.Empty;
 }

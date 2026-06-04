@@ -10,6 +10,7 @@ export interface LoginResponseDTO {
     nome: string;
 } 
 
+
 export interface UserRegisterDTO {
   nome: string;
   email: string;

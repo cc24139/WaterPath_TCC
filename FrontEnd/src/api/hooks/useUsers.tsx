@@ -13,16 +13,24 @@ export const useLogin = () => {
     const [error,setError] = useState<string | null>(null);
 
     const login = async (dados : LoginDTO) => {
-        console.log("Login iniciado com dados:", dados);
         setLoading(true);
         setError(null);
-        try{
-            const response = await userServices.login(dados);
-            return response;
-        } catch (err) {
-            setError((err as Error).message);
-        } finally {
+        const response = await userServices.login(dados);
+        console.log("Resposta do login:", response.status);
+        console.log(response);
+        if(response.status == 200){
             setLoading(false);
+            return response.json();
+        }
+        else if(response.status == 401){
+            setError("Email não confirmado. Por favor, verifique seu email para confirmar sua conta.");
+            setLoading(false);
+            return response;
+        }
+        else{
+            setError("Falha no login. Verifique suas credenciais e tente novamente.");
+            setLoading(false);
+            return response;
         }
     };
 

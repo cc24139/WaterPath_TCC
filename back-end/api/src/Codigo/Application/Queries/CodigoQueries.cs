@@ -4,12 +4,12 @@ namespace Application.Queries.Codigo;
 
 public class QueryCodigoPendente : IRequest<bool>
 {
-    public int UsuarioId { get; set; }
+    public string UsuarioEmail { get; set; }
 
     public QueryCodigoPendente() { }
 
-    public QueryCodigoPendente(int usuarioId)
+    public QueryCodigoPendente(string usuarioEmail)
     {
-        UsuarioId = usuarioId;
+        UsuarioEmail = usuarioEmail;
     }
 }

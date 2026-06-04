@@ -41,10 +41,35 @@ namespace back_end.src.Infrastructure.Repository
             return true;
         }
 
+        public bool MarcarCodigoComoUsado(string emailUsuario, string codigo)
+        {
+            var codigoEntity = context.Codigos.FirstOrDefault(c =>
+                c.emailUsuario == emailUsuario
+                && c.Codigo == codigo
+                && !c.Usado
+                && c.DataExpiracao > DateTime.UtcNow
+            );
+
+            if (codigoEntity == null)
+            {
+                return false;
+            }
+
+            codigoEntity.Usado = true;
+            context.Codigos.Remove(codigoEntity);
+            context.SaveChanges();
+            return true;
+        }
+
         public bool VerificarPendenciaCodigo(int usuarioId)
         {
+            return context.Codigos.Any(c => c.UsuarioId == usuarioId && !c.Usado);
+        }
+
+        public bool VerificarPendenciaCodigo(string emailUsuario)
+        {
             return context.Codigos.Any(c =>
-                c.UsuarioId == usuarioId && !c.Usado && c.DataExpiracao > DateTime.UtcNow
+                c.emailUsuario == emailUsuario && !c.Usado && c.DataExpiracao < DateTime.UtcNow
             );
         }
     }

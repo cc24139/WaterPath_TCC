@@ -17,12 +17,12 @@ public class ValidarCodigoHandler : IRequestHandler<CommandValidarCodigo, string
 
     public Task<string> Handle(CommandValidarCodigo request, CancellationToken cancellationToken)
     {
-        var sucesso = codigoRepository.MarcarCodigoComoUsado(request.UsuarioId, request.Codigo);
+        var sucesso = codigoRepository.MarcarCodigoComoUsado(request.UsuarioEmail, request.Codigo);
         if (!sucesso)
         {
             throw new ArgumentException("Código inválido, expirado ou já utilizado");
         }
-        codigoRepository.MarcarCodigoComoUsado(request.UsuarioId, request.Codigo);
+        codigoRepository.MarcarCodigoComoUsado(request.UsuarioEmail, request.Codigo);
         return Task.FromResult("Código validado com sucesso");
     }
 }

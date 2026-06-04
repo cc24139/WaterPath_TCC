@@ -17,7 +17,7 @@ public class BuscarCodigoPendenteHandler : IRequestHandler<QueryCodigoPendente, 
 
     public Task<bool> Handle(QueryCodigoPendente request, CancellationToken cancellationToken)
     {
-        var existeCodigoPendente = codigoRepository.VerificarPendenciaCodigo(request.UsuarioId);
+        var existeCodigoPendente = codigoRepository.VerificarPendenciaCodigo(request.UsuarioEmail);
         return Task.FromResult(existeCodigoPendente);
     }
 }

@@ -11,6 +11,7 @@ namespace back_end.src.Domain.Codigo
         public DateTime DataExpiracao { get; set; }
         public bool Usado { get; set; }
         public int UsuarioId { get; set; }
+        public string emailUsuario { get; set; }
         public UserEntity Usuario { get; set; }
 
         public CodigoEntity() { }
@@ -22,6 +23,7 @@ namespace back_end.src.Domain.Codigo
             UsuarioId = usuario.Id;
             DataGeracao = DateTime.UtcNow;
             DataExpiracao = DateTime.UtcNow.AddMinutes(15);
+            emailUsuario = usuario.Email;
             Usado = false;
         }
     }
