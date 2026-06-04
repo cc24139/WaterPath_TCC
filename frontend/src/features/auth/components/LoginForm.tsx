@@ -1,10 +1,13 @@
 "use client";
 
 import { AuthFormCard } from "./AuthFormCard";
+import { useLogin } from "@/api/hooks/useUsers";
 
 
 
 export function LoginForm() {
+  const { state, login } = useLogin("", "");
+
   return (
     <AuthFormCard
       title={
@@ -28,7 +31,7 @@ export function LoginForm() {
         </>
       }
       onSecondaryAction={() => console.log("cancelou")}
-      onPrimaryAction={() => console.log("entrou")}
+      onPrimaryAction={() => login().then(() => console.log("logou"))}
       primaryActionText="Entrar"
     />
   );

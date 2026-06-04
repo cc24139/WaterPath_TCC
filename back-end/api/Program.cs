@@ -54,10 +54,18 @@ builder.Services.AddScoped<IMetalPesadoRepository, MetalPesadoRepository>();
 builder.Services.AddScoped<IQualidadeRepository, QualidadeRepository>();
 builder.Services.AddScoped<IQualidadeFuturaRepository, QualidadeFuturaRepository>();
 builder.Services.AddScoped<ICodigoRepository, CodigoRepository>();
+//CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+            builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
 
 builder.Services.AddControllers();
 var app = builder.Build();
-
+app.UseCors("AllowAll");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
