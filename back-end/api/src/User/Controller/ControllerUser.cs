@@ -45,6 +45,10 @@ namespace back_end.src.Controllers.User
         {
             try
             {
+                var existingCode = await mediator.Send(new QueryCodigoPendente(command.Email));
+                if (existingCode)                {
+                    return Unauthorized(new { mensagem = "Já existe um código de verificação pendente para este email. Por favor, verifique seu email." });
+                }
                 var hash = new HashServices();
                 command.Senha = hash.ComputeHash(command.Senha);
                 var result = await mediator.Send(command);

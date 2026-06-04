@@ -1,8 +1,38 @@
 "use client";
 
+import { useRegister } from "@/api/hooks/useUsers";
 import { AuthFormCard } from "./AuthFormCard";
+import { useState } from "react";
 
 export function RegisterForm() {
+  const { register, loading, error } = useRegister();
+  const [form, setForm] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+  const handleRegister = async () => {
+    if (form.password !== form.confirmPassword) {
+      alert("As senhas não coincidem. Por favor, tente novamente.");
+      return;
+    }
+    const response = await register({
+      nome: form.username,
+      email: form.email,
+      senha: form.password,
+    });
+    if(error){
+      alert(error);
+      return;
+    }
+      alert("Enviamos um codigo de confirmação para seu email! verique sua caixa de entrada para confirmar seu cadastro.");
+      //Redirecionar para a página de confirmação de email
+  };
+    
   return (
     <AuthFormCard
       title={
@@ -28,7 +58,7 @@ export function RegisterForm() {
         },
       ]}
       onSecondaryAction={() => console.log("cancelou")}
-      onPrimaryAction={() => console.log("cadastrou")}
+      onPrimaryAction={handleRegister}
       primaryActionText="Cadastrar"
     />
   );

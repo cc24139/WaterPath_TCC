@@ -10,6 +10,7 @@ public class CriarContaUserHandler : IRequestHandler<CommandCriarConta, CriarCon
 {
     private readonly IUserRepository userRepository;
 
+
     public CriarContaUserHandler(IUserRepository userRepository)
     {
         this.userRepository = userRepository;
