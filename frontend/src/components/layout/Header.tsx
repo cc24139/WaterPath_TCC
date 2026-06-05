@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LuBell, LuChevronDown } from "react-icons/lu";
 import { MdClose, MdMenu } from "react-icons/md";
@@ -28,7 +29,7 @@ type HeaderLink = {
 
 const headerLinks: HeaderLink[] = [
     { label: "Sobre nós", href: "#" },
-    { label: "Minhas análises", href: "#" },
+    { label: "Minhas análises", href: "/water-bodies" },
     { label: "Metodologias", href: "#" },
 ];
 
@@ -104,10 +105,10 @@ export function Header({
                         <MdMenu className="h-6 w-6" />
                     </button>
 
-                    <div className="flex min-w-0 flex-row items-center gap-1">
+                    <Link href="/" className="flex min-w-0 flex-row items-center gap-1">
                         <Logo className="h-7 w-auto sm:h-7 md:h-10" />
                         <h1 className="truncate font-heading text-[18px] font-bold text-primary">Water Path</h1>
-                    </div>
+                    </Link>
                 </section>
 
                 <section className="hidden justify-self-center md:block">
@@ -161,10 +162,10 @@ export function Header({
                     <MdClose className="h-6 w-6" />
                 </button>
 
-                <div className="flex items-center gap-2">
+                <Link href="/" onClick={closeDrawer} className="flex items-center gap-2">
                     <Logo className="h-8 w-auto" />
                     <h2 className="font-heading text-[20px] font-bold text-primary">Water Path</h2>
-                </div>
+                </Link>
 
                 <HeaderLinkList
                     links={headerLinks}
@@ -246,15 +247,15 @@ function isHeaderLinkActive(href: string, pathname: string) {
 function PublicHeaderActions() {
     return (
         <section className="flex shrink-0 justify-self-end flex-row items-center justify-end gap-2">
-            <a href="#" className="hidden text-[12px] font-semibold text-contrast sm:inline md:text-[14px] lg:text-[16px]">
+            <a href="/register" className="hidden text-[12px] font-semibold text-contrast sm:inline md:text-[14px] lg:text-[16px]">
                 Criar Conta
             </a>
-            <button
-                type="button"
+            <Link
+                href="/login"
                 className="rounded-lg bg-contrast px-3 py-1.5 text-[11px] font-semibold text-white shadow-default transition-colors hover:bg-contrast/90 sm:px-4 sm:text-[12px] lg:text-[16px]"
             >
                 Comece agora
-            </button>
+            </Link>
         </section>
     );
 }
@@ -270,9 +271,9 @@ function PublicDrawerActions({ onNavigate }: { onNavigate: () => void }) {
                 Criar Conta
             </a>
 
-            <a href="#" onClick={onNavigate} className={primaryActionClass}>
+            <Link href="/login" onClick={onNavigate} className={primaryActionClass}>
                 Comece agora
-            </a>
+            </Link>
         </section>
     );
 }

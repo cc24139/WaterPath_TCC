@@ -83,7 +83,7 @@ const stats = [
   },
 ];
 
-export default function HomePage() {
+export default function Home() {
   return (
     <div className="min-h-screen bg-background text-text-primary">
       <Header isAuthenticated={true} />
@@ -178,7 +178,7 @@ export default function HomePage() {
             </div>
 
             <Link
-              href="/rivers"
+              href="/water-bodies"
               className="relative mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-white px-7 font-heading text-[16px] font-bold text-primary shadow-[0_10px_18px_rgba(0,0,0,0.12)] transition-transform hover:-translate-y-0.5 lg:mt-0"
             >
               Ver todos os rios

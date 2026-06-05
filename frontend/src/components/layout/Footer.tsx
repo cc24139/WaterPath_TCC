@@ -3,7 +3,7 @@ import { Logo } from "@/components/ui/Logo";
 const footerLinks = [
   { label: "Sobre nós", href: "#" },
   { label: "Metodologias", href: "#" },
-  { label: "Rios", href: "/rivers" },
+  { label: "Rios", href: "/water-bodies" },
 ];
 
 export function Footer() {
