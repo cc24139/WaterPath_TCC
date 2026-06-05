@@ -86,7 +86,7 @@ const stats = [
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background text-text-primary">
-      <Header />
+      <Header isAuthenticated={true} />
 
       <main>
         <section className="mx-auto grid w-full max-w-7xl items-center gap-10 px-6 py-14 sm:px-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16 lg:px-16 lg:py-20">
