@@ -32,6 +32,18 @@ namespace back_end.src.Infrastructure.Repository
         {
             context.CorposHidricos.Add(corpoHidrico);
             context.SaveChanges();
+            var usuarios = corpoHidrico.users;
+            foreach (var usuario in usuarios)
+            {
+                var userEntity = context.Usuarios.Find(usuario.Id);
+                if (userEntity != null)
+                {
+                    userEntity.CorpoHidricos.Add(corpoHidrico);
+                    context.CorposHidricos.Update(corpoHidrico);
+                    context.Usuarios.Update(userEntity);
+                }
+            }
+            context.SaveChanges();
         }
 
         public void Deletar(int id)
@@ -47,17 +59,20 @@ namespace back_end.src.Infrastructure.Repository
 
         public List<CorpoHidricoEntity> ObterTodos()
         {
-            return context.CorposHidricos.ToList();
+            return context.CorposHidricos.Include(c => c.users).ToList();
         }
 
         public CorpoHidricoEntity? ObterCorpoHidricoPorId(int id)
         {
-            return context.CorposHidricos.FirstOrDefault(c => c.Id == id);
+            return context.CorposHidricos.Include(c => c.users).FirstOrDefault(c => c.Id == id);
         }
 
         public List<CorpoHidricoEntity> ObterCorposHidricosPorUsuario(int userId)
         {
-            return context.CorposHidricos.Where(c => c.users.Any(u => u.Id == userId)).ToList();
+            return context
+                .CorposHidricos.Include(c => c.users)
+                .Where(c => c.users.Any(u => u.Id == userId))
+                .ToList();
         }
 
         public List<int> ObterUsuariosDoCorpoHidrico(int corpoHidricoId)
@@ -121,6 +136,11 @@ namespace back_end.src.Infrastructure.Repository
 
             corpoHidrico.users.Remove(usuario);
             context.SaveChanges();
+        }
+
+        public CorpoHidricoEntity? ObterCorpoHidricoPorNome(string nome)
+        {
+            return context.CorposHidricos.Include(c => c.users).FirstOrDefault(c => c.Nome == nome);
         }
     }
 }

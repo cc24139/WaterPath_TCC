@@ -9,6 +9,8 @@ public class CommandCadastrarCorpoHidrico : IRequest<Unit>
     public string Localizacao { get; set; } = string.Empty;
     public double Tamanho { get; set; }
     public bool EhPrivado { get; set; }
+
+    public List<int> UserIds { get; set; } = new();
 }
 
 public class CommandAtualizarCorpoHidrico : IRequest<Unit>

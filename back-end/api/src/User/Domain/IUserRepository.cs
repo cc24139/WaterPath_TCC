@@ -10,5 +10,6 @@ namespace Domain.User
         UserEntity ObterUsuarioPorId(int id);
         UserEntity ObterUsuarioPorEmail(string email);
         List<UserEntity> ObterTodos();
+        List<UserEntity> ObterUsuariosPorIds(List<int> ids);
     }
 }

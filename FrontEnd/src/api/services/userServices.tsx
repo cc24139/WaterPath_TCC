@@ -1,8 +1,7 @@
-import {routes} from "../routes";
-import {LoginDTO, LoginResponseDTO, UserRegisterDTO,} from "../dtos/userDTO";
+import { routes } from "../routes";
+import { LoginDTO, UserRegisterDTO } from "../dtos/userDTO";
 
 export const userServices = {
-
   async login(data: LoginDTO): Promise<Response> {
     const response = await fetch(routes.user + "login", {
       method: "POST",
@@ -23,5 +22,5 @@ export const userServices = {
       body: JSON.stringify(data),
     });
     return response;
-  }
+  },
 };

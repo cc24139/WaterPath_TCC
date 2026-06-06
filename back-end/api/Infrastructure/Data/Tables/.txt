@@ -4,3 +4,9 @@ Corpo Hidrico <--> Coletas,Imagem
 Coleta <--> Metal pesado,CianoBacteria
 Qualidae <--> Metal pesado,CianoBacteria
 Predição<--> Qualidade
+
+Dtos:
+
+Corpo Hidrico:
+    -informações do corpo Hidrico
+    -Usuario:id,nome e email

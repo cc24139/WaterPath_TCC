@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Text;
+using System.Text.Json.Serialization;
 using back_end.src.Domain.CianoBacteria;
 using back_end.src.Domain.Codigo;
 using back_end.src.Domain.Coleta;
@@ -12,11 +14,9 @@ using Domain.User;
 using DotNetEnv;
 using Infrastructure.Data;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -32,7 +32,8 @@ builder.Services.AddDbContext<WaterPathDbContext>(optins => optins.UseNpgsql(con
 
 //Token
 var key = Environment.GetEnvironmentVariable("JWT_KEY");
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -40,7 +41,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
             ValidateIssuer = false,
-            ValidateAudience = false
+            ValidateAudience = false,
         };
     });
 
@@ -54,18 +55,29 @@ builder.Services.AddScoped<IMetalPesadoRepository, MetalPesadoRepository>();
 builder.Services.AddScoped<IQualidadeRepository, QualidadeRepository>();
 builder.Services.AddScoped<IQualidadeFuturaRepository, QualidadeFuturaRepository>();
 builder.Services.AddScoped<ICodigoRepository, CodigoRepository>();
+
 //CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
-    {
+    options.AddPolicy(
+        "AllowAll",
+        builder =>
+        {
             builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-    });
+        }
+    );
 });
 
-builder.Services.AddControllers();
+builder
+    .Services.AddControllers()
+    .AddJsonOptions(opts =>
+    {
+        opts.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        opts.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    });
 var app = builder.Build();
 app.UseCors("AllowAll");
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

@@ -16,3 +16,9 @@ export interface UserRegisterDTO {
   email: string;
   senha: string;
 }
+
+export interface UserDTO {
+    id: number;
+    nome: string;
+    email: string;
+}

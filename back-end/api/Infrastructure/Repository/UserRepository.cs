@@ -61,5 +61,10 @@ namespace back_end.src.Infrastructure.Repository
         {
             return context.Usuarios.FirstOrDefault(u => u.Id == id);
         }
+
+        public List<UserEntity> ObterUsuariosPorIds(List<int> ids)
+        {
+            return context.Usuarios.Where(u => ids.Contains(u.Id)).ToList();
+        }
     }
 }

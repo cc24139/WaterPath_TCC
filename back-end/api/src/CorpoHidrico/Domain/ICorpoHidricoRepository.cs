@@ -12,6 +12,8 @@ namespace back_end.src.Domain.CorpoHidrico
         void Deletar(int id);
         CorpoHidricoEntity? ObterCorpoHidricoPorId(int id);
         List<CorpoHidricoEntity> ObterTodos();
+    
+        CorpoHidricoEntity? ObterCorpoHidricoPorNome(string nome);
         List<CorpoHidricoEntity> ObterCorposHidricosPorUsuario(int userId);
         List<int> ObterUsuariosDoCorpoHidrico(int corpoHidricoId);
         List<int> ObterColetasDoCorpoHidrico(int corpoHidricoId);
