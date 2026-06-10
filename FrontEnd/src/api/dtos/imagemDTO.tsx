@@ -3,9 +3,10 @@ export interface ImagemRelationDTO {
 }
 
 export interface ImagemCadastroDTO {
-  url: string;
-  corpoHidrico?: ImagemRelationDTO;
-  coleta?: ImagemRelationDTO;
+  idCorpoHidrico?: number;
+  idColeta?: number;
+  dateTime: Date;
+  
 }
 
 export interface ImagemDTO {
