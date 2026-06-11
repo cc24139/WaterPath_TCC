@@ -25,7 +25,7 @@ export function LoginForm() {
     console.log("Resposta do login no componente:", response);
     const dto = response as unknown as LoginResponseDTO;
     localStorage.setItem("token", dto.token);
-    localStorage.setItem("userId", dto.id.toString());
+    localStorage.setItem("id", dto.id.toString());
     localStorage.setItem("userEmail", dto.email);
     localStorage.setItem("userName", dto.nome);
     alert("Login bem-sucedido! Redirecionando para a página inicial...");
