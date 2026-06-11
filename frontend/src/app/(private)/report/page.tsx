@@ -20,7 +20,7 @@ export default function Report() {
 
   return (
     <div className="min-h-screen bg-background lg:flex">
-      <SideBar />
+      <SideBar variant="monitoring" />
 
       <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:px-8 xl:px-10">
         <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-7">
