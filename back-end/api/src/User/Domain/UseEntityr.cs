@@ -21,10 +21,10 @@ namespace Domain.User
             if (!new EmailAddressAttribute().IsValid(email))
                 throw new ArgumentException("O email fornecido é inválido.");
 
-            if (!VerificarSenha(senha))
+            /*if (!VerificarSenha(senha))
                 throw new ArgumentException(
                     "A senha deve conter pelo menos 6 caracteres, incluindo caracteres especiais e números."
-                );
+                );*/
 
             Nome = nome;
             Senha = senha;

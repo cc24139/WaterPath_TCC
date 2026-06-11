@@ -25,6 +25,7 @@ export function RegisterForm() {
       email: form.email,
       senha: form.password,
     });
+    console.log(response)
     if(error){
       alert(error);
       return;
@@ -44,17 +45,21 @@ export function RegisterForm() {
       }
       subtitle="Informações para o Cadastro:"
       fields={[
-        { placeholder: "Informe o seu nome de usuário", name: "username" },
-        { placeholder: "Informe o seu email", type: "email", name: "email" },
+        { placeholder: "Informe o seu nome de usuário", name: "username", onChange: handleChange, value: form.username },
+        { placeholder: "Informe o seu email", type: "email", name: "email", onChange: handleChange, value: form.email },
         {
           placeholder: "Informe a sua senha",
           type: "password",
           name: "password",
+          onChange: handleChange,
+          value: form.password
         },
         {
           placeholder: "Confirme a sua senha",
           type: "password",
           name: "confirmPassword",
+          onChange: handleChange,
+          value: form.confirmPassword
         },
       ]}
       onSecondaryAction={() => console.log("cancelou")}

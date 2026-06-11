@@ -8,7 +8,7 @@ namespace Domain.User
         void Atualizar(UserEntity user);
         void Deletar(int id);
         UserEntity ObterUsuarioPorId(int id);
-        UserEntity ObterUsuarioPorEmail(string email);
+        Task<UserEntity> ObterUsuarioPorEmail(string email);
         List<UserEntity> ObterTodos();
         List<UserEntity> ObterUsuariosPorIds(List<int> ids);
     }

@@ -51,9 +51,9 @@ namespace back_end.src.Infrastructure.Repository
             return context.Usuarios.ToList();
         }
 
-        public UserEntity ObterUsuarioPorEmail(string email)
+        public Task<UserEntity> ObterUsuarioPorEmail(string email)
         {
-            return context.Usuarios.FirstOrDefault(u => u.Email == email);
+            return Task.FromResult(context.Usuarios.FirstOrDefault(u => u.Email == email));
         }
         
 

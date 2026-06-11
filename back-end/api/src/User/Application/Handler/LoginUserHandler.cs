@@ -20,18 +20,19 @@ namespace back_end.src.Application.Handler.User
             this.userRepository = userRepository;
         }
 
-        public Task<UserLoginResponse> Handle(
+        public async Task<UserLoginResponse> Handle(
             QueryLoginUser query,
             CancellationToken cancellationToken
         )
         {
-            var user = userRepository.ObterUsuarioPorEmail(query.email);
+            var user = await userRepository.ObterUsuarioPorEmail(query.email);
             if (user == null || !new HashServices().VerifyHash(query.senha, user.Senha))
             {
                 throw new ArgumentException("Email ou senha inválidos");
             }
             var token = new JWTService().GenerateToken(user.Nome, user.Id, user.Email);
-            return Task.FromResult(new UserLoginResponse { Id = user.Id, email = user.Email, nome = user.Nome, token = token });
+            var response = new UserLoginResponse { Id = user.Id, email = user.Email, nome = user.Nome, token = token };
+            return await Task.FromResult(response);
         }
     }
 }

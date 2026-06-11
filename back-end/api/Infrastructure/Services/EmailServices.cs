@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using Infrastructure.Services;
@@ -24,13 +25,23 @@ namespace back_end.src.Infrastructure.Services
 
         public async Task EnviarCodigoCadastro(string destinatario, string codigo)
         {
+            using var smtp = new SmtpClient("smtp.gmail.com", 587)
+            {
+                Credentials = new NetworkCredential(
+                    Remetente,
+                    Environment.GetEnvironmentVariable("senhaEmail")
+                ),
+                EnableSsl = true,
+            };
+
             using var mail = new MailMessage(
                 from: Remetente,
                 to: destinatario,
                 subject: "Código de Cadastro",
                 body: $"Seu código de cadastro é: {codigo}"
             );
-            await _smtpServer.SendMailAsync(mail);
+
+            await smtp.SendMailAsync(mail);
         }
 
         public async Task EnviarCodigoEsqueciSenha(string destinatario, string codigo)

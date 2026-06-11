@@ -81,7 +81,7 @@ namespace back_end.src.Infrastructure.Repository
         public bool VerificarPendenciaCodigo(string emailUsuario)
         {
             return context.Codigos.Any(c =>
-                c.emailUsuario == emailUsuario && !c.Usado && c.DataExpiracao < DateTime.UtcNow
+                c.emailUsuario == emailUsuario && !c.Usado && c.DataExpiracao > DateTime.UtcNow
             );
         }
     }
