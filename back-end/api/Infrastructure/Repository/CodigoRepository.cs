@@ -14,6 +14,18 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
+        public void AlterarSenha(string email, string novaSenha)
+        {
+            var usuario = context.Usuarios.FirstOrDefault(u => u.Email == email);
+            if (usuario == null)
+            {
+                throw new ArgumentException("Usuário não encontrado");
+            }
+            usuario.Senha = novaSenha;
+            context.Usuarios.Update(usuario);
+            context.SaveChanges();
+        }
+
         public string GerarCodigo(CodigoEntity codigo)
         {
             context.Codigos.Add(codigo);
@@ -69,7 +81,7 @@ namespace back_end.src.Infrastructure.Repository
         public bool VerificarPendenciaCodigo(string emailUsuario)
         {
             return context.Codigos.Any(c =>
-                c.emailUsuario == emailUsuario && !c.Usado && c.DataExpiracao < DateTime.UtcNow
+                c.emailUsuario == emailUsuario && !c.Usado && c.DataExpiracao > DateTime.UtcNow
             );
         }
     }

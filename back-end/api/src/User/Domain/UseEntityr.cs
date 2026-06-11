@@ -7,7 +7,7 @@ namespace Domain.User
     {
         public int Id { get; private set; }
         public string Nome { get; private set; }
-        public string Senha { get; private set; }
+        public string Senha { get;  set; }
         public string Email { get; private set; }
         public List<CorpoHidricoEntity> CorpoHidricos { get; private set; }
 
@@ -21,10 +21,10 @@ namespace Domain.User
             if (!new EmailAddressAttribute().IsValid(email))
                 throw new ArgumentException("O email fornecido é inválido.");
 
-            if (!VerificarSenha(senha))
+            /*if (!VerificarSenha(senha))
                 throw new ArgumentException(
                     "A senha deve conter pelo menos 6 caracteres, incluindo caracteres especiais e números."
-                );
+                );*/
 
             Nome = nome;
             Senha = senha;

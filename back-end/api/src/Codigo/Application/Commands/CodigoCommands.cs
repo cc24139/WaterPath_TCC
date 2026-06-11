@@ -29,3 +29,10 @@ public class CommandValidarCodigo : IRequest<string>
         Codigo = codigo;
     }
 }
+
+public class CommandAlterarSenhaCodigo() : IRequest<string>
+{
+    public string codigo { get; set; }
+    public string email { get; set; }
+    public string senha { get; set; }
+}

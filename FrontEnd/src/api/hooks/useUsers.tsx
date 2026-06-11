@@ -44,6 +44,7 @@ export const useRegister = () => {
     const register = async (dados : UserRegisterDTO) => {
         setLoading(true);
         setError(null);
+        console.log("Dados do registro:", dados);
         const response = await userServices.register(dados);
         console.log("Resposta do registro:", response.status);
         console.log(response);

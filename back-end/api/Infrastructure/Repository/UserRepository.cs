@@ -51,9 +51,9 @@ namespace back_end.src.Infrastructure.Repository
             return context.Usuarios.ToList();
         }
 
-        public UserEntity ObterUsuarioPorEmail(string email)
+        public Task<UserEntity> ObterUsuarioPorEmail(string email)
         {
-            return context.Usuarios.FirstOrDefault(u => u.Email == email);
+            return Task.FromResult(context.Usuarios.FirstOrDefault(u => u.Email == email));
         }
         
 
@@ -65,6 +65,18 @@ namespace back_end.src.Infrastructure.Repository
         public List<UserEntity> ObterUsuariosPorIds(List<int> ids)
         {
             return context.Usuarios.Where(u => ids.Contains(u.Id)).ToList();
+        }
+
+        public void AlterarSenha(string email, string senha)
+        {
+            var userToUpdate = context.Usuarios.FirstOrDefault(u => u.Email == email);
+            if (userToUpdate == null)
+            {
+                throw new ArgumentException("Usuário não encontrado");
+            }
+            userToUpdate.Senha = senha;
+            context.Usuarios.Update(userToUpdate);
+            context.SaveChanges();
         }
     }
 }

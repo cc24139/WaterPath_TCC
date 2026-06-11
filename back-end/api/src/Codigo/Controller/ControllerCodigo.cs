@@ -1,5 +1,6 @@
 using Application.Commands.Codigo;
 using Application.Queries.Codigo;
+using back_end.src.Infrastructure.Services;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -52,6 +53,21 @@ namespace back_end.src.Controllers.Codigo
                 var query = new QueryCodigoPendente(usuarioEmail);
                 var existePendente = await mediator.Send(query);
                 return Ok(new { pendente = existePendente });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPatch("esqueceu-senha")]
+        public async Task<IActionResult> AlterarSenha([FromBody] CommandAlterarSenhaCodigo command)
+        {
+            try
+            {
+                command.senha = new HashServices().ComputeHash(command.senha);
+                var resultado = await mediator.Send(command);
+                return Ok(resultado);
             }
             catch (ArgumentException ex)
             {
