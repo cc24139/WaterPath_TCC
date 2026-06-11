@@ -7,7 +7,7 @@ namespace Domain.User
     {
         public int Id { get; private set; }
         public string Nome { get; private set; }
-        public string Senha { get; private set; }
+        public string Senha { get;  set; }
         public string Email { get; private set; }
         public List<CorpoHidricoEntity> CorpoHidricos { get; private set; }
 

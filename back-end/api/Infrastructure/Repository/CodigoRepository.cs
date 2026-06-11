@@ -14,6 +14,18 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
+        public void AlterarSenha(string email, string novaSenha)
+        {
+            var usuario = context.Usuarios.FirstOrDefault(u => u.Email == email);
+            if (usuario == null)
+            {
+                throw new ArgumentException("Usuário não encontrado");
+            }
+            usuario.Senha = novaSenha;
+            context.Usuarios.Update(usuario);
+            context.SaveChanges();
+        }
+
         public string GerarCodigo(CodigoEntity codigo)
         {
             context.Codigos.Add(codigo);
