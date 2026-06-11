@@ -1,12 +1,6 @@
-import { LoginDTO, LoginResponseDTO, UserRegisterDTO } from "../dtos/userDTO";
+import { LoginDTO, UserRegisterDTO } from "../dtos/userDTO";
 import {userServices} from "../services/userServices";
-import {useState,useEffect} from "react";
-
-interface state{
-    user: LoginResponseDTO | null;
-    loading: boolean;
-    error: string | null;
-}
+import {useState} from "react";
 
 export const useLogin = () => {
     const [loading,setLoading] = useState(false);

@@ -4,9 +4,10 @@ import { useState } from "react";
 import { AuthFormCard } from "./AuthFormCard";
 import { useLogin } from "@/api/hooks/useUsers";
 import { LoginResponseDTO } from "@/api/dtos/userDTO";
+import { saveAuthSession } from "@/features/auth/utils/authSession";
 
 export function LoginForm() {
-  const { login, loading, error } = useLogin();
+  const { login } = useLogin();
   const [form, setForm] = useState({
     email: "",
     senha: "",
@@ -17,20 +18,27 @@ export function LoginForm() {
   };
 
   const handleLogin = async () => {
-    const response = await login(form);
-    if(error){
-      alert(error);
+    try {
+      const response = await login(form);
+
+      if (response instanceof Response) {
+        alert(getLoginErrorMessage(response.status));
+        return;
+      }
+
+      if (!isLoginResponse(response)) {
+        alert("Falha no login. Tente novamente.");
+        return;
+      }
+
+      saveAuthSession(response);
+      alert("Login bem-sucedido! Redirecionando para a página inicial...");
+      window.location.href = "/";
+    } catch {
+      alert("Não foi possível conectar ao servidor. Tente novamente.");
       return;
     }
-    console.log("Resposta do login no componente:", response);
-    const dto = response as unknown as LoginResponseDTO;
-    localStorage.setItem("token", dto.token);
-    localStorage.setItem("id", dto.id.toString());
-    localStorage.setItem("userEmail", dto.email);
-    localStorage.setItem("userName", dto.nome);
-    alert("Login bem-sucedido! Redirecionando para a página inicial...");
-    window.location.href = "/home";
-    }
+  };
 
   return (
     <AuthFormCard
@@ -72,4 +80,27 @@ export function LoginForm() {
     />
   );
 
+}
+
+function isLoginResponse(response: unknown): response is LoginResponseDTO {
+  if (!response || typeof response !== "object") {
+    return false;
+  }
+
+  const data = response as Partial<LoginResponseDTO>;
+
+  return (
+    typeof data.id === "number" &&
+    typeof data.token === "string" &&
+    typeof data.email === "string" &&
+    typeof data.nome === "string"
+  );
+}
+
+function getLoginErrorMessage(status: number) {
+  if (status === 401) {
+    return "Email não confirmado. Por favor, verifique seu email para confirmar sua conta.";
+  }
+
+  return "Falha no login. Verifique suas credenciais e tente novamente.";
 }

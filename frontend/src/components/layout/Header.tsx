@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,6 +8,7 @@ import { LuBell, LuChevronDown } from "react-icons/lu";
 import { MdClose, MdMenu } from "react-icons/md";
 
 import { Logo } from "@/components/ui/Logo";
+import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 
 export interface HeaderUser {
     name: string;
@@ -33,11 +34,6 @@ const headerLinks: HeaderLink[] = [
     { label: "Metodologias", href: "#" },
 ];
 
-const fallbackUser: HeaderUser = {
-    name: "Devlin",
-    email: "devlin@email.com",
-};
-
 const primaryActionClass =
     "inline-flex min-h-10 items-center justify-center rounded-lg bg-contrast px-5 font-heading text-[13px] font-bold text-white shadow-default transition-colors hover:bg-contrast/90 md:text-[14px]";
 
@@ -48,7 +44,7 @@ export function Header({
     hasNotifications = true,
 }: HeaderProps) {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [storedUser, setStoredUser] = useState<HeaderUser | null>(null);
+    const authSession = useAuthSession();
     const pathname = usePathname();
 
     const background = variant === "dark" ? "bg-text-primary" : "bg-background";
@@ -59,33 +55,8 @@ export function Header({
     const hoverText = variant === "dark" ? "hover:text-secondary" : "hover:text-primary";
     const separator = variant === "dark" ? "bg-background/20" : "bg-placeholder";
     const notificationDotBorder = variant === "dark" ? "border-text-primary" : "border-background";
-    const isLoggedIn = isAuthenticated ?? Boolean(user || storedUser);
-    const currentUser = user ?? storedUser ?? (isLoggedIn ? fallbackUser : null);
-
-    useEffect(() => {
-        const timeoutId = window.setTimeout(() => {
-            if (user || isAuthenticated === false) {
-                setStoredUser(null);
-                return;
-            }
-
-            const token = localStorage.getItem("token");
-            const storedName = localStorage.getItem("userName");
-            const storedEmail = localStorage.getItem("userEmail");
-
-            if (!token && !storedName && !storedEmail) {
-                setStoredUser(null);
-                return;
-            }
-
-            setStoredUser({
-                name: storedName || fallbackUser.name,
-                email: storedEmail || fallbackUser.email,
-            });
-        }, 0);
-
-        return () => window.clearTimeout(timeoutId);
-    }, [isAuthenticated, user]);
+    const currentUser = user ?? authSession.user;
+    const isLoggedIn = isAuthenticated === false ? false : Boolean(currentUser);
 
     function closeDrawer() {
         setIsDrawerOpen(false);
@@ -263,13 +234,13 @@ function PublicHeaderActions() {
 function PublicDrawerActions({ onNavigate }: { onNavigate: () => void }) {
     return (
         <section className="mt-8 flex flex-col gap-3 border-t border-placeholder pt-5">
-            <a
-                href="#"
+            <Link
+                href="/register"
                 onClick={onNavigate}
                 className="font-heading text-[15px] font-semibold text-contrast"
             >
                 Criar Conta
-            </a>
+            </Link>
 
             <Link href="/login" onClick={onNavigate} className={primaryActionClass}>
                 Comece agora

@@ -1,5 +1,7 @@
+import { getAuthSession } from "@/features/auth/utils/authSession";
+
 export const getAuthHeaders = (includeJsonContentType = false): HeadersInit => {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token = getAuthSession()?.token ?? null;
 
   const headers: Record<string, string> = {};
 

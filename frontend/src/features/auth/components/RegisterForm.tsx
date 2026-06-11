@@ -5,7 +5,7 @@ import { AuthFormCard } from "./AuthFormCard";
 import { useState } from "react";
 
 export function RegisterForm() {
-  const { register, loading, error } = useRegister();
+  const { register, error } = useRegister();
   const [form, setForm] = useState({
     username: "",
     email: "",
