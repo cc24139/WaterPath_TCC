@@ -7,6 +7,7 @@ export interface CorpoHidricoCadastroDTO {
     localizacao: string;
     tamanho: string;
     ehPrivado: boolean;
+    users: number[];
 }
 
 
