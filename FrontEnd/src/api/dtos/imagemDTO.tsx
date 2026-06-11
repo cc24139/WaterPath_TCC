@@ -1,3 +1,4 @@
+
 export interface ImagemRelationDTO {
   id: number;
 }
@@ -6,6 +7,7 @@ export interface ImagemCadastroDTO {
   idCorpoHidrico?: number;
   idColeta?: number;
   dateTime: Date;
+  Imagem : File
   
 }
 

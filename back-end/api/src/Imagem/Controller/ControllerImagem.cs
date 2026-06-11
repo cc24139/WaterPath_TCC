@@ -23,7 +23,7 @@ namespace back_end.src.Controllers.Imagem
         }
 
         [HttpPost]
-        public async Task<IActionResult> Cadastrar([FromBody] CadastrarImagemDTO imagem)
+        public async Task<IActionResult> Cadastrar([FromForm] CadastrarImagemDTO imagem)
         {
             try
             {
