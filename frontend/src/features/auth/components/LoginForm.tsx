@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AuthFormCard } from "./AuthFormCard";
 import { useLogin } from "@/api/hooks/useUsers";
 import { LoginResponseDTO } from "@/api/dtos/userDTO";
@@ -8,6 +9,7 @@ import { saveAuthSession } from "@/features/auth/utils/authSession";
 
 export function LoginForm() {
   const { login } = useLogin();
+  const router = useRouter();
   const [form, setForm] = useState({
     email: "",
     senha: "",
@@ -33,11 +35,15 @@ export function LoginForm() {
 
       saveAuthSession(response);
       alert("Login bem-sucedido! Redirecionando para a página inicial...");
-      window.location.href = "/";
+      router.replace("/");
     } catch {
       alert("Não foi possível conectar ao servidor. Tente novamente.");
       return;
     }
+  };
+
+  const handleCancel = () => {
+    router.push("/");
   };
 
   return (
@@ -74,7 +80,7 @@ export function LoginForm() {
           </a>
         </>
       }
-      onSecondaryAction={() => console.log("cancelou")}
+      onSecondaryAction={handleCancel}
       onPrimaryAction={handleLogin}
       primaryActionText="Entrar"
     />

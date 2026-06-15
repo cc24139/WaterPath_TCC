@@ -1,4 +1,5 @@
 import { Logo } from "@/components/ui/Logo";
+import Link from "next/link";
 
 const footerLinks = [
   { label: "Sobre nós", href: "#" },
@@ -21,7 +22,11 @@ export function Footer() {
           <ul className="flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-text-secondary">
             {footerLinks.map((link) => (
               <li key={link.href}>
-                <a href={link.href}>{link.label}</a>
+                {link.href.startsWith("/") ? (
+                  <Link href={link.href}>{link.label}</Link>
+                ) : (
+                  <a href={link.href}>{link.label}</a>
+                )}
               </li>
             ))}
           </ul>

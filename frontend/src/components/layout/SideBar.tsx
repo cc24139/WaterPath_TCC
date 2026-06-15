@@ -98,7 +98,8 @@ export const analysisRegistrationSideBarSections: SideBarSection[] = [
       },
       {
         label: "Nova análise",
-        href: "/analysis",
+        href: "/add-analysis",
+        activePaths: ["/add-analysis", "/analysis"],
         icon: LuSquarePlus,
       },
       {

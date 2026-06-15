@@ -188,14 +188,25 @@ function HeaderLinkList({
 
                 return (
                     <li key={link.label}>
-                        <a
-                            href={link.href}
-                            onClick={onNavigate}
-                            aria-current={isActive ? "page" : undefined}
-                            className={`${baseLinkClassName} transition-colors hover:text-secondary ${isActive ? "text-secondary" : inactiveLinkClassName}`}
-                        >
-                            {link.label}
-                        </a>
+                        {link.href.startsWith("/") ? (
+                            <Link
+                                href={link.href}
+                                onClick={onNavigate}
+                                aria-current={isActive ? "page" : undefined}
+                                className={`${baseLinkClassName} transition-colors hover:text-secondary ${isActive ? "text-secondary" : inactiveLinkClassName}`}
+                            >
+                                {link.label}
+                            </Link>
+                        ) : (
+                            <a
+                                href={link.href}
+                                onClick={onNavigate}
+                                aria-current={isActive ? "page" : undefined}
+                                className={`${baseLinkClassName} transition-colors hover:text-secondary ${isActive ? "text-secondary" : inactiveLinkClassName}`}
+                            >
+                                {link.label}
+                            </a>
+                        )}
                     </li>
                 );
             })}
@@ -218,9 +229,9 @@ function isHeaderLinkActive(href: string, pathname: string) {
 function PublicHeaderActions() {
     return (
         <section className="flex shrink-0 justify-self-end flex-row items-center justify-end gap-2">
-            <a href="/register" className="hidden text-[12px] font-semibold text-contrast sm:inline md:text-[14px] lg:text-[16px]">
+            <Link href="/register" className="hidden text-[12px] font-semibold text-contrast sm:inline md:text-[14px] lg:text-[16px]">
                 Criar Conta
-            </a>
+            </Link>
             <Link
                 href="/login"
                 className="rounded-lg bg-contrast px-3 py-1.5 text-[11px] font-semibold text-white shadow-default transition-colors hover:bg-contrast/90 sm:px-4 sm:text-[12px] lg:text-[16px]"
@@ -298,9 +309,9 @@ function AuthenticatedHeaderActions({
 
             <span className={`hidden h-9 w-px xl:block ${separatorClassName}`} />
 
-            <a href="/analysis" className={`${primaryActionClass} hidden xl:inline-flex`}>
+            <Link href="/analysis" className={`${primaryActionClass} hidden xl:inline-flex`}>
                 Nova análise
-            </a>
+            </Link>
         </section>
     );
 }
@@ -347,13 +358,13 @@ function AuthenticatedDrawerActions({
                     dotBorderClassName={notificationDotBorderClassName}
                 />
 
-                <a
+                <Link
                     href="/analysis"
                     onClick={onNavigate}
                     className={`${primaryActionClass} flex-1`}
                 >
                     Nova análise
-                </a>
+                </Link>
             </div>
         </section>
     );

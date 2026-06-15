@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { LuArrowRight, LuCircleAlert } from "react-icons/lu";
 
 import {
@@ -45,13 +46,23 @@ export function RiverInsightListCard({
       </CardContent>
 
       <CardFooter className="mt-5 flex justify-end">
-        <a
-          href={actionHref}
-          className="inline-flex items-center gap-1 font-heading text-[13px] font-medium text-primary transition-colors hover:text-secondary"
-        >
-          {actionLabel}
-          <LuArrowRight className="h-3.5 w-3.5" />
-        </a>
+        {actionHref.startsWith("/") ? (
+          <Link
+            href={actionHref}
+            className="inline-flex items-center gap-1 font-heading text-[13px] font-medium text-primary transition-colors hover:text-secondary"
+          >
+            {actionLabel}
+            <LuArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        ) : (
+          <a
+            href={actionHref}
+            className="inline-flex items-center gap-1 font-heading text-[13px] font-medium text-primary transition-colors hover:text-secondary"
+          >
+            {actionLabel}
+            <LuArrowRight className="h-3.5 w-3.5" />
+          </a>
+        )}
       </CardFooter>
     </Card>
   );

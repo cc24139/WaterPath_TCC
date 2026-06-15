@@ -3,9 +3,11 @@
 import { useRegister } from "@/api/hooks/useUsers";
 import { AuthFormCard } from "./AuthFormCard";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function RegisterForm() {
   const { register, error } = useRegister();
+  const router = useRouter();
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -34,6 +36,10 @@ export function RegisterForm() {
       //Redirecionar para a página de confirmação de email
   };
     
+  const handleCancel = () => {
+    router.push("/");
+  };
+
   return (
     <AuthFormCard
       title={
@@ -62,7 +68,7 @@ export function RegisterForm() {
           value: form.confirmPassword
         },
       ]}
-      onSecondaryAction={() => console.log("cancelou")}
+      onSecondaryAction={handleCancel}
       onPrimaryAction={handleRegister}
       primaryActionText="Cadastrar"
     />
