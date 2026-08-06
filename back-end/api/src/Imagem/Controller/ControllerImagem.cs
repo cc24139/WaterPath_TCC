@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using Application.Commands.Imagem;
 using Application.Queries.Coleta;
 using Application.Queries.CorpoHidrico;
@@ -7,6 +8,7 @@ using back_end.src.Domain.Coleta;
 using back_end.src.Domain.Imagem;
 using Domain.User;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace back_end.src.Controllers.Imagem
@@ -22,6 +24,7 @@ namespace back_end.src.Controllers.Imagem
             this.mediator = mediator;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Cadastrar([FromForm] CadastrarImagemDTO imagem)
         {
@@ -32,7 +35,8 @@ namespace back_end.src.Controllers.Imagem
                 if (corpoHidrico == null)
                     return NotFound("Corpo Hídrico não encontrado");
                 ColetaEntity? coleta = null;
-                if (imagem.idColeta.HasValue)                {
+                if (imagem.idColeta.HasValue)
+                {
                     coleta = await mediator.Send(new QueryObterColetaPorId { Id = imagem.idColeta.Value });
                     if (coleta == null)
                         return NotFound("Coleta não encontrada");
@@ -73,6 +77,9 @@ namespace back_end.src.Controllers.Imagem
             }
         }
 
+
+
+        
         [HttpGet("{id}")]
         public async Task<IActionResult> ObterPorId(int id)
         {
@@ -81,7 +88,10 @@ namespace back_end.src.Controllers.Imagem
                 var imagem = await mediator.Send(new QueryObterImagemPorId { Id = id });
                 if (imagem == null)
                     return NotFound("Imagem não encontrada");
-                return Ok(imagem);
+                var streamFile = new FileStream(imagem.Url, FileMode.Open);
+                string contentType = "Image/" + Path.GetExtension(imagem.Url);
+                var nameFile = Path.GetFileName(imagem.Url);
+                return File(streamFile, contentType, nameFile);
             }
             catch (ArgumentException ex)
             {
