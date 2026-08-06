@@ -6,6 +6,4 @@ public interface IVision
     void AtualizarImagem();
     void Train();
     
-
-
 }
