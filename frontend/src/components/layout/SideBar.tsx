@@ -93,7 +93,7 @@ export const analysisRegistrationSideBarSections: SideBarSection[] = [
     items: [
       {
         label: "Adicionar corpo hídrico",
-        href: "/insert",
+        href: "/add-water-bodie",
         icon: LuDroplet,
       },
       {
@@ -104,7 +104,7 @@ export const analysisRegistrationSideBarSections: SideBarSection[] = [
       },
       {
         label: "Minhas análises",
-        href: "/water-bodies",
+        href: "/my-analyses",
         icon: LuFolder,
       },
       {
