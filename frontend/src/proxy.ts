@@ -13,6 +13,7 @@ const publicRoutes: PublicRoute[] = [
   { path: "/about-us", whenAuthenticated: "next" },
   { path: "/methodology", whenAuthenticated: "next" },
   { path: "/add-analysis", whenAuthenticated: "next" }, // Só pra fazer a tela, depois excluir
+  { path: "/add-water-bodie", whenAuthenticated: "next" },
   { path: "/water-bodies", whenAuthenticated: "next", match: "prefix" },
 ];
 

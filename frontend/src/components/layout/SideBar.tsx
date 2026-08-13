@@ -93,7 +93,7 @@ export const analysisRegistrationSideBarSections: SideBarSection[] = [
     items: [
       {
         label: "Adicionar corpo hídrico",
-        href: "/insert",
+        href: "/add-water-bodie",
         icon: LuDroplet,
       },
       {
