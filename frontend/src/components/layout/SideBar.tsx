@@ -104,7 +104,7 @@ export const analysisRegistrationSideBarSections: SideBarSection[] = [
       },
       {
         label: "Minhas análises",
-        href: "/water-bodies",
+        href: "/my-analyses",
         icon: LuFolder,
       },
       {

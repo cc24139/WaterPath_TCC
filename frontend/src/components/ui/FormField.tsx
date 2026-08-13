@@ -75,7 +75,7 @@ export function FormField({
             aria-describedby={describedBy}
             className={`${fieldClassName} h-11 appearance-none pr-10`}
           >
-            <option value="">{placeholder}</option>
+            {placeholder ? <option value="">{placeholder}</option> : null}
             {options.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
