@@ -18,6 +18,8 @@ interface FormFieldProps {
   type?: InputHTMLAttributes<HTMLInputElement>["type"];
   inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"];
   autoComplete?: InputHTMLAttributes<HTMLInputElement>["autoComplete"];
+  min?: InputHTMLAttributes<HTMLInputElement>["min"];
+  step?: InputHTMLAttributes<HTMLInputElement>["step"];
   options?: FormFieldOption[];
   rows?: number;
   maxLength?: number;
@@ -38,6 +40,8 @@ export function FormField({
   type = "text",
   inputMode,
   autoComplete,
+  min,
+  step,
   options,
   rows = 3,
   maxLength,
@@ -116,6 +120,8 @@ export function FormField({
           type={type}
           inputMode={inputMode}
           autoComplete={autoComplete}
+          min={min}
+          step={step}
           placeholder={placeholder}
           required={required}
           aria-invalid={Boolean(error)}

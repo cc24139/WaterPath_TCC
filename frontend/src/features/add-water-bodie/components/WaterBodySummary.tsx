@@ -1,13 +1,11 @@
 import type { IconType } from "react-icons";
 import {
-  LuBuilding2,
-  LuCircleDot,
   LuClipboardList,
   LuDroplet,
-  LuLandmark,
-  LuMap,
+  LuGlobe,
+  LuLockKeyhole,
   LuMapPin,
-  LuTag,
+  LuRuler,
 } from "react-icons/lu";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -15,7 +13,6 @@ import type { AddWaterBodieFormState } from "@/features/add-water-bodie/types/ad
 
 interface WaterBodySummaryProps {
   form: AddWaterBodieFormState;
-  collectionPointCount: number;
 }
 
 interface SummaryItem {
@@ -24,25 +21,19 @@ interface SummaryItem {
   icon: IconType;
 }
 
-export function WaterBodySummary({
-  form,
-  collectionPointCount,
-}: WaterBodySummaryProps) {
+export function WaterBodySummary({ form }: WaterBodySummaryProps) {
   const items: SummaryItem[] = [
     { label: "Nome do corpo hídrico", value: form.name, icon: LuDroplet },
-    { label: "Tipo", value: form.type, icon: LuTag },
-    { label: "Cidade", value: form.city, icon: LuBuilding2 },
-    { label: "Estado", value: form.state, icon: LuMap },
-    { label: "Bacia hidrográfica", value: form.basin, icon: LuLandmark },
     { label: "Localização", value: form.location, icon: LuMapPin },
     {
-      label: "Pontos de coleta",
-      value: collectionPointCount
-        ? `${collectionPointCount} ${
-            collectionPointCount === 1 ? "ponto" : "pontos"
-          }`
-        : "",
-      icon: LuCircleDot,
+      label: "Tamanho",
+      value: formatWaterBodySize(form.size),
+      icon: LuRuler,
+    },
+    {
+      label: "Acesso",
+      value: form.ehPrivado ? "Área privada" : "Público",
+      icon: form.ehPrivado ? LuLockKeyhole : LuGlobe,
     },
   ];
 
@@ -80,4 +71,20 @@ export function WaterBodySummary({
       </CardContent>
     </Card>
   );
+}
+
+function formatWaterBodySize(size: string) {
+  if (!size.trim()) {
+    return "";
+  }
+
+  const parsedSize = Number(size.replace(",", "."));
+
+  if (!Number.isFinite(parsedSize)) {
+    return size;
+  }
+
+  return `${new Intl.NumberFormat("pt-BR", {
+    maximumFractionDigits: 2,
+  }).format(parsedSize)} km`;
 }

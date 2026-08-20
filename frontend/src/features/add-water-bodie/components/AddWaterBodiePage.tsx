@@ -2,29 +2,17 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import {
-  LuCircleCheck,
-  LuFileText,
-  LuMapPin,
-} from "react-icons/lu";
+import { LuCircleCheck, LuFileText, LuRuler } from "react-icons/lu";
 
+import { corpoHidricoServices } from "@/api/services/corpoHidricoServices";
 import { SideBar } from "@/components/layout/SideBar";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { FormSectionCard } from "@/components/ui/FormSectionCard";
-import { ImageUploadCard } from "@/components/ui/ImageUploadCard";
-import { CollectionPointsCard } from "@/features/add-water-bodie/components/CollectionPointsCard";
 import { WaterBodySummary } from "@/features/add-water-bodie/components/WaterBodySummary";
-import {
-  brazilianStateOptions,
-  waterBodyTypeOptions,
-} from "@/features/add-water-bodie/constants/addWaterBodieOptions";
+import { waterBodyAccessOptions } from "@/features/add-water-bodie/constants/addWaterBodieOptions";
 import { useAddWaterBodieForm } from "@/features/add-water-bodie/hooks/useAddWaterBodieForm";
-import type {
-  AddWaterBodieErrors,
-  AddWaterBodieFormValues,
-  CollectionPoint,
-} from "@/features/add-water-bodie/types/addWaterBodie";
+import type { AddWaterBodieErrors } from "@/features/add-water-bodie/types/addWaterBodie";
 
 type SubmissionFeedback =
   | { type: "error" | "success"; message: string }
@@ -38,13 +26,9 @@ export function AddWaterBodiePage() {
   const {
     form,
     errors,
-    imageError,
-    collectionPoints,
     updateField,
+    updatePrivateStatus,
     validateForm,
-    updateImage,
-    removeImage,
-    removeCollectionPoint,
     resetForm,
   } = useAddWaterBodieForm();
 
@@ -74,30 +58,39 @@ export function AddWaterBodiePage() {
 
     setIsSaving(true);
 
-    const savedWaterBody = await simulateWaterBodySave({
-      ...form,
-      collectionPoints,
-    });
+    try {
+      const response = await corpoHidricoServices.create({
+        nome: form.name.trim(),
+        localizacao: form.location.trim(),
+        tamanho: parseWaterBodySize(form.size),
+        ehPrivado: form.ehPrivado,
+      });
 
-    setSubmissionFeedback({
-      type: "success",
-      message: `${savedWaterBody.name} foi cadastrado com sucesso. Abrindo uma nova análise...`,
-    });
+      if (!response.ok) {
+        const responseMessage = await response.text();
+        throw new Error(
+          responseMessage || "Não foi possível cadastrar o corpo hídrico."
+        );
+      }
 
-    await wait(900);
-    router.push("/add-analysis");
-  }
+      setSubmissionFeedback({
+        type: "success",
+        message: `${form.name.trim()} foi cadastrado com sucesso. Abrindo uma nova análise...`,
+      });
 
-  function handleAddPoint() {
-    window.alert(
-      "O formulário de criação de pontos será conectado nesta ação em uma próxima etapa."
-    );
-  }
-
-  function handleEditPoint(point: CollectionPoint) {
-    window.alert(
-      `A edição de “${point.name}” será conectada nesta ação em uma próxima etapa.`
-    );
+      await wait(900);
+      router.push("/add-analysis");
+    } catch (error) {
+      setSubmissionFeedback({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível cadastrar o corpo hídrico. Tente novamente.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -181,101 +174,55 @@ export function AddWaterBodiePage() {
                     error={errors.name}
                   />
                   <FormField
-                    id="water-body-type"
-                    label="Tipo de corpo hídrico"
-                    name="type"
-                    value={form.type}
-                    onChange={(value) => updateField("type", value)}
-                    placeholder="Selecione o tipo"
-                    options={waterBodyTypeOptions}
-                    required
-                    error={errors.type}
-                  />
-                  <FormField
-                    id="water-body-city"
-                    label="Cidade"
-                    name="city"
-                    value={form.city}
-                    onChange={(value) => updateField("city", value)}
-                    placeholder="Ex.: Niterói"
+                    id="water-body-location"
+                    label="Localização"
+                    name="location"
+                    value={form.location}
+                    onChange={(value) => updateField("location", value)}
+                    placeholder="Ex.: Niterói, Rio de Janeiro"
                     autoComplete="address-level2"
                     required
-                    error={errors.city}
-                  />
-                  <FormField
-                    id="water-body-state"
-                    label="Estado"
-                    name="state"
-                    value={form.state}
-                    onChange={(value) => updateField("state", value)}
-                    placeholder="Selecione o estado"
-                    options={brazilianStateOptions}
-                    required
-                    error={errors.state}
+                    error={errors.location}
                   />
                 </div>
               </FormSectionCard>
 
               <FormSectionCard
-                title="Localização e contexto"
-                description="Informe onde o corpo hídrico está localizado e forneça contexto adicional."
-                icon={LuMapPin}
+                title="Dimensão e acesso"
+                description="Informe o tamanho do corpo hídrico e as condições de acesso ao local."
+                icon={LuRuler}
               >
                 <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
                   <FormField
-                    id="water-body-location"
-                    label="Localização ou referência"
-                    name="location"
-                    value={form.location}
-                    onChange={(value) => updateField("location", value)}
-                    placeholder="Ex.: Próximo à Ponte Rio-Niterói, bairro Icaraí"
+                    id="water-body-size"
+                    label="Tamanho do corpo hídrico (km)"
+                    name="size"
+                    value={form.size}
+                    onChange={(value) => updateField("size", value)}
+                    placeholder="Ex.: 120,5"
+                    helper="Informe a extensão aproximada em quilômetros."
+                    type="number"
+                    inputMode="decimal"
+                    min="0.01"
+                    step="any"
+                    required
+                    error={errors.size}
                   />
                   <FormField
-                    id="water-body-basin"
-                    label="Bacia hidrográfica (opcional)"
-                    name="basin"
-                    value={form.basin}
-                    onChange={(value) => updateField("basin", value)}
-                    placeholder="Ex.: Bacia do Rio Paraíba do Sul"
-                  />
-                  <FormField
-                    id="water-body-description"
-                    label="Descrição / observações (opcional)"
-                    name="description"
-                    value={form.description}
-                    onChange={(value) => updateField("description", value)}
-                    placeholder="Forneça informações relevantes sobre o corpo hídrico, como características, uso da água, pontos de interesse ou qualquer observação importante."
-                    isTextarea
-                    rows={4}
-                    maxLength={500}
-                    className="md:col-span-2"
+                    id="water-body-access"
+                    label="Tipo de acesso"
+                    name="ehPrivado"
+                    value={String(form.ehPrivado)}
+                    onChange={(value) => updatePrivateStatus(value === "true")}
+                    options={waterBodyAccessOptions}
+                    helper="Indique se o corpo hídrico está em uma área privada."
                   />
                 </div>
               </FormSectionCard>
-
-              <CollectionPointsCard
-                points={collectionPoints}
-                onAddPoint={handleAddPoint}
-                onEditPoint={handleEditPoint}
-                onRemovePoint={removeCollectionPoint}
-              />
             </div>
 
             <aside className="flex min-w-0 flex-col gap-5 xl:sticky xl:top-6 xl:self-start">
-              <WaterBodySummary
-                form={form}
-                collectionPointCount={collectionPoints.length}
-              />
-              <ImageUploadCard
-                inputId="water-body-image-upload"
-                title="Imagem do corpo hídrico"
-                description="Faça upload de uma imagem para identificar o corpo hídrico."
-                imageName={form.imageName}
-                imagePreviewUrl={form.imagePreviewUrl}
-                onImageChange={updateImage}
-                onRemoveImage={removeImage}
-                error={imageError}
-              />
+              <WaterBodySummary form={form} />
             </aside>
           </section>
         </form>
@@ -288,15 +235,8 @@ function getFirstInvalidField(errors: AddWaterBodieErrors) {
   return (Object.keys(errors) as Array<keyof AddWaterBodieErrors>)[0];
 }
 
-async function simulateWaterBodySave(
-  data: AddWaterBodieFormValues & { collectionPoints: CollectionPoint[] }
-) {
-  await wait(900);
-
-  return {
-    id: `water-body-${Date.now()}`,
-    ...data,
-  };
+function parseWaterBodySize(size: string) {
+  return Number(size.replace(",", "."));
 }
 
 function wait(milliseconds: number) {
