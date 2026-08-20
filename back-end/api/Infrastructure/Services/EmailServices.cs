@@ -20,28 +20,22 @@ namespace back_end.src.Infrastructure.Services
                     Environment.GetEnvironmentVariable("senhaEmail")
                 ),
                 EnableSsl = true,
+                Timeout = 30000
             };
         }
 
         public async Task EnviarCodigoCadastro(string destinatario, string codigo)
         {
-            using var smtp = new SmtpClient("smtp.gmail.com", 587)
+        
+            using var mail = new MailMessage
             {
-                Credentials = new NetworkCredential(
-                    Remetente,
-                    Environment.GetEnvironmentVariable("senhaEmail")
-                ),
-                EnableSsl = true,
+                From = new MailAddress(Remetente),
+                Subject = "Código de Cadastro",
+                Body = $"Seu código de cadastro é: {codigo}",
+                IsBodyHtml = false
             };
-
-            using var mail = new MailMessage(
-                from: Remetente,
-                to: destinatario,
-                subject: "Código de Cadastro",
-                body: $"Seu código de cadastro é: {codigo}"
-            );
-
-            await smtp.SendMailAsync(mail);
+            mail.To.Add(destinatario);
+            await _smtpServer.SendMailAsync(mail);
         }
 
         public async Task EnviarCodigoEsqueciSenha(string destinatario, string codigo)

@@ -272,7 +272,6 @@ C:/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/obj/Debug/net10.0/re
 C:/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/obj/Debug/net10.0/back-end.pdb
 C:/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/obj/Debug/net10.0/back-end.genruntimeconfig.cache
 C:/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/obj/Debug/net10.0/ref/back-end.dll
-/Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/bin/Debug/net10.0/appsettings.Development.json
 /Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/bin/Debug/net10.0/appsettings.json
 /Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/bin/Debug/net10.0/insomnia-controllers-tests.json
 /Users/u24139/Documents/GitHub/WaterPath_TCC/back-end/api/bin/Debug/net10.0/insomnia-waterpath.json

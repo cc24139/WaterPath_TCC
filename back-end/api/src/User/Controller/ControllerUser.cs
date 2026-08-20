@@ -15,10 +15,12 @@ namespace back_end.src.Controllers.User
     public class ControllerUser : ControllerBase
     {
         private readonly IMediator mediator;
+        private readonly EmailServices emailServices;
 
         public ControllerUser(IMediator mediator)
         {
             this.mediator = mediator;
+            emailServices = new EmailServices();
         }
 
         [HttpPost("login")]
@@ -28,10 +30,10 @@ namespace back_end.src.Controllers.User
             {
                 var result = await mediator.Send(query);
                 var existeCodigoPendente = await mediator.Send(new QueryCodigoPendente(result.email));
-                if (existeCodigoPendente)
+                /*if (existeCodigoPendente)
                 {
                     return Unauthorized(new { mensagem = "Código de verificação pendente. Por favor, verifique seu email." });
-                }
+                }*/
                 return Ok(result);
             }
             catch (ArgumentException ex)
@@ -53,9 +55,8 @@ namespace back_end.src.Controllers.User
                 var hash = new HashServices();
                 command.Senha = hash.ComputeHash(command.Senha);
                 var result = await mediator.Send(command);
-                var emailService = new EmailServices();
-                var codResult = await mediator.Send(new CommandGerarCodigo { UsuarioEmail = result.Email });
-                await emailService.EnviarCodigoCadastro(command.Email, codResult.ToString());
+               /* var codResult = await mediator.Send(new CommandGerarCodigo { UsuarioEmail = result.Email });
+                await emailServices.EnviarCodigoCadastro(command.Email, codResult.ToString());*/
                 return Ok(new { id = result.UsuarioId, email = result.Email, mensagem = result.Mensagem });
             }
             catch (ArgumentException ex)
