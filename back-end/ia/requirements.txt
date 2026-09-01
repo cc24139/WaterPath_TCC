@@ -1,0 +1,14 @@
+# Machine Learning & Ensemble
+xgboost
+catboost
+scikit-learn
+joblib
+
+# Processamento de Dados
+pandas
+numpy
+
+# API
+fastapi
+uvicorn
+pydantic
