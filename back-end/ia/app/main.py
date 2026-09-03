@@ -4,6 +4,8 @@ import os
 import numpy as np
 import joblib
 import cv2
+import pandas as pd
+
 app = FastAPI(
     title="API de IA",
     description="API para predição com YOLO",
@@ -15,8 +17,10 @@ servicesPath = os.path.join(os.getcwd(), "services")
 modelComputerVison = None
 
 #Modelo de predição (já treinado no google colab)
-path_modelo = f'{os.getcwd()}/app/services/Predict/model/model.pkl'
+path_modelo = f'{os.getcwd()}/services/Predict/model/best_model.pkl'
 modelPredicao = joblib.load(path_modelo)
+# Dados testes 
+dataTestPATH = f'{os.getcwd()}/services/Predict/data/Data_Lake Onego_V2.xlsx'
 
 
 def carregar_modelo():
@@ -56,3 +60,5 @@ def test():
 
 test()
 #Para rodar: uvicorn main:app --reload
+#Para rodar mac:  python3 -m uvicorn main:app --reload
+#Para rodar linux: python -m uvicorn main:app --reload
