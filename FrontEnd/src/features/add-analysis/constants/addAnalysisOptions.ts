@@ -32,22 +32,10 @@ export const waterBodyOptions: SelectOption[] = [
   { label: "Rio Paraíba do Sul", value: "Rio Paraíba do Sul" },
 ];
 
-export const collectionPointOptions: SelectOption[] = [
-  { label: "Ponto 01 - Margem norte", value: "Ponto 01 - Margem norte" },
-  { label: "Ponto 02 - Ponte central", value: "Ponto 02 - Ponte central" },
-  { label: "Ponto 03 - Área urbana", value: "Ponto 03 - Área urbana" },
-];
-
 export const responsibleOptions: SelectOption[] = [
   { label: "Equipe Water Path", value: "Equipe Water Path" },
   { label: "Ana Souza", value: "Ana Souza" },
   { label: "Carlos Lima", value: "Carlos Lima" },
-];
-
-export const analysisTypeOptions: SelectOption[] = [
-  { label: "IQA de rotina", value: "IQA de rotina" },
-  { label: "Metais pesados", value: "Metais pesados" },
-  { label: "Microbiológica", value: "Microbiológica" },
 ];
 
 export const visualConditionOptions: SelectOption[] = [
