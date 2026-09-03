@@ -1,6 +1,6 @@
 import { routes } from "../routes";
 import { ImagemCadastroDTO } from "../dtos/imagemDTO";
-import { getAuthHeaders } from "./authHeaders";
+import { apiFetch } from "../apiFetch";
 
 export const imagemServices = {
 
@@ -16,37 +16,31 @@ export const imagemServices = {
      formData.append("DataUpload", data.dateTime.toISOString());
      formData.append("imagem", data.Imagem); 
 
-     return fetch(routes.imagem, {
+     return apiFetch(routes.imagem, {
        method: "POST",
-       headers: getAuthHeaders(false), 
        body: formData,
      });
      },
 
   async getById(id: number): Promise<Response> {
-    return fetch(`${routes.imagem}${id}`, {
-      headers: getAuthHeaders(),
-    });
+    return apiFetch(`${routes.imagem}${id}`);
   },
 
   async getAll(): Promise<Response> {
-    return fetch(routes.imagem, {
-      headers: getAuthHeaders(),
-    });
+    return apiFetch(routes.imagem);
   },
 
   async update(id: number, data: ImagemCadastroDTO): Promise<Response> {
-    return fetch(`${routes.imagem}${id}`, {
+    return apiFetch(`${routes.imagem}${id}`, {
       method: "PUT",
-      headers: getAuthHeaders(true),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
 
   async remove(id: number): Promise<Response> {
-    return fetch(`${routes.imagem}${id}`, {
+    return apiFetch(`${routes.imagem}${id}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
     });
   },
 };

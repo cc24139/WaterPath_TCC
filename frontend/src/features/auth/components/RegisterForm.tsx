@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export function RegisterForm() {
-  const { register, error } = useRegister();
+  const { register, loading } = useRegister();
   const router = useRouter();
   const [form, setForm] = useState({
     username: "",
@@ -14,28 +14,37 @@ export function RegisterForm() {
     password: "",
     confirmPassword: "",
   });
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
+
   const handleRegister = async () => {
+    if (!form.username.trim() || !form.email.trim() || !form.password) {
+      alert("Preencha todos os campos obrigatórios.");
+      return;
+    }
+
     if (form.password !== form.confirmPassword) {
       alert("As senhas não coincidem. Por favor, tente novamente.");
       return;
     }
-    const response = await register({
-      nome: form.username,
-      email: form.email,
+
+    const result = await register({
+      nome: form.username.trim(),
+      email: form.email.trim(),
       senha: form.password,
     });
-    console.log(response)
-    if(error){
-      alert(error);
+
+    if (!result.ok) {
+      alert(result.message);
       return;
     }
-      alert("Enviamos um codigo de confirmação para seu email! verique sua caixa de entrada para confirmar seu cadastro.");
-      //Redirecionar para a página de confirmação de email
+
+    alert("Conta criada com sucesso. Agora você já pode entrar.");
+    router.replace("/login");
   };
-    
+
   const handleCancel = () => {
     router.push("/");
   };
@@ -51,26 +60,46 @@ export function RegisterForm() {
       }
       subtitle="Informações para o Cadastro:"
       fields={[
-        { placeholder: "Informe o seu nome de usuário", name: "username", onChange: handleChange, value: form.username },
-        { placeholder: "Informe o seu email", type: "email", name: "email", onChange: handleChange, value: form.email },
+        {
+          placeholder: "Informe o seu nome de usuário",
+          name: "username",
+          autoComplete: "name",
+          required: true,
+          onChange: handleChange,
+          value: form.username,
+        },
+        {
+          placeholder: "Informe o seu email",
+          type: "email",
+          name: "email",
+          autoComplete: "email",
+          required: true,
+          onChange: handleChange,
+          value: form.email,
+        },
         {
           placeholder: "Informe a sua senha",
           type: "password",
           name: "password",
+          autoComplete: "new-password",
+          required: true,
           onChange: handleChange,
-          value: form.password
+          value: form.password,
         },
         {
           placeholder: "Confirme a sua senha",
           type: "password",
           name: "confirmPassword",
+          autoComplete: "new-password",
+          required: true,
           onChange: handleChange,
-          value: form.confirmPassword
+          value: form.confirmPassword,
         },
       ]}
       onSecondaryAction={handleCancel}
       onPrimaryAction={handleRegister}
-      primaryActionText="Cadastrar"
+      primaryActionText={loading ? "Cadastrando..." : "Cadastrar"}
+      isSubmitting={loading}
     />
   );
 }

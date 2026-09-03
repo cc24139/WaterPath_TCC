@@ -38,7 +38,7 @@ namespace back_end.src.Controllers.User
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new{ mensagem = ex.Message });
+                return Unauthorized(new { mensagem = ex.Message });
             }
         }
 
@@ -50,7 +50,7 @@ namespace back_end.src.Controllers.User
                 var existingCode = await mediator.Send(new QueryCodigoPendente(command.Email));
                 if (existingCode)
                 {
-                    return Unauthorized(new { mensagem = "Já existe um código de verificação pendente para este email. Por favor, verifique seu email." });
+                    return Conflict(new { mensagem = "Já existe um código de verificação pendente para este email. Por favor, verifique seu email." });
                 }
                 var hash = new HashServices();
                 command.Senha = hash.ComputeHash(command.Senha);

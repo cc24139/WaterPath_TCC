@@ -1,43 +1,38 @@
 import { routes } from "../routes";
 import { QualidadeFuturaCadastroDTO } from "../dtos/qualidadeFuturaDTO";
-import { getAuthHeaders } from "./authHeaders";
+import { apiFetch } from "../apiFetch";
 
 export const qualidadeFuturaServices = {
   async create(data: QualidadeFuturaCadastroDTO): Promise<Response> {
-    return fetch(routes.qualidadeFutura, {
+    return apiFetch(routes.qualidadeFutura, {
       method: "POST",
-      headers: getAuthHeaders(true),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
 
   async getById(id: number): Promise<Response> {
-    return fetch(`${routes.qualidadeFutura}${id}`, {
-      headers: getAuthHeaders(),
-    });
+    return apiFetch(`${routes.qualidadeFutura}${id}`);
   },
 
   async getAll(): Promise<Response> {
-    return fetch(routes.qualidadeFutura, {
-      headers: getAuthHeaders(),
-    });
+    return apiFetch(routes.qualidadeFutura);
   },
 
   async update(
     id: number,
     data: QualidadeFuturaCadastroDTO,
   ): Promise<Response> {
-    return fetch(`${routes.qualidadeFutura}${id}`, {
+    return apiFetch(`${routes.qualidadeFutura}${id}`, {
       method: "PUT",
-      headers: getAuthHeaders(true),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
 
   async remove(id: number): Promise<Response> {
-    return fetch(`${routes.qualidadeFutura}${id}`, {
+    return apiFetch(`${routes.qualidadeFutura}${id}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
     });
   },
 };
