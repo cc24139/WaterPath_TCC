@@ -1,52 +1,45 @@
 import { routes } from "../routes";
 import { CorpoHidricoCadastroDTO } from "../dtos/corpoHidricoDTO";
-import { getAuthHeaders } from "./authHeaders";
+import { apiFetch } from "../apiFetch";
 
 export const corpoHidricoServices = {
   async create(data: CorpoHidricoCadastroDTO): Promise<Response> {
-    return fetch(routes.corpoHidrico, {
+    return apiFetch(routes.corpoHidrico, {
       method: "POST",
-      headers: getAuthHeaders(true),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
 
   async getById(id: number): Promise<Response> {
-    return fetch(`${routes.corpoHidrico}${id}`, {
-      headers: getAuthHeaders(),
-    });
+    return apiFetch(`${routes.corpoHidrico}${id}`);
   },
 
   async getAll(): Promise<Response> {
-    return fetch(routes.corpoHidrico, {
-      headers: getAuthHeaders(),
-    });
+    return apiFetch(routes.corpoHidrico);
   },
 
   async getByUsuario(): Promise<Response> {
-    return fetch(`${routes.corpoHidrico}usuario`, {
-      headers: getAuthHeaders(),
-    });
+    return apiFetch(`${routes.corpoHidrico}usuario`);
   },
 
   async getByUsuarioNome(nome: string): Promise<Response> {
-    return fetch(`${routes.corpoHidrico}usuario/${nome}`, {
-      headers: getAuthHeaders(),
-    });
+    return apiFetch(
+      `${routes.corpoHidrico}usuario/${encodeURIComponent(nome)}`
+    );
   },
 
   async update(id: number, data: CorpoHidricoCadastroDTO): Promise<Response> {
-    return fetch(`${routes.corpoHidrico}${id}`, {
+    return apiFetch(`${routes.corpoHidrico}${id}`, {
       method: "PUT",
-      headers: getAuthHeaders(true),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
 
   async remove(id: number): Promise<Response> {
-    return fetch(`${routes.corpoHidrico}${id}`, {
+    return apiFetch(`${routes.corpoHidrico}${id}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
     });
   },
 };

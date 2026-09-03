@@ -1,12 +1,12 @@
 import { routes } from "../routes";
 import { VisionPredicaoDTO } from "../dtos/visionDTO";
-import { getAuthHeaders } from "./authHeaders";
+import { apiFetch } from "../apiFetch";
 
 export const visionServices = {
   async predizerImagem(data: VisionPredicaoDTO): Promise<Response> {
-    return fetch(routes.vision, {
+    return apiFetch(routes.vision, {
       method: "POST",
-      headers: getAuthHeaders(true),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data.pathImagem),
     });
   },

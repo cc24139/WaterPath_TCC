@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode } from "react";
+import type { FormEvent, InputHTMLAttributes, ReactNode } from "react";
 
 import { Button } from "./Button";
 import { InputField } from "./InputField";
@@ -16,6 +16,7 @@ interface AuthFormCardProps {
   recoveryLink?: ReactNode;
   onPrimaryAction?: () => void;
   onSecondaryAction?: () => void;
+  isSubmitting?: boolean;
 }
 
 export function AuthFormCard({
@@ -27,9 +28,22 @@ export function AuthFormCard({
   recoveryLink,
   onPrimaryAction,
   onSecondaryAction,
+  isSubmitting = false,
 }: AuthFormCardProps) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!isSubmitting) {
+      onPrimaryAction?.();
+    }
+  }
+
   return (
-    <div className="flex w-full max-w-[560px] flex-col items-center justify-center rounded-lg bg-white px-5 py-7 shadow-md sm:px-8 md:px-7 md:py-8 lg:px-10">
+    <form
+      onSubmit={handleSubmit}
+      aria-busy={isSubmitting}
+      className="flex w-full max-w-[560px] flex-col items-center justify-center rounded-lg bg-white px-5 py-7 shadow-md sm:px-8 md:px-7 md:py-8 lg:px-10"
+    >
       <h1 className="px-2 pb-3 text-[22px] font-semibold leading-tight text-text-primary sm:text-2xl md:text-[23px] lg:text-2xl">
         {title}
       </h1>
@@ -52,16 +66,19 @@ export function AuthFormCard({
 
       <div className="mt-5 flex w-full flex-wrap items-center justify-center gap-3 sm:gap-4">
         <Button
+          type="button"
           onClick={onSecondaryAction}
           text={secondaryActionText}
           variant="secondary"
+          disabled={isSubmitting}
         />
         <Button
-          onClick={onPrimaryAction}
+          type="submit"
           text={primaryActionText}
           variant="primary"
+          disabled={isSubmitting}
         />
       </div>
-    </div>
+    </form>
   );
 }

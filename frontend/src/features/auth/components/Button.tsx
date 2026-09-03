@@ -13,7 +13,7 @@ export function Button({ text, variant, className = "", type = "button", ...prop
     return (
         <button
             type={type}
-            className={`${size} font-semibold ${fontsize} rounded-lg shadow-sm transition-colors
+            className={`${size} font-semibold ${fontsize} rounded-lg shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60
              ${variant === "primary"
                 ? "bg-contrast text-[#FFFFFF] hover:bg-[#e9784d]"
                 : "bg-transparent text-contrast border border-placeholder hover:bg-placeholder/20"

@@ -309,7 +309,7 @@ function AuthenticatedHeaderActions({
 
             <span className={`hidden h-9 w-px xl:block ${separatorClassName}`} />
 
-            <Link href="/analysis" className={`${primaryActionClass} hidden xl:inline-flex`}>
+            <Link href="/add-analysis" className={`${primaryActionClass} hidden xl:inline-flex`}>
                 Nova análise
             </Link>
         </section>
@@ -359,7 +359,7 @@ function AuthenticatedDrawerActions({
                 />
 
                 <Link
-                    href="/analysis"
+                    href="/add-analysis"
                     onClick={onNavigate}
                     className={`${primaryActionClass} flex-1`}
                 >

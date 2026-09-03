@@ -1,40 +1,35 @@
 import { routes } from "../routes";
 import { ColetaCadastroDTO } from "../dtos/coletaDTO";
-import { getAuthHeaders } from "./authHeaders";
+import { apiFetch } from "../apiFetch";
 
 export const coletaServices = {
   async create(data: ColetaCadastroDTO): Promise<Response> {
-    return fetch(routes.coleta, {
+    return apiFetch(routes.coleta, {
       method: "POST",
-      headers: getAuthHeaders(true),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
 
   async getById(id: number): Promise<Response> {
-    return fetch(`${routes.coleta}${id}`, {
-      headers: getAuthHeaders(),
-    });
+    return apiFetch(`${routes.coleta}${id}`);
   },
 
   async getAll(): Promise<Response> {
-    return fetch(routes.coleta, {
-      headers: getAuthHeaders(),
-    });
+    return apiFetch(routes.coleta);
   },
 
   async update(id: number, data: ColetaCadastroDTO): Promise<Response> {
-    return fetch(`${routes.coleta}${id}`, {
+    return apiFetch(`${routes.coleta}${id}`, {
       method: "PUT",
-      headers: getAuthHeaders(true),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
 
   async remove(id: number): Promise<Response> {
-    return fetch(`${routes.coleta}${id}`, {
+    return apiFetch(`${routes.coleta}${id}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
     });
   },
 };

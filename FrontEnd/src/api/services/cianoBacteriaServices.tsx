@@ -1,40 +1,35 @@
 import { routes } from "../routes";
 import { CianoBacteriaCadastroDTO } from "../dtos/cianoBacteriaDTO";
-import { getAuthHeaders } from "./authHeaders";
+import { apiFetch } from "../apiFetch";
 
 export const cianoBacteriaServices = {
   async create(data: CianoBacteriaCadastroDTO): Promise<Response> {
-    return fetch(routes.cianoBacteria, {
+    return apiFetch(routes.cianoBacteria, {
       method: "POST",
-      headers: getAuthHeaders(true),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
 
   async getById(id: number): Promise<Response> {
-    return fetch(`${routes.cianoBacteria}${id}`, {
-      headers: getAuthHeaders(),
-    });
+    return apiFetch(`${routes.cianoBacteria}${id}`);
   },
 
   async getAll(): Promise<Response> {
-    return fetch(routes.cianoBacteria, {
-      headers: getAuthHeaders(),
-    });
+    return apiFetch(routes.cianoBacteria);
   },
 
   async update(id: number, data: CianoBacteriaCadastroDTO): Promise<Response> {
-    return fetch(`${routes.cianoBacteria}${id}`, {
+    return apiFetch(`${routes.cianoBacteria}${id}`, {
       method: "PUT",
-      headers: getAuthHeaders(true),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   },
 
   async remove(id: number): Promise<Response> {
-    return fetch(`${routes.cianoBacteria}${id}`, {
+    return apiFetch(`${routes.cianoBacteria}${id}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
     });
   },
 };

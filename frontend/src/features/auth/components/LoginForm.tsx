@@ -8,7 +8,7 @@ import { LoginResponseDTO } from "@/api/dtos/userDTO";
 import { saveAuthSession } from "@/features/auth/utils/authSession";
 
 export function LoginForm() {
-  const { login } = useLogin();
+  const { login, loading } = useLogin();
   const router = useRouter();
   const [form, setForm] = useState({
     email: "",
@@ -21,7 +21,10 @@ export function LoginForm() {
 
   const handleLogin = async () => {
     try {
-      const response = await login(form);
+      const response = await login({
+        email: form.email.trim(),
+        senha: form.senha,
+      });
 
       if (response instanceof Response) {
         alert(getLoginErrorMessage(response.status));
@@ -35,7 +38,7 @@ export function LoginForm() {
 
       saveAuthSession(response);
       alert("Login bem-sucedido! Redirecionando para a página inicial...");
-      router.replace("/");
+      router.replace(getSafeRedirectPath());
     } catch {
       alert("Não foi possível conectar ao servidor. Tente novamente.");
       return;
@@ -61,6 +64,8 @@ export function LoginForm() {
           placeholder: "Insira seu email",
           type: "email",
           name: "email",
+          autoComplete: "email",
+          required: true,
           onChange: handleChange,
           value: form.email,
         },
@@ -68,6 +73,8 @@ export function LoginForm() {
           placeholder: "Insira sua senha",
           type: "password",
           name: "senha",
+          autoComplete: "current-password",
+          required: true,
           onChange: handleChange,
           value: form.senha,
         },
@@ -82,7 +89,8 @@ export function LoginForm() {
       }
       onSecondaryAction={handleCancel}
       onPrimaryAction={handleLogin}
-      primaryActionText="Entrar"
+      primaryActionText={loading ? "Entrando..." : "Entrar"}
+      isSubmitting={loading}
     />
   );
 
@@ -104,9 +112,30 @@ function isLoginResponse(response: unknown): response is LoginResponseDTO {
 }
 
 function getLoginErrorMessage(status: number) {
-  if (status === 401) {
+  if (status === 403) {
     return "Email não confirmado. Por favor, verifique seu email para confirmar sua conta.";
   }
 
+  if (status === 401) {
+    return "Email ou senha inválidos.";
+  }
+
   return "Falha no login. Verifique suas credenciais e tente novamente.";
+}
+
+function getSafeRedirectPath() {
+  if (typeof window === "undefined") {
+    return "/";
+  }
+
+  const requestedPath = new URLSearchParams(window.location.search).get("next");
+
+  if (
+    requestedPath?.startsWith("/") &&
+    !requestedPath.startsWith("//")
+  ) {
+    return requestedPath;
+  }
+
+  return "/";
 }
