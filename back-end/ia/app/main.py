@@ -4,6 +4,7 @@ import os
 import numpy as np
 import joblib
 import cv2
+import pandas as pd
 
 app = FastAPI(
     title="API de IA",
@@ -18,6 +19,8 @@ modelComputerVison = None
 #Modelo de predição (já treinado no google colab)
 path_modelo = f'{os.getcwd()}/services/Predict/model/best_model.pkl'
 modelPredicao = joblib.load(path_modelo)
+# Dados testes 
+dataTestPATH = f'{os.getcwd()}/services/Predict/data/Data_Lake Onego_V2.xlsx'
 
 
 def carregar_modelo():
