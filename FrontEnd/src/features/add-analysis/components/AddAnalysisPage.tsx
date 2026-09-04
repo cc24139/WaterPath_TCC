@@ -10,8 +10,6 @@ import { AddAnalysisFormSection } from "@/features/add-analysis/components/AddAn
 import { AddAnalysisSummary } from "@/features/add-analysis/components/AddAnalysisSummary";
 import { AnalysisImageCard } from "@/features/add-analysis/components/AnalysisImageCard";
 import {
-  analysisTypeOptions,
-  collectionPointOptions,
   indicatorFields,
   responsibleOptions,
   visualConditionOptions,
@@ -118,29 +116,12 @@ export function AddAnalysisPage() {
                     type="date"
                   />
                   <AddAnalysisField
-                    label="Ponto de coleta"
-                    name="collectionPoint"
-                    value={form.collectionPoint}
-                    onChange={updateField}
-                    placeholder="Selecione o ponto de coleta"
-                    options={collectionPointOptions}
-                  />
-                  <AddAnalysisField
                     label="Responsável"
                     name="responsible"
                     value={form.responsible}
                     onChange={updateField}
                     placeholder="Selecione o responsável"
                     options={responsibleOptions}
-                    className="xl:col-span-1"
-                  />
-                  <AddAnalysisField
-                    label="Tipo de análise"
-                    name="analysisType"
-                    value={form.analysisType}
-                    onChange={updateField}
-                    placeholder="Selecione o tipo de análise"
-                    options={analysisTypeOptions}
                     className="xl:col-span-1"
                   />
                 </div>

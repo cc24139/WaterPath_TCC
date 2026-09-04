@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { LuCircleCheck, LuFileText, LuRuler } from "react-icons/lu";
 
-import { corpoHidricoServices } from "@/api/services/corpoHidricoServices";
+import { useCadastro } from "@/api/hooks/useCorpoHidrico";
 import { SideBar } from "@/components/layout/SideBar";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
@@ -20,9 +20,9 @@ type SubmissionFeedback =
 
 export function AddWaterBodiePage() {
   const router = useRouter();
-  const [isSaving, setIsSaving] = useState(false);
   const [submissionFeedback, setSubmissionFeedback] =
     useState<SubmissionFeedback>(null);
+  const { cadastrarCorpoHidrico, isLoading } = useCadastro();
   const {
     form,
     errors,
@@ -56,41 +56,28 @@ export function AddWaterBodiePage() {
       return;
     }
 
-    setIsSaving(true);
+    const result = await cadastrarCorpoHidrico({
+      nome: form.name.trim(),
+      localizacao: form.location.trim(),
+      tamanho: parseWaterBodySize(form.size),
+      ehPrivado: form.ehPrivado,
+    });
 
-    try {
-      const response = await corpoHidricoServices.create({
-        nome: form.name.trim(),
-        localizacao: form.location.trim(),
-        tamanho: parseWaterBodySize(form.size),
-        ehPrivado: form.ehPrivado,
-      });
-
-      if (!response.ok) {
-        const responseMessage = await response.text();
-        throw new Error(
-          responseMessage || "Não foi possível cadastrar o corpo hídrico."
-        );
-      }
-
-      setSubmissionFeedback({
-        type: "success",
-        message: `${form.name.trim()} foi cadastrado com sucesso. Abrindo uma nova análise...`,
-      });
-
-      await wait(900);
-      router.push("/add-analysis");
-    } catch (error) {
+    if (!result.ok) {
       setSubmissionFeedback({
         type: "error",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Não foi possível cadastrar o corpo hídrico. Tente novamente.",
+        message: result.message,
       });
-    } finally {
-      setIsSaving(false);
+
+      return;
     }
+
+    setSubmissionFeedback({
+      type: "success",
+      message: `${form.name.trim()} foi cadastrado com sucesso. Abrindo uma nova análise...`,
+    });
+
+    router.push("/add-analysis");
   }
 
   return (
@@ -122,17 +109,17 @@ export function AddWaterBodiePage() {
               <Button
                 variant="outline"
                 onClick={handleCancel}
-                disabled={isSaving}
+                disabled={isLoading}
                 className="px-4 sm:min-w-32 sm:px-6"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                isLoading={isSaving}
+                isLoading={isLoading}
                 className="px-4 sm:min-w-44 sm:px-6"
               >
-                {isSaving ? "Salvando..." : "Salvar corpo hídrico"}
+                {isLoading ? "Salvando..." : "Salvar corpo hídrico"}
               </Button>
             </div>
           </div>
@@ -237,8 +224,4 @@ function getFirstInvalidField(errors: AddWaterBodieErrors) {
 
 function parseWaterBodySize(size: string) {
   return Number(size.replace(",", "."));
-}
-
-function wait(milliseconds: number) {
-  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }

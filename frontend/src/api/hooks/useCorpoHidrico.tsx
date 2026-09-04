@@ -1,26 +1,62 @@
-
-import { useEffect,useState} from "react";
+import { useState } from "react";
 import { corpoHidricoServices } from "../services/corpoHidricoServices";
-import { CorpoHidricoCadastroDTO, CorpoHidricoDTO } from "../dtos/corpoHidricoDTO";
+import type {
+  CorpoHidricoCadastroDTO,
+  CorpoHidricoDTO,
+} from "../dtos/corpoHidricoDTO";
 
-
+type CadastroResult =
+  | { ok: true }
+  | { ok: false; message: string };
 
 export const useCadastro = () => {
-        const [loading, setLoading] = useState(false);
-        const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-        const cadastrarCorpoHidrico = async (dados: CorpoHidricoCadastroDTO) => {
-            setLoading(true);
-            setError(null);
-            const response = await corpoHidricoServices.create(dados);
-            if (!response.ok) {
-                setError("Erro ao cadastrar corpo hidrico");
-            }
-            setLoading(false);
+  const cadastrarCorpoHidrico = async (
+    dados: CorpoHidricoCadastroDTO
+  ): Promise<CadastroResult> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await corpoHidricoServices.create(dados);
+
+      if (!response.ok) {
+        const responseMessage = await response.text();
+
+        const message =
+          responseMessage || "Erro ao cadastrar corpo hídrico.";
+
+        setError(message);
+
+        return {
+          ok: false,
+          message,
         };
+      }
 
-        return { loading, error };
-}
+      return { ok: true };
+    } catch {
+      const message = "Não foi possível conectar ao servidor.";
+
+      setError(message);
+
+      return {
+        ok: false,
+        message,
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    cadastrarCorpoHidrico,
+    isLoading,
+    error,
+  };
+};
 
 export const useGetById = () => {
     const [loading, setLoading] = useState(false);
