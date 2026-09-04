@@ -5,7 +5,8 @@ import numpy as np
 import joblib
 import cv2
 import pandas as pd
-
+import json
+from DTOs.Amostra import Amostra
 app = FastAPI(
     title="API de IA",
     description="API para predição com YOLO",
@@ -44,6 +45,11 @@ async def predict(file: UploadFile = File(...)):
         "msg": "Predição realizada com sucesso",
         "predictions": str(imgPredict)
     }
+    
+@app.post("/predict")
+async def predict(data: Amostra):
+    results = best_model
+    pass
 
 
 @app.get("/")

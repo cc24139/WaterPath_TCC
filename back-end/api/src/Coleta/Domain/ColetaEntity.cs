@@ -14,13 +14,19 @@ namespace back_end.src.Domain.Coleta
         public int Id { get; private set; }
         public string Nome { get; private set; }
         public DateTime Data { get; private set; }
+
+        // Parâmetros fisico-quimicos
         public float Ph { get; private set; }
         public float OxigenioDissolvido { get; private set; }
         public float Turbidez { get; private set; }
-        public float CloroResidual { get; private set; }
-        public float Floretos { get; private set; }
-        public float ColiformesTotais { get; private set; }
-        public bool EscherichiaColi { get; private set; }
+        public float CondutividadeEletrica { get; private set; }
+        public float SolidosSuspensosTotais { get; private set; }
+        public float Sodio { get; private set; }
+        public float Cloreto { get; private set; }
+
+        //
+
+
 
         public CorpoHidricoEntity CorpoHidrico { get; set; }
         public List<ImagemEntity> Imagens { get; private set; }
@@ -35,10 +41,10 @@ namespace back_end.src.Domain.Coleta
             float ph,
             float oxigenioDissolvido,
             float turbidez,
-            float cloroResidual,
-            float floretos,
-            float coliformesTotais,
-            bool escherichiaColi,
+            float condutividadeEletrica,
+            float solidosSuspensosTotais,
+            float sodio,
+            float cloreto,
             CorpoHidricoEntity corpoHidrico
         )
         {
@@ -59,19 +65,24 @@ namespace back_end.src.Domain.Coleta
             if (turbidez < 0)
                 throw new ArgumentException("A turbidez deve ser maior ou igual a zero.");
 
-            if (cloroResidual < 0)
+            if (condutividadeEletrica < 0)
                 throw new ArgumentException(
-                    "A concentração de cloro residual deve ser maior ou igual a zero."
+                    "A concentração de condutividade elétrica deve ser maior ou igual a zero."
                 );
 
-            if (floretos < 0)
+            if (solidosSuspensosTotais < 0)
                 throw new ArgumentException(
-                    "A concentração de floretos deve ser maior ou igual a zero."
+                    "A concentração de sólidos suspensos totais deve ser maior ou igual a zero."
                 );
 
-            if (coliformesTotais < 0)
+            if (sodio < 0)
                 throw new ArgumentException(
-                    "A concentração de coliformes totais deve ser maior ou igual a zero."
+                    "A concentração de sódio deve ser maior ou igual a zero."
+                );
+
+            if (cloreto < 0)
+                throw new ArgumentException(
+                    "A concentração de cloreto deve ser maior ou igual a zero."
                 );
 
             Nome = nome;
@@ -79,10 +90,10 @@ namespace back_end.src.Domain.Coleta
             Ph = ph;
             OxigenioDissolvido = oxigenioDissolvido;
             Turbidez = turbidez;
-            CloroResidual = cloroResidual;
-            Floretos = floretos;
-            ColiformesTotais = coliformesTotais;
-            EscherichiaColi = escherichiaColi;
+            CondutividadeEletrica = condutividadeEletrica;
+            SolidosSuspensosTotais = solidosSuspensosTotais;
+            Sodio = sodio;
+            Cloreto = cloreto;
             CorpoHidrico = corpoHidrico;
             Imagens = new List<ImagemEntity>();
             MetaisPesados = new List<MetalPesadoEntity>();
