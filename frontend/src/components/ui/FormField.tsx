@@ -26,6 +26,7 @@ interface FormFieldProps {
   className?: string;
   isTextarea?: boolean;
   required?: boolean;
+  disabled?: boolean;
 }
 
 export function FormField({
@@ -48,11 +49,12 @@ export function FormField({
   className = "",
   isTextarea = false,
   required = false,
+  disabled = false,
 }: FormFieldProps) {
   const helperId = helper ? `${id}-helper` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [helperId, errorId].filter(Boolean).join(" ") || undefined;
-  const fieldClassName = `w-full rounded-md border bg-white px-3.5 font-heading text-[12px] font-medium text-text-primary outline-none transition-colors placeholder:text-text-secondary/70 focus:ring-2 ${
+  const fieldClassName = `w-full rounded-md border bg-white px-3.5 font-heading text-[12px] font-medium text-text-primary outline-none transition-colors placeholder:text-text-secondary/70 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
     error
       ? "border-contrast focus:border-contrast focus:ring-contrast/15"
       : "border-placeholder focus:border-primary focus:ring-secondary/25"
@@ -70,6 +72,7 @@ export function FormField({
       {options ? (
         <span className="relative block">
           <select
+            disabled={disabled}
             id={id}
             name={name}
             value={value}
@@ -91,6 +94,7 @@ export function FormField({
       ) : isTextarea ? (
         <span className="relative block">
           <textarea
+            disabled={disabled}
             id={id}
             name={name}
             value={value}
@@ -113,6 +117,7 @@ export function FormField({
         </span>
       ) : (
         <input
+          disabled={disabled}
           id={id}
           name={name}
           value={value}

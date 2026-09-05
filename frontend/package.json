@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:water-bodies": "node --experimental-strip-types --test tests/waterBodies.test.mjs"
   },
   "dependencies": {
     "@svgr/webpack": "^8.1.0",

@@ -3,10 +3,16 @@ import { LoginForm } from "@/features/auth/components/LoginForm";
 
 
 
-export default function Login() {
+export default async function Login({
+  searchParams,
+}: {
+  searchParams: Promise<{ registered?: string | string[] }>;
+}) {
+  const { registered } = await searchParams;
+
   return (
     <AuthPageLayout>
-      <LoginForm />
+      <LoginForm registered={registered === "true"} />
     </AuthPageLayout>
   );
 }

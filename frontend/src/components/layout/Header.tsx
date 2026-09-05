@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LuBell, LuChevronDown } from "react-icons/lu";
+import { LuBell } from "react-icons/lu";
 import { MdClose, MdMenu } from "react-icons/md";
 
 import { Logo } from "@/components/ui/Logo";
+import { UserAvatar } from "@/components/ui/UserAvatar";
+import { UserMenu } from "./UserMenu";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 
 export interface HeaderUser {
@@ -30,7 +31,7 @@ type HeaderLink = {
 
 const headerLinks: HeaderLink[] = [
     { label: "Sobre nós", href: "#" },
-    { label: "Minhas análises", href: "/water-bodies" },
+    { label: "Análises", href: "/water-bodies" },
     { label: "Metodologias", href: "#" },
 ];
 
@@ -64,7 +65,7 @@ export function Header({
 
     return (
         <>
-            <nav className={`grid min-h-16 w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-b ${drawerBorder} px-3 shadow-[0_8px_15px_rgba(23,166,191,0.25)] sm:px-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-8 ${background}`}>
+            <nav className={`relative z-30 grid min-h-16 w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-b ${drawerBorder} px-3 shadow-[0_8px_15px_rgba(23,166,191,0.25)] sm:px-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-8 ${background}`}>
                 <section className="flex min-w-0 flex-row items-center justify-self-start gap-2">
                     <button
                         type="button"
@@ -94,6 +95,7 @@ export function Header({
 
                 {isLoggedIn && currentUser ? (
                     <AuthenticatedHeaderActions
+                        key={pathname}
                         user={currentUser}
                         hasNotifications={hasNotifications}
                         textClassName={text}
@@ -287,25 +289,12 @@ function AuthenticatedHeaderActions({
                 dotBorderClassName={notificationDotBorderClassName}
             />
 
-            <button
-                type="button"
-                aria-label={`Abrir menu de ${user.name}`}
-                aria-haspopup="menu"
-                className={`inline-flex min-w-0 items-center gap-1.5 rounded-lg py-1 text-left transition-colors sm:gap-2 ${hoverClassName}`}
-            >
-                <UserAvatar user={user} />
-
-                <span className="hidden min-w-0 flex-col leading-tight lg:flex">
-                    <span className={`max-w-24 truncate font-heading text-[13px] font-bold xl:max-w-32 ${textClassName}`}>
-                        {user.name}
-                    </span>
-                    <span className={`hidden max-w-36 truncate text-[11px] font-medium 2xl:block ${mutedTextClassName}`}>
-                        {user.email}
-                    </span>
-                </span>
-
-                <LuChevronDown className={`hidden h-4 w-4 shrink-0 sm:block ${mutedTextClassName}`} />
-            </button>
+            <UserMenu
+                user={user}
+                textClassName={textClassName}
+                mutedTextClassName={mutedTextClassName}
+                hoverClassName={hoverClassName}
+            />
 
             <span className={`hidden h-9 w-px xl:block ${separatorClassName}`} />
 
@@ -395,40 +384,4 @@ function NotificationButton({
             )}
         </button>
     );
-}
-
-function UserAvatar({ user }: { user: HeaderUser }) {
-    const initials = getInitials(user.name);
-
-    if (user.avatarUrl) {
-        return (
-            <Image
-                src={user.avatarUrl}
-                alt={`Avatar de ${user.name}`}
-                width={40}
-                height={40}
-                unoptimized
-                className="h-10 w-10 shrink-0 rounded-full object-cover"
-            />
-        );
-    }
-
-    return (
-        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-heading text-[16px] font-bold text-white">
-            {initials}
-        </span>
-    );
-}
-
-function getInitials(name: string) {
-    const initials = name
-        .trim()
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0])
-        .join("")
-        .toUpperCase();
-
-    return initials || "U";
 }

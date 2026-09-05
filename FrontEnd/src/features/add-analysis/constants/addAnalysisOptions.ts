@@ -25,13 +25,6 @@ export const initialAddAnalysisForm: AddAnalysisFormState = {
   imagePreviewUrl: defaultImagePreviewUrl,
 };
 
-export const waterBodyOptions: SelectOption[] = [
-  { label: "Rio Tietê", value: "Rio Tietê" },
-  { label: "Rio Pinheiros", value: "Rio Pinheiros" },
-  { label: "Rio Piracicaba", value: "Rio Piracicaba" },
-  { label: "Rio Paraíba do Sul", value: "Rio Paraíba do Sul" },
-];
-
 export const responsibleOptions: SelectOption[] = [
   { label: "Equipe Water Path", value: "Equipe Water Path" },
   { label: "Ana Souza", value: "Ana Souza" },

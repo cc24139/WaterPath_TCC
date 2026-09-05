@@ -54,7 +54,13 @@ namespace back_end.src.Controllers.Qualidade
             try
             {
                 var qualidades = await mediator.Send(new QueryObterTodasQualidades());
-                return Ok(qualidades);
+                return Ok(qualidades.Select(q => new
+                {
+                    q.Id,
+                    q.IQA,
+                    CorpoHidrico = q.CorpoHidrico == null ? null : new { q.CorpoHidrico.Id },
+                    QualidadeFutura = q.QualidadeFutura == null ? null : new { q.QualidadeFutura.Id },
+                }));
             }
             catch (ArgumentException ex)
             {

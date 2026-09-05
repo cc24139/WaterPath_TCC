@@ -15,8 +15,8 @@ export const coletaServices = {
     return apiFetch(`${routes.coleta}${id}`);
   },
 
-  async getAll(): Promise<Response> {
-    return apiFetch(routes.coleta);
+  async getAll(signal?: AbortSignal): Promise<Response> {
+    return apiFetch(routes.coleta, { signal }, { authenticated: false });
   },
 
   async update(id: number, data: ColetaCadastroDTO): Promise<Response> {

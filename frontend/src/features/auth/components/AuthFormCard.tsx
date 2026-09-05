@@ -17,6 +17,8 @@ interface AuthFormCardProps {
   onPrimaryAction?: () => void;
   onSecondaryAction?: () => void;
   isSubmitting?: boolean;
+  error?: string | null;
+  successMessage?: string | null;
 }
 
 export function AuthFormCard({
@@ -29,6 +31,8 @@ export function AuthFormCard({
   onPrimaryAction,
   onSecondaryAction,
   isSubmitting = false,
+  error,
+  successMessage,
 }: AuthFormCardProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -63,6 +67,18 @@ export function AuthFormCard({
           {recoveryLink}
         </p>
       ) : null}
+
+      {error && (
+        <p role="alert" className="mt-3 w-full text-sm text-red-600">
+          {error}
+        </p>
+      )}
+
+      {successMessage && !error && (
+        <p role="status" className="mt-3 w-full text-sm text-green-700">
+          {successMessage}
+        </p>
+      )}
 
       <div className="mt-5 flex w-full flex-wrap items-center justify-center gap-3 sm:gap-4">
         <Button

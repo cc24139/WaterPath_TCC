@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 export function RegisterForm() {
   const { register, loading } = useRegister();
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -20,13 +21,15 @@ export function RegisterForm() {
   };
 
   const handleRegister = async () => {
-    if (!form.username.trim() || !form.email.trim() || !form.password) {
-      alert("Preencha todos os campos obrigatórios.");
+    setError(null);
+
+    if (!form.username.trim() || !form.email.trim() || !form.password || !form.confirmPassword) {
+      setError("Preencha todos os campos obrigatórios.");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      alert("As senhas não coincidem. Por favor, tente novamente.");
+      setError("As senhas não coincidem. Por favor, tente novamente.");
       return;
     }
 
@@ -37,12 +40,11 @@ export function RegisterForm() {
     });
 
     if (!result.ok) {
-      alert(result.message);
+      setError(result.message);
       return;
     }
 
-    alert("Conta criada com sucesso. Agora você já pode entrar.");
-    router.replace("/login");
+    router.replace("/login?registered=true");
   };
 
   const handleCancel = () => {
@@ -100,6 +102,7 @@ export function RegisterForm() {
       onPrimaryAction={handleRegister}
       primaryActionText={loading ? "Cadastrando..." : "Cadastrar"}
       isSubmitting={loading}
+      error={error}
     />
   );
 }

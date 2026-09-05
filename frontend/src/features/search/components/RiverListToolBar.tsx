@@ -1,109 +1,49 @@
 import { CiSearch } from "react-icons/ci";
-import { LuChevronDown } from "react-icons/lu";
-
 import { Card } from "@/components/ui/Card";
+import type { RiverStatus } from "../types/river";
 
-export function RiverListToolBar() {
-  const inputStyle =
-    "placeholder:font-semibold placeholder:text-placeholder font-medium text-text-primary";
-  const filterButtonClass =
-    "h-7 lg:h-8 min-w-0 flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-3 lg:px-4 rounded-md border border-placeholder bg-white text-text-primary font-heading font-semibold text-[10px] lg:text-[11px] transition-colors hover:border-primary";
+export interface RiverFilters {
+  query: string;
+  status: string;
+  location: string;
+  onlyMine: boolean;
+}
 
+interface RiverListToolBarProps {
+  filters: RiverFilters;
+  onChange: (filters: RiverFilters) => void;
+  locations: string[];
+  isAuthenticated: boolean;
+  disabled?: boolean;
+}
+
+const statuses: RiverStatus[] = ["Ótima", "Boa", "Atenção", "Crítica", "Sem classificação"];
+const selectClassName = "min-w-0 rounded-md border border-placeholder bg-white px-2 py-2 text-xs text-text-primary focus-visible:outline-primary disabled:opacity-50";
+
+export function RiverListToolBar({ filters, onChange, locations, isAuthenticated, disabled }: RiverListToolBarProps) {
   return (
-    <Card
-      className="
-        max-w-[930px] lg:max-w-[1040px] xl:max-w-[1120px] mx-4 sm:mx-auto
-        flex flex-col gap-3
-        md:grid md:grid-cols-[minmax(150px,190px)_minmax(240px,1fr)_auto]
-        lg:grid-cols-[minmax(180px,230px)_minmax(360px,1fr)_auto]
-        md:items-center md:gap-5
-        lg:gap-8
-        !px-4 !py-4
-        sm:!px-5 lg:!px-6
-      "
-    >
-      <div className="min-w-0">
-        <div>
-          <h1 className="font-heading text-text-secondary text-[20px] sm:text-[21px] lg:text-[23px] leading-tight">
-            Rios Analisados
-          </h1>
-
-          <p className="font-heading text-[#767676] font-semibold text-[10px] sm:text-[11px] lg:text-[12px] leading-snug">
-            Veja o status atual e previsões dos corpos hídricos
-          </p>
-        </div>
+    <Card className="mx-auto flex w-full flex-col gap-4 !px-4 !py-4 sm:!px-5 lg:flex-row lg:items-center">
+      <div className="lg:max-w-56">
+        <h1 className="font-heading text-xl leading-tight text-text-primary">Corpos hídricos</h1>
+        <p className="mt-1 text-xs text-text-secondary">Consulte os registros e medições disponíveis.</p>
       </div>
-
-      <div className="relative w-full min-w-0">
-        <input
-          type="text"
-          placeholder="Pesquise os rios"
-          className={`
-            w-full h-8
-            lg:h-9
-            pl-4 pr-10
-            outline-none
-            border border-placeholder
-            rounded-full
-            bg-white
-            text-[11px] lg:text-[12px]
-            ${inputStyle}
-          `}
-        />
-
-        <CiSearch
-          size={18}
-          className="
-            text-text-primary
-            absolute right-3 top-1/2 -translate-y-1/2
-            pointer-events-none
-          "
-        />
+      <div className="relative min-w-0 flex-1">
+        <input type="search" aria-label="Buscar por nome ou localização" placeholder="Pesquise por nome ou localização" value={filters.query} disabled={disabled} onChange={(event) => onChange({ ...filters, query: event.target.value })} className="h-10 w-full rounded-full border border-placeholder bg-white pl-4 pr-10 text-xs text-text-primary placeholder:text-text-secondary focus-visible:outline-primary disabled:opacity-50" />
+        <CiSearch aria-hidden="true" size={18} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-primary" />
       </div>
-
-      <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-        <div className="flex min-w-[180px] flex-1 gap-2 sm:min-w-fit sm:flex-none">
-          <button className={filterButtonClass}>
-            Status
-            <LuChevronDown className="h-3 w-3 shrink-0" />
-          </button>
-
-          <button className={filterButtonClass}>
-            Região
-            <LuChevronDown className="h-3 w-3 shrink-0" />
-          </button>
-        </div>
-        
-        <section>
-          <label className="flex h-8 flex-1 items-center justify-between gap-2 sm:h-auto sm:flex-none sm:flex-col sm:items-center sm:gap-0.5 cursor-pointer">
-            <span className="font-heading text-[#767676] text-[9px] leading-none whitespace-nowrap">
-              Minhas Análises
-            </span>
-
-            <input type="checkbox" defaultChecked className="peer sr-only" />
-
-            <div
-              className="
-                w-8 h-4
-                rounded-full
-                bg-placeholder
-                relative
-                transition-colors
-                peer-checked:bg-secondary
-                after:content-['']
-                after:absolute
-                after:top-0.5
-                after:left-0.5
-                after:w-3
-                after:h-3
-                after:bg-white
-                after:rounded-full
-                after:transition-transform
-                peer-checked:after:translate-x-4
-              "
-            />
-          </label>
-        </section>
+      <div className="flex flex-wrap items-center gap-3">
+        <select aria-label="Filtrar por classificação do IQA" value={filters.status} disabled={disabled} onChange={(event) => onChange({ ...filters, status: event.target.value })} className={selectClassName}>
+          <option value="">Todos os status</option>
+          {statuses.map((status) => <option key={status}>{status}</option>)}
+        </select>
+        <select aria-label="Filtrar por localização" value={filters.location} disabled={disabled} onChange={(event) => onChange({ ...filters, location: event.target.value })} className={`${selectClassName} max-w-48`}>
+          <option value="">Todas as localizações</option>
+          {locations.map((location) => <option key={location}>{location}</option>)}
+        </select>
+        <label className={`flex items-center gap-2 text-xs text-text-secondary ${!isAuthenticated ? "opacity-60" : "cursor-pointer"}`} title={!isAuthenticated ? "Entre para filtrar seus corpos hídricos" : undefined}>
+          <input type="checkbox" checked={isAuthenticated && filters.onlyMine} disabled={disabled || !isAuthenticated} onChange={(event) => onChange({ ...filters, onlyMine: event.target.checked })} className="h-4 w-4 accent-primary focus-visible:outline-primary" />
+          Meus corpos hídricos
+        </label>
       </div>
     </Card>
   );

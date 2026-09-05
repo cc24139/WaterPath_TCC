@@ -8,6 +8,7 @@ import {
 } from "@/features/auth/utils/authSession";
 
 export interface AuthSessionUser {
+  id: string;
   name: string;
   email: string;
 }
@@ -27,6 +28,7 @@ export function useAuthSession() {
       }
 
       setUser({
+        id: session.id,
         name: session.name,
         email: session.email,
       });

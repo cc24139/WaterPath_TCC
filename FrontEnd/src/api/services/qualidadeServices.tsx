@@ -15,8 +15,8 @@ export const qualidadeServices = {
     return apiFetch(`${routes.qualidade}${id}`);
   },
 
-  async getAll(): Promise<Response> {
-    return apiFetch(routes.qualidade);
+  async getAll(signal?: AbortSignal): Promise<Response> {
+    return apiFetch(routes.qualidade, { signal }, { authenticated: false });
   },
 
   async update(id: number, data: QualidadeCadastroDTO): Promise<Response> {

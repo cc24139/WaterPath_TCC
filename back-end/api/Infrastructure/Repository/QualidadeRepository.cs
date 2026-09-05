@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using back_end.src.Domain.Qualidade;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace back_end.src.Infrastructure.Repository
 {
@@ -45,7 +46,10 @@ namespace back_end.src.Infrastructure.Repository
 
         public List<QualidadeEntity> ObterTodos()
         {
-            return context.Qualidades.ToList();
+            return context.Qualidades.AsNoTracking()
+                .Include(q => q.CorpoHidrico)
+                .Include(q => q.QualidadeFutura)
+                .ToList();
         }
 
         public QualidadeEntity ObterPorId(int id)

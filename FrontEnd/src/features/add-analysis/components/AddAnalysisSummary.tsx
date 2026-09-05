@@ -13,6 +13,7 @@ import type { AddAnalysisFormState } from "@/features/add-analysis/types/addAnal
 
 interface AddAnalysisSummaryProps {
   form: AddAnalysisFormState;
+  waterBodyLabel: string;
 }
 
 interface SummaryItem {
@@ -21,11 +22,11 @@ interface SummaryItem {
   icon: IconType;
 }
 
-export function AddAnalysisSummary({ form }: AddAnalysisSummaryProps) {
+export function AddAnalysisSummary({ form, waterBodyLabel }: AddAnalysisSummaryProps) {
   const summaryItems: SummaryItem[] = [
     {
       label: "Corpo hídrico",
-      value: form.waterBody,
+      value: waterBodyLabel,
       icon: LuFolder,
     },
     {

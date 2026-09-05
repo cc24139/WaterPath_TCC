@@ -60,7 +60,21 @@ namespace back_end.src.Controllers.Coleta
             try
             {
                 var coletas = await mediator.Send(new QueryObterTodasColetas());
-                return Ok(coletas);
+                // Project the relation to its ID: entity graphs can contain cycles.
+                return Ok(coletas.Select(c => new
+                {
+                    c.Id,
+                    c.Nome,
+                    c.Data,
+                    c.Ph,
+                    c.OxigenioDissolvido,
+                    c.Turbidez,
+                    c.CondutividadeEletrica,
+                    c.SolidosSuspensosTotais,
+                    c.Sodio,
+                    c.Cloreto,
+                    CorpoHidrico = c.CorpoHidrico == null ? null : new { c.CorpoHidrico.Id },
+                }));
             }
             catch (ArgumentException ex)
             {

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LuDroplet, LuFileText, LuMessageCircle } from "react-icons/lu";
 
@@ -13,12 +14,18 @@ import {
   indicatorFields,
   responsibleOptions,
   visualConditionOptions,
-  waterBodyOptions,
 } from "@/features/add-analysis/constants/addAnalysisOptions";
 import { useAddAnalysisForm } from "@/features/add-analysis/hooks/useAddAnalysisForm";
+import { useWaterBodyOptions } from "@/features/add-analysis/hooks/useWaterBodyOptions";
 
 export function AddAnalysisPage() {
   const router = useRouter();
+  const {
+    options: waterBodyOptions,
+    loading: loadingWaterBodies,
+    error: waterBodiesError,
+    retry: retryWaterBodies,
+  } = useWaterBodyOptions();
   const {
     form,
     updateField,
@@ -27,6 +34,7 @@ export function AddAnalysisPage() {
     resetForm,
     canSubmit,
   } = useAddAnalysisForm();
+  const selectedWaterBody = waterBodyOptions.find((option) => option.value === form.waterBody);
 
   function handleCancel() {
     resetForm();
@@ -35,6 +43,8 @@ export function AddAnalysisPage() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (loadingWaterBodies || waterBodiesError || !selectedWaterBody) return;
 
     if (!canSubmit()) {
       alert("Preencha os dados gerais obrigatórios antes de salvar.");
@@ -85,7 +95,8 @@ export function AddAnalysisPage() {
               </button>
               <button
                 type="submit"
-                className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-6 font-heading text-[12px] font-bold text-white shadow-[0_7px_18px_rgba(23,166,191,0.25)] transition-colors hover:bg-secondary sm:min-w-36"
+                disabled={loadingWaterBodies || Boolean(waterBodiesError) || !selectedWaterBody}
+                className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-6 font-heading text-[12px] font-bold text-white shadow-[0_7px_18px_rgba(23,166,191,0.25)] transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-36"
               >
                 Salvar análise
               </button>
@@ -100,14 +111,32 @@ export function AddAnalysisPage() {
                 icon={LuFileText}
               >
                 <div className="grid gap-x-6 gap-y-5 md:grid-cols-2 xl:grid-cols-3">
-                  <AddAnalysisField
-                    label="Corpo hídrico"
-                    name="waterBody"
-                    value={form.waterBody}
-                    onChange={updateField}
-                    placeholder="Selecione um corpo hídrico"
-                    options={waterBodyOptions}
-                  />
+                  <div className="min-w-0" aria-busy={loadingWaterBodies}>
+                    <AddAnalysisField
+                      label="Corpo hídrico"
+                      name="waterBody"
+                      value={selectedWaterBody?.value ?? ""}
+                      onChange={updateField}
+                      placeholder={loadingWaterBodies ? "Carregando corpos hídricos..." : "Selecione um corpo hídrico"}
+                      options={waterBodyOptions}
+                      disabled={loadingWaterBodies || Boolean(waterBodiesError) || waterBodyOptions.length === 0}
+                      error={waterBodiesError ?? undefined}
+                      required
+                    />
+                    {waterBodiesError && (
+                      <button type="button" onClick={retryWaterBodies} className="mt-2 rounded text-xs font-semibold text-primary underline underline-offset-4 focus-visible:outline-primary">
+                        Tentar novamente
+                      </button>
+                    )}
+                    {!loadingWaterBodies && !waterBodiesError && waterBodyOptions.length === 0 && (
+                      <div className="mt-2 text-xs text-text-secondary">
+                        <p role="status">Nenhum corpo hídrico cadastrado.</p>
+                        <Link href="/add-water-bodie" className="mt-1 inline-flex rounded font-semibold text-primary underline underline-offset-4 focus-visible:outline-primary">
+                          Adicionar corpo hídrico
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                   <AddAnalysisField
                     label="Data da análise"
                     name="analysisDate"
@@ -187,7 +216,7 @@ export function AddAnalysisPage() {
             </div>
 
             <aside className="flex min-w-0 flex-col gap-5 xl:sticky xl:top-6 xl:self-start">
-              <AddAnalysisSummary form={form} />
+              <AddAnalysisSummary form={form} waterBodyLabel={selectedWaterBody?.label ?? ""} />
               <AnalysisImageCard
                 imageName={form.imageName}
                 imagePreviewUrl={form.imagePreviewUrl}

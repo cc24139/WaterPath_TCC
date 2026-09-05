@@ -13,6 +13,9 @@ interface AddAnalysisFieldProps {
   onChange: (name: AddAnalysisFieldName, value: string) => void;
   placeholder?: string;
   helper?: string;
+  error?: string;
+  disabled?: boolean;
+  required?: boolean;
   type?: InputHTMLAttributes<HTMLInputElement>["type"];
   inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"];
   options?: SelectOption[];
@@ -29,6 +32,9 @@ export function AddAnalysisField({
   onChange,
   placeholder = "",
   helper,
+  error,
+  disabled,
+  required,
   type = "text",
   inputMode,
   options,
@@ -48,6 +54,9 @@ export function AddAnalysisField({
       onChange={(nextValue) => onChange(name, nextValue)}
       placeholder={placeholder}
       helper={helper}
+      error={error}
+      disabled={disabled}
+      required={required}
       type={type}
       inputMode={inputMode}
       options={options}

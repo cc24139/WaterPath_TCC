@@ -1,4 +1,5 @@
 export interface AddAnalysisFormValues {
+  // API ID of the selected water body, stored as a string for the select input.
   waterBody: string;
   analysisDate: string;
   collectionPoint: string;

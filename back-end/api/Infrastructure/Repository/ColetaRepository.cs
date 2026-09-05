@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using back_end.src.Domain.Coleta;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace back_end.src.Infrastructure.Repository
 {
@@ -83,7 +84,7 @@ namespace back_end.src.Infrastructure.Repository
 
         public List<ColetaEntity> ObterTodos()
         {
-            return context.Coletas.ToList();
+            return context.Coletas.AsNoTracking().Include(c => c.CorpoHidrico).ToList();
         }
     }
 }

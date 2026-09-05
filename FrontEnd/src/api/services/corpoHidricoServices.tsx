@@ -15,8 +15,8 @@ export const corpoHidricoServices = {
     return apiFetch(`${routes.corpoHidrico}${id}`);
   },
 
-  async getAll(): Promise<Response> {
-    return apiFetch(routes.corpoHidrico);
+  async getAll(signal?: AbortSignal): Promise<Response> {
+    return apiFetch(routes.corpoHidrico, { signal }, { authenticated: false });
   },
 
   async getByUsuario(): Promise<Response> {

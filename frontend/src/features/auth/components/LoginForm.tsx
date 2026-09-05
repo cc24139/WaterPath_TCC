@@ -7,9 +7,11 @@ import { useLogin } from "@/api/hooks/useUsers";
 import { LoginResponseDTO } from "@/api/dtos/userDTO";
 import { saveAuthSession } from "@/features/auth/utils/authSession";
 
-export function LoginForm() {
+export function LoginForm({ registered = false }: { registered?: boolean }) {
   const { login, loading } = useLogin();
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [hasAttemptedLogin, setHasAttemptedLogin] = useState(false);
   const [form, setForm] = useState({
     email: "",
     senha: "",
@@ -20,6 +22,9 @@ export function LoginForm() {
   };
 
   const handleLogin = async () => {
+    setError(null);
+    setHasAttemptedLogin(true);
+
     try {
       const response = await login({
         email: form.email.trim(),
@@ -27,20 +32,19 @@ export function LoginForm() {
       });
 
       if (response instanceof Response) {
-        alert(getLoginErrorMessage(response.status));
+        setError(getLoginErrorMessage(response.status));
         return;
       }
 
       if (!isLoginResponse(response)) {
-        alert("Falha no login. Tente novamente.");
+        setError("Falha no login. Tente novamente.");
         return;
       }
 
       saveAuthSession(response);
-      alert("Login bem-sucedido! Redirecionando para a página inicial...");
       router.replace(getSafeRedirectPath());
     } catch {
-      alert("Não foi possível conectar ao servidor. Tente novamente.");
+      setError("Não foi possível conectar ao servidor. Tente novamente.");
       return;
     }
   };
@@ -91,6 +95,12 @@ export function LoginForm() {
       onPrimaryAction={handleLogin}
       primaryActionText={loading ? "Entrando..." : "Entrar"}
       isSubmitting={loading}
+      error={error}
+      successMessage={
+        registered && !hasAttemptedLogin
+          ? "Conta criada com sucesso. Agora você já pode entrar."
+          : null
+      }
     />
   );
 
@@ -120,7 +130,7 @@ function getLoginErrorMessage(status: number) {
     return "Email ou senha inválidos.";
   }
 
-  return "Falha no login. Verifique suas credenciais e tente novamente.";
+  return "Não foi possível entrar. Tente novamente.";
 }
 
 function getSafeRedirectPath() {
