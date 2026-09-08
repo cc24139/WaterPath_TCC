@@ -6,6 +6,7 @@ import joblib
 import cv2
 import pandas as pd
 import json
+import sklearn as sk
 from DTOs.Amostra import Amostra
 app = FastAPI(
     title="API de IA",
@@ -22,15 +23,45 @@ path_modelo = f'{os.getcwd()}/services/Predict/model/best_model.pkl'
 modelPredicao = joblib.load(path_modelo)
 # Dados testes 
 dataTestPATH = f'{os.getcwd()}/services/Predict/data/Data_Lake Onego_V2.xlsx'
+features = [
+      "T, °C",
+      "рН",
+      "TSS, mg/L",
+      "Color, mg Pt-Co/L",
+      "TOC, mg/L",
+      "CODMn, mg О/L",
+      "CODCr, мгО/л",
+      "BOD5, mg О2/L",
+    "PO4-P, µg/L",
+    "TP, µg/L",
+    "NH4-N, mgN/L",
+    "NO2-N, mgN/L",
+    "NO3-N, mgN/L",
+    "TN, mg/L",
+    "EC, μS/сm at 25 °C",
+    "Depth, m"
+]
 
 
-def carregar_modelo():
+result = [
+    "Fe, mg/L",
+    "Mn, mg/L",
+    "Cr, µg/L",
+    "Ni, µg/L",
+    "Cu, µg/L",
+    "Zn, µg/L",
+    "Cd, µg/L",
+    "Pb, µg/L"
+]
+
+
+async def carregar_modelo():
     global modelComputerVison
     if modelComputerVison is None:
         modelComputerVison = YOLO(f"{servicesPath}/computerVision/runs/detect/{trainVersion}/weights/best.pt")
     return modelComputerVison
 
-def predict_image(img):
+async def predict_image(img):
     model = carregar_modelo()
     imgPredict = model.predict(img, conf=0.25, save=False,show=True, save_txt=False)
     return imgPredict
@@ -48,8 +79,42 @@ async def predict(file: UploadFile = File(...)):
     
 @app.post("/predict")
 async def predict(data: Amostra):
-    results = best_model
+    results = best_model.predict(data.decode())
     pass
+
+#rota apena para dar dados para testar a predição
+@app.get("/predict/test")
+async def predict_test():
+    dados = pd.read_excel(dataTestPATH)
+    dados = pd.DataFrame(dados)
+    dados.columns = dados.columns.str.strip()
+    dados = dados.dropna()
+    dados[features] = dados[features].map(tratar_censurado)
+    dados[result] = dados[result].map(tratar_censurado)
+    dados = dados.dropna()
+    X = dados.loc[:, features]
+    Y = dados.loc[:, result]
+    TrainX, TestX, TrainY, TestY = sk.model_selection.train_test_split(
+        X,
+        Y,
+        test_size=0.2,
+        random_state=42
+    )
+    predicoes = modelPredicao.predict(TestX)
+    PredY = pd.DataFrame(
+        predicoes,
+        columns=result,
+        index=TestY.index
+    ).round(4)
+    TestY = TestY.round(4)
+    resultado = []
+    for i in TestX.index:
+        resultado.append({
+        "entrada": TestX.loc[i].to_dict(),
+        "real": TestY.loc[i].to_dict(),
+        "predito": PredY.loc[i].to_dict()
+        })
+    return resultado
 
 
 @app.get("/")
@@ -57,14 +122,19 @@ async def root():
     return {"msg": "API funcionando"}
 
 
-def test():
-    # Retorna uma lista/array com os nomes das colunas de entrada
-    print(modelPredicao.feature_names_in_)
 
-# Retorna a quantidade de colunas que o modelo espera receber
-    print(modelPredicao.n_features_in_)
+def tratar_censurado(valor):
+    if isinstance(valor, str) and valor.startswith("<"):
+        limite = float(valor[1:])
+        return limite / 2
 
-test()
+    return float(valor)
+
+modelInfos()
+
+def modelInfos():
+    model = carregar_modelo()
+    print( str(model),trainVersion)
 #Para rodar: uvicorn main:app --reload
 #Para rodar mac:  python3 -m uvicorn main:app --reload
 #Para rodar linux: python -m uvicorn main:app --reload

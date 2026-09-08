@@ -49,3 +49,32 @@ class Amostra:
     demanda_quimica_oxigenio_permanganato: Optional[float]
     demanda_quimica_oxigenio_dicromato: Optional[float]
     demanda_bioquimica_oxigenio_5_dias: Optional[float]
+    
+    def decode(self):
+        return [
+            self.temperatura,
+            self.ph,
+            self.condutividade_eletrica,
+            self.cor,
+            self.solidos_suspensos_totais,
+            self.sodio,
+            self.cloreto,
+            self.ferro,
+            self.manganes,
+            self.cobre,
+            self.niquel,
+            self.cromo,
+            self.zinco,
+            self.cadmio,
+            self.chumbo,
+            self.nitrogenio_amoniacal,
+            self.nitrito,
+            self.nitrato,
+            self.nitrogenio_total,
+            self.fosfato,
+            self.fosforo_total,
+            self.carbono_organico_total,
+            self.demanda_quimica_oxigenio_permanganato,
+            self.demanda_quimica_oxigenio_dicromato,
+            self.demanda_bioquimica_oxigenio_5_dias
+        ]
