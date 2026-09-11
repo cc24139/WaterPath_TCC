@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, Form, UploadFile
 from ultralytics import YOLO
 import os
 import numpy as np
@@ -59,7 +59,7 @@ result = [
 
 
 async def predict_image(img):
-    imgPredict = modeloComputerVision.predict(img, conf=0.25, save=False,show=True, save_txt=False)
+    imgPredict = modelComputerVison.predict(img, conf=0.25, save=False,show=True, save_txt=False)
     return imgPredict
 
 async def _instaciateObjetcDeteced(box):
@@ -68,17 +68,17 @@ async def _instaciateObjetcDeteced(box):
     match(name):
         case 0:
             return Lixo(box, conf, "lixo")
-    return "Desconhecido"
+    return Lixo(box, conf, "lixo")
 
 
 
 async def _relatorioImg(predictedImg,predictedHeavyMetais):
     relatorio = []
-    for result in predictedImg:
-        for box in result.boxes:
+    for resultsIMG in predictedImg:
+        for box in resultsIMG.boxes:
             x1, y1, x2, y2 = box.xyxy[0]
-            obj = _instaciateObjetcDeteced(box)
-            
+            obj = await _instaciateObjetcDeteced(box)
+            relatorio += [{obj.impact(predictedHeavyMetais)}]
     return relatorio
     
 
@@ -102,17 +102,28 @@ async def predict(file: UploadFile = File(...)):
         "predictions": str(imgPredict)
     }
     
-@app.post("/predict")
-async def predict(data: Amostra):
+async def _predict(data: Amostra):
     predicted = modelPredicao.predict(data.decode())
     response = {}
-    for metal,value in zip(result, predicted):
-        response[metal] = value
+    for metal, value in zip(result, predicted[0]):
+        response[metal] = f"{value.round(4)}"
+    return response
+
+@app.post("/predict")
+async def predictQuality(data:str = Form(...),image:UploadFile = File(...)):
+    dataAmostra = Amostra.parse_raw(data)
+    predicted = await _predict(dataAmostra)
+    conteudo = await image.read()
+    nparr = np.frombuffer(conteudo, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    imgPredict = await predict_image(img)
+    relatorioImg = await _relatorioImg(imgPredict,predicted)
     return {
         "msg": "Predição realizada com sucesso",
-        "predictions": response
+        "predictions": predicted,
+        "predictedHeavyMetais": dataAmostra.dict(),
+        "relatorioImg": relatorioImg
     }
-
 #rota apena para dar dados para testar a predição
 @app.get("/predict/test")
 async def predict_test():

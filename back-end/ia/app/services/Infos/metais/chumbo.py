@@ -1,5 +1,4 @@
-
-import Metal
+from .Metal import Metal
 class Chumbo(Metal):
     def __init__(self, valor, unidadeMedida = "mg/l"):
         super().__init__("Chumbo", valor, unidadeMedida)
