@@ -1,80 +1,53 @@
-from dataclasses import dataclass
-from datetime import date
+from pydantic import BaseModel
 from typing import Optional
 
 
-@dataclass
-class Amostra:
-    # Localização e identificação
-    estacao: str
-    latitude: float
-    longitude: float
-    data: date
-    profundidade: Optional[float]
-    estacao_ano: str
+class Amostra(BaseModel):
 
-    # Parâmetros físico-químicos
-    temperatura: Optional[float]
-    ph: Optional[float]
-    condutividade_eletrica: Optional[float]
-    cor: Optional[float]
-    solidos_suspensos_totais: Optional[float]
+    # Localização e identificação — opcionais
+    estacao: Optional[str] = None
+    latitude: Optional[str] = None
+    longitude: Optional[str] = None
+    data: Optional[str] = None
+    profundidade: Optional[float] = None
+    estacao_ano: Optional[str] = None
 
-    # Íons
-    sodio: Optional[float]
-    cloreto: Optional[float]
+    # Features utilizadas pelo modelo — obrigatórias
+    temperatura: float
+    ph: float
+    condutividade_eletrica: float
+    cor: float
+    solidos_suspensos_totais: float
 
-    # Metais
-    ferro: Optional[float]
-    manganes: Optional[float]
-    cobre: Optional[float]
-    niquel: Optional[float]
-    cromo: Optional[float]
-    zinco: Optional[float]
-    cadmio: Optional[float]
-    chumbo: Optional[float]
+    nitrogenio_amoniacal: float
+    nitrito: float
+    nitrato: float
+    nitrogenio_total: float
 
-    # Nitrogênio
-    nitrogenio_amoniacal: Optional[float]
-    nitrito: Optional[float]
-    nitrato: Optional[float]
-    nitrogenio_total: Optional[float]
+    fosfato: float
+    fosforo_total: float
 
-    # Fósforo
-    fosfato: Optional[float]
-    fosforo_total: Optional[float]
+    carbono_organico_total: float
+    demanda_quimica_oxigenio_permanganato: float
+    demanda_quimica_oxigenio_dicromato: float
+    demanda_bioquimica_oxigenio_5_dias: float
 
-    # Matéria orgânica
-    carbono_organico_total: Optional[float]
-    demanda_quimica_oxigenio_permanganato: Optional[float]
-    demanda_quimica_oxigenio_dicromato: Optional[float]
-    demanda_bioquimica_oxigenio_5_dias: Optional[float]
-    
     def decode(self):
-        return [
+        return [[
             self.temperatura,
             self.ph,
-            self.condutividade_eletrica,
-            self.cor,
             self.solidos_suspensos_totais,
-            self.sodio,
-            self.cloreto,
-            self.ferro,
-            self.manganes,
-            self.cobre,
-            self.niquel,
-            self.cromo,
-            self.zinco,
-            self.cadmio,
-            self.chumbo,
+            self.cor,
+            self.carbono_organico_total,
+            self.demanda_quimica_oxigenio_permanganato,
+            self.demanda_quimica_oxigenio_dicromato,
+            self.demanda_bioquimica_oxigenio_5_dias,
+            self.fosfato,
+            self.fosforo_total,
             self.nitrogenio_amoniacal,
             self.nitrito,
             self.nitrato,
             self.nitrogenio_total,
-            self.fosfato,
-            self.fosforo_total,
-            self.carbono_organico_total,
-            self.demanda_quimica_oxigenio_permanganato,
-            self.demanda_quimica_oxigenio_dicromato,
-            self.demanda_bioquimica_oxigenio_5_dias
-        ]
+            self.condutividade_eletrica,
+            self.profundidade
+        ]]

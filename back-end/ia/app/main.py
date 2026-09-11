@@ -8,6 +8,7 @@ import pandas as pd
 import json
 import sklearn as sk
 from DTOs.Amostra import Amostra
+from services.Infos.objetos.Lixo import Lixo
 app = FastAPI(
     title="API de IA",
     description="API para predição com YOLO",
@@ -16,7 +17,7 @@ app = FastAPI(
 #Modelo de analise de imagem
 trainVersion = "train";
 servicesPath = os.path.join(os.getcwd(), "services")
-modelComputerVison = None
+modelComputerVison = YOLO(f"{servicesPath}/computerVision/runs/detect/{trainVersion}/weights/best.pt")
 
 #Modelo de predição (já treinado no google colab)
 path_modelo = f'{os.getcwd()}/services/Predict/model/best_model.pkl'
@@ -55,16 +56,40 @@ result = [
 ]
 
 
-async def carregar_modelo():
-    global modelComputerVison
-    if modelComputerVison is None:
-        modelComputerVison = YOLO(f"{servicesPath}/computerVision/runs/detect/{trainVersion}/weights/best.pt")
-    return modelComputerVison
+
 
 async def predict_image(img):
-    model = carregar_modelo()
-    imgPredict = model.predict(img, conf=0.25, save=False,show=True, save_txt=False)
+    imgPredict = modeloComputerVision.predict(img, conf=0.25, save=False,show=True, save_txt=False)
     return imgPredict
+
+async def _instaciateObjetcDeteced(box):
+    conf = box.conf[0]
+    name = box.cls[0]
+    match(name):
+        case 0:
+            return Lixo(box, conf, "lixo")
+    return "Desconhecido"
+
+
+
+async def _relatorioImg(predictedImg,predictedHeavyMetais):
+    relatorio = []
+    for result in predictedImg:
+        for box in result.boxes:
+            x1, y1, x2, y2 = box.xyxy[0]
+            obj = _instaciateObjetcDeteced(box)
+            
+    return relatorio
+    
+
+
+@app.get("/vision/infos")
+async def getInfos():
+    return {"msg:": "Informações do modelo de visão computacional", 
+            "names": modelComputerVison.names, 
+            "trainVersion": trainVersion}
+    
+    
 
 @app.post("/vision/predict")
 async def predict(file: UploadFile = File(...)):
@@ -79,8 +104,14 @@ async def predict(file: UploadFile = File(...)):
     
 @app.post("/predict")
 async def predict(data: Amostra):
-    results = best_model.predict(data.decode())
-    pass
+    predicted = modelPredicao.predict(data.decode())
+    response = {}
+    for metal,value in zip(result, predicted):
+        response[metal] = value
+    return {
+        "msg": "Predição realizada com sucesso",
+        "predictions": response
+    }
 
 #rota apena para dar dados para testar a predição
 @app.get("/predict/test")
@@ -130,11 +161,13 @@ def tratar_censurado(valor):
 
     return float(valor)
 
-modelInfos()
 
 def modelInfos():
-    model = carregar_modelo()
-    print( str(model),trainVersion)
+    print("Informações do modelo de predição:")
+    print("Features:", modelPredicao.feature_names_in_)
+
+    
+modelInfos()
 #Para rodar: uvicorn main:app --reload
 #Para rodar mac:  python3 -m uvicorn main:app --reload
 #Para rodar linux: python -m uvicorn main:app --reload
