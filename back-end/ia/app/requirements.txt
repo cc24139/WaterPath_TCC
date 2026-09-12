@@ -9,10 +9,11 @@ ultralytics
 torch
 torchvision
 
-xgboost
-catboost
-scikit-learn
-joblib
+xgboost == 3.4.1
+catboost == 1.2.10
+scikit-learn == 1.6.1
+joblib == 1.5.3
+
 
 pandas
 numpy
