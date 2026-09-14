@@ -9,6 +9,7 @@ import json
 import sklearn as sk
 from DTOs.Amostra import Amostra
 from services.Infos.objetos.Lixo import Lixo
+from services.Infos.objetos.Urbano import Urbano
 app = FastAPI(
     title="API de IA",
     description="API para predição com YOLO",
@@ -68,6 +69,8 @@ async def _instaciateObjetcDeteced(box):
     match(name):
         case 0:
             return Lixo(box, conf, "lixo")
+        case 1:
+            return Urbano(box,conf)
     return Lixo(box, conf, "lixo")
 
 
@@ -173,12 +176,11 @@ def tratar_censurado(valor):
     return float(valor)
 
 
-def modelInfos():
-    print("Informações do modelo de predição:")
-    print("Features:", modelPredicao.feature_names_in_)
+ 
+def infos():
+    print(modelComputerVison.names)   
 
-    
-modelInfos()
+infos()
 #Para rodar: uvicorn main:app --reload
 #Para rodar mac:  python3 -m uvicorn main:app --reload
 #Para rodar linux: python -m uvicorn main:app --reload
