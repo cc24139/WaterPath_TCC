@@ -15,6 +15,10 @@ class Lixo(Impact):
             "impact": self.impact(heavyMetais)
         }
     
+    
+    def mensagem(self):
+        return "Foi detectado a presença de lixo no lago, isso pode impactar na presença de zinco,chumbo e cadmio"
+    
     def heavyMetais(self,metal,value):
         
         if not metal in self._AllMetals:

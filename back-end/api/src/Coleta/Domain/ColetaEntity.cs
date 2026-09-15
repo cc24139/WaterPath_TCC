@@ -6,98 +6,49 @@ using back_end.src.Domain.CianoBacteria;
 using back_end.src.Domain.CorpoHidrico;
 using back_end.src.Domain.Imagem;
 using back_end.src.Domain.MetalPesado;
+using back_end.src.Medicoes.Domain;
 
 namespace back_end.src.Domain.Coleta
 {
     public class ColetaEntity
     {
         public int Id { get; private set; }
-        public string Nome { get; private set; }
-        public DateTime Data { get; private set; }
-
-        // Parâmetros fisico-quimicos
-        public float Ph { get; private set; }
-        public float OxigenioDissolvido { get; private set; }
-        public float Turbidez { get; private set; }
-        public float CondutividadeEletrica { get; private set; }
-        public float SolidosSuspensosTotais { get; private set; }
-        public float Sodio { get; private set; }
-        public float Cloreto { get; private set; }
-
-        //
-
-
-
-        public CorpoHidricoEntity CorpoHidrico { get; set; }
-        public List<ImagemEntity> Imagens { get; private set; }
-        public List<MetalPesadoEntity> MetaisPesados { get; private set; }
-        public List<CianoBacteriaEntity> CianoBacterias { get; private set; }
+        public int CorpoHidricoId { get; private set; }
+        public DateTimeOffset DataHora { get; private set; }
+        public double? Latitude { get; private set; }
+        public double? Longitude { get; private set; }
+        public double? ProfundidadeMetros { get; private set; }
 
         public ColetaEntity() { }
-
         public ColetaEntity(
-            string nome,
-            DateTime data,
-            float ph,
-            float oxigenioDissolvido,
-            float turbidez,
-            float condutividadeEletrica,
-            float solidosSuspensosTotais,
-            float sodio,
-            float cloreto,
-            CorpoHidricoEntity corpoHidrico
+            int corpoHidricoId,
+            DateTimeOffset dataHora,
+            double? latitude,
+            double? Longitude,
+            double? profundidade
         )
         {
-            if (string.IsNullOrEmpty(nome))
-                throw new ArgumentException("O nome da coleta é obrigatório.");
+            if (corpoHidricoId < 0)
+                throw new Exception("Id inválido!");
 
-            if (data == default)
-                throw new ArgumentException("A data da coleta é obrigatória.");
+            this.CorpoHidricoId = corpoHidricoId;
+            this.DataHora = dataHora;
+            this.Latitude = latitude;
+            this.Longitude = Longitude;
+            this.ProfundidadeMetros = profundidade;
+        }
 
-            if (ph < 0 || ph > 14)
-                throw new ArgumentException("O pH deve estar entre 0 e 14.");
+        public List<MedicoesEntity> Medicoes { get; private set; } = [];
 
-            if (oxigenioDissolvido < 0)
-                throw new ArgumentException(
-                    "A concentração de oxigênio dissolvido deve ser maior ou igual a zero."
-                );
+        public void AdicionarMedicao(MedicoesEntity medicao)
+        {
+            var existente = Medicoes.Any(x => x.codigoMedicao == medicao.codigoMedicao);
 
-            if (turbidez < 0)
-                throw new ArgumentException("A turbidez deve ser maior ou igual a zero.");
+            if (existente)
+                throw new InvalidOperationException(
+                    $"Já existe uma medição de {medicao.codigoMedicao}.");
 
-            if (condutividadeEletrica < 0)
-                throw new ArgumentException(
-                    "A concentração de condutividade elétrica deve ser maior ou igual a zero."
-                );
-
-            if (solidosSuspensosTotais < 0)
-                throw new ArgumentException(
-                    "A concentração de sólidos suspensos totais deve ser maior ou igual a zero."
-                );
-
-            if (sodio < 0)
-                throw new ArgumentException(
-                    "A concentração de sódio deve ser maior ou igual a zero."
-                );
-
-            if (cloreto < 0)
-                throw new ArgumentException(
-                    "A concentração de cloreto deve ser maior ou igual a zero."
-                );
-
-            Nome = nome;
-            Data = data;
-            Ph = ph;
-            OxigenioDissolvido = oxigenioDissolvido;
-            Turbidez = turbidez;
-            CondutividadeEletrica = condutividadeEletrica;
-            SolidosSuspensosTotais = solidosSuspensosTotais;
-            Sodio = sodio;
-            Cloreto = cloreto;
-            CorpoHidrico = corpoHidrico;
-            Imagens = new List<ImagemEntity>();
-            MetaisPesados = new List<MetalPesadoEntity>();
-            CianoBacterias = new List<CianoBacteriaEntity>();
+            Medicoes.Add(medicao);
         }
     }
 }

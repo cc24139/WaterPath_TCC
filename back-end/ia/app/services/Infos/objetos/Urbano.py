@@ -2,6 +2,9 @@ from .Impact import Impact
 from services.Infos.metais.chumbo import Chumbo
 from services.Infos.metais.Zinco import Zinco
 from services.Infos.metais.cadmio import Cadmio
+from services.Infos.metais.Cromo import Cromo
+from services.Infos.metais.Niquel import Niquel
+from services.Infos.metais.Cobre import Cobre
 class Urbano(Impact):
     def __init__(self,obj,confidence=0.1,name="Urbano"):
         super().__init__(obj,confidence,name)
@@ -14,6 +17,10 @@ class Urbano(Impact):
             "confidence": self.confidence,
             "impact": self.impact(heavyMetais)
         }
+        
+    def mensagem(self):
+        return ("Foi detectado a presença de ambiente urbano no lago, caso não ocorra o devido tratamento pode impactar na presença de"
+    "Cromo,Niquel,Cobre,Zinco,Cadmio e Chumbo!")
     
     def heavyMetais(self,metal,value):
         if metal not in self._AllMetals:

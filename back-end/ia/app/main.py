@@ -69,8 +69,8 @@ async def _instaciateObjetcDeteced(box):
     match(name):
         case 0:
             return Lixo(box, conf, "lixo")
-        case 1:
-            return Urbano(box,conf)
+        case 2:
+            return Urbano(box,conf,"Urbano")
     return Lixo(box, conf, "lixo")
 
 

@@ -26,9 +26,10 @@ class Impact():
             print(metal.valor,metal.definirLimite())
             if metal.valor > metal.definirLimite():
                 detectado += f"{metal.nome} acima do limite ({metal.valor} {metal.unidadeMedida}) \n"
-        return f"Foi detectada a presença de lixo no lago. O descarte irregular pode contaminar a água e aumentar a concentração de metais pesados. \n {detectado}"
+        return f"{self.mensagem()} \n {detectado}"
             
-    
+    def mensagem(self):
+        pass
     #Retorna em formato json para api
     def getImpact(self):
         return {
