@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using back_end.src.Domain.CianoBacteria;
-using back_end.src.Domain.Codigo;
 using back_end.src.Domain.Coleta;
 using back_end.src.Domain.CorpoHidrico;
 using back_end.src.Domain.Imagem;
@@ -10,6 +9,7 @@ using back_end.src.Domain.MetalPesado;
 using back_end.src.Domain.Qualidade;
 using back_end.src.Domain.QualidadeFutura;
 using back_end.src.Infrastructure.Repository;
+using back_end.src.Medicoes.Domain;
 using Domain.User;
 using DotNetEnv;
 using Infrastructure.Data;
@@ -60,6 +60,7 @@ builder
     });
 
 // Registro dos repositórios
+builder.Services.AddScoped<IMedicoesRepository, MedicoesRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICianoBacteriaRepository, CianoBacteriaRepository>();
 builder.Services.AddScoped<IColetaRepository, ColetaRepository>();
@@ -68,7 +69,6 @@ builder.Services.AddScoped<IImagemRepository, ImagemRepository>();
 builder.Services.AddScoped<IMetalPesadoRepository, MetalPesadoRepository>();
 builder.Services.AddScoped<IQualidadeRepository, QualidadeRepository>();
 builder.Services.AddScoped<IQualidadeFuturaRepository, QualidadeFuturaRepository>();
-builder.Services.AddScoped<ICodigoRepository, CodigoRepository>();
 
 //CORS
 builder.Services.AddCors(options =>

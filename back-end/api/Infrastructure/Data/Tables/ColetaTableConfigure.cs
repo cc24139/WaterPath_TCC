@@ -12,20 +12,18 @@ public class ColetaTableConfigure : IEntityTypeConfiguration<ColetaEntity>
         builder.ToTable("Coletas", "waterPath");
         builder.HasKey(e => e.Id);
 
-        builder.Property(e => e.Nome).IsRequired();
-        builder.Property(e => e.Data).IsRequired();
-        builder.Property(e => e.Ph).IsRequired();
-        builder.Property(e => e.OxigenioDissolvido).IsRequired();
-        builder.Property(e => e.Turbidez).IsRequired();
-        builder.Property(e => e.CloroResidual).IsRequired();
-        builder.Property(e => e.Floretos).IsRequired();
-        builder.Property(e => e.ColiformesTotais).IsRequired();
-        builder.Property(e => e.EscherichiaColi).IsRequired();
+        builder.Property(e => e.CorpoHidricoId).IsRequired();
+        builder.Property(e => e.DataHora).IsRequired();
+        builder.Property(e => e.Latitude);
+        builder.Property(e => e.Longitude);
+        builder.Property(e => e.ProfundidadeMetros);
+
 
         builder
             .HasOne(e => e.CorpoHidrico)
             .WithMany(e => e.Coletas)
-            .HasForeignKey("CorpoHidricoId")
+            .HasForeignKey(e => e.CorpoHidricoId)
+            .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

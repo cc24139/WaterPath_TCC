@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using back_end.src.Domain.Coleta;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace back_end.src.Infrastructure.Repository
 {
@@ -17,30 +18,46 @@ namespace back_end.src.Infrastructure.Repository
 
         public virtual void Atualizar(ColetaEntity coleta, int idColeta)
         {
-            var entityToUpdate = context.Coletas.Find(idColeta);
+            var entityToUpdate = context.Coletas.Include(c => c.Medicoes).SingleOrDefault(c => c.Id == idColeta);
             if (entityToUpdate == null)
             {
                 throw new ArgumentException("Coleta não encontrada");
             }
-            context.Coletas.Update(entityToUpdate);
+            ValidarCorpoHidrico(coleta.CorpoHidricoId);
+            entityToUpdate.CorpoHidricoId = coleta.CorpoHidricoId;
+            entityToUpdate.DataHora = coleta.DataHora.ToUniversalTime();
+            entityToUpdate.Latitude = coleta.Latitude;
+            entityToUpdate.Longitude = coleta.Longitude;
+            entityToUpdate.ProfundidadeMetros = coleta.ProfundidadeMetros;
+            // Medições omitidas são preservadas; exclusões usam o endpoint de medições.
+            foreach (var medicao in coleta.Medicoes)
+            {
+                var existente = entityToUpdate.Medicoes.SingleOrDefault(m => m.codigoMedicao == medicao.codigoMedicao);
+                if (existente is null)
+                    entityToUpdate.AdicionarMedicao(medicao);
+                else
+                    existente.Atualizar(medicao.codigoMedicao, medicao.valor, medicao.unidade,
+                        medicao.censurado, medicao.limite);
+            }
             context.SaveChanges();
         }
 
         public void Cadastrar(ColetaEntity coleta, int idCorpoHidrico)
         {
-            var corpoHidrico = context.CorposHidricos.Find(idCorpoHidrico);
-            if (corpoHidrico == null)
-            {
-                throw new ArgumentException("Corpo Hídrico não encontrado");
-            }
-
-            coleta.CorpoHidrico = corpoHidrico;
+            ValidarCorpoHidrico(idCorpoHidrico);
+            coleta.CorpoHidricoId = idCorpoHidrico;
+            coleta.DataHora = coleta.DataHora.ToUniversalTime();
             context.Coletas.Add(coleta);
             context.SaveChanges();
         }
 
         public void CadastrarListaColetas(List<ColetaEntity> coletas)
         {
+            foreach (var coleta in coletas)
+            {
+                ValidarCorpoHidrico(coleta.CorpoHidricoId);
+                coleta.DataHora = coleta.DataHora.ToUniversalTime();
+            }
             context.Coletas.AddRange(coletas);
             context.SaveChanges();
         }
@@ -58,12 +75,12 @@ namespace back_end.src.Infrastructure.Repository
 
         public List<ColetaEntity> ObterPorCorpoHidrico(int corpoHidricoId)
         {
-            return context.Coletas.Where(c => c.CorpoHidrico.Id == corpoHidricoId).ToList();
+            return Consultar().Where(c => c.CorpoHidricoId == corpoHidricoId).ToList();
         }
 
-        public ColetaEntity ObterPorId(int id)
+        public ColetaEntity? ObterPorId(int id)
         {
-            return context.Coletas.Find(id);
+            return Consultar().SingleOrDefault(c => c.Id == id);
         }
 
         public List<ColetaEntity> ObterPorPeriodo(
@@ -72,18 +89,28 @@ namespace back_end.src.Infrastructure.Repository
             string dataFim
         )
         {
-            return context
-                .Coletas.Where(c =>
-                    c.CorpoHidrico.Id == corpoHidricoId
-                    && c.Data >= DateTime.Parse(dataInicio)
-                    && c.Data <= DateTime.Parse(dataFim)
+            return Consultar()
+                .Where(c =>
+                    c.CorpoHidricoId == corpoHidricoId
+                    && c.DataHora >= DateTimeOffset.Parse(dataInicio).ToUniversalTime()
+                    && c.DataHora<= DateTimeOffset.Parse(dataFim).ToUniversalTime()
                 )
                 .ToList();
         }
 
+        private IQueryable<ColetaEntity> Consultar() => context.Coletas
+            .AsNoTracking()
+            .Include(c => c.Medicoes);
+
+        private void ValidarCorpoHidrico(int id)
+        {
+            if (id <= 0 || !context.CorposHidricos.Any(c => c.Id == id))
+                throw new ArgumentException("Corpo Hídrico não encontrado");
+        }
+
         public List<ColetaEntity> ObterTodos()
         {
-            return context.Coletas.ToList();
+            return Consultar().ToList();
         }
     }
 }

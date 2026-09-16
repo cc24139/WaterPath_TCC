@@ -1,8 +1,5 @@
 using System;
-using Application.Commands.Codigo;
 using Application.Commands.User;
-using Application.Handler.Codigo;
-using Application.Queries.Codigo;
 using back_end.src.Application.Queries.User;
 using back_end.src.Infrastructure.Services;
 using MediatR;
@@ -29,7 +26,7 @@ namespace back_end.src.Controllers.User
             try
             {
                 var result = await mediator.Send(query);
-                var existeCodigoPendente = await mediator.Send(new QueryCodigoPendente(result.email));
+                //var existeCodigoPendente = await mediator.Send(new QueryCodigoPendente(result.email));
                 /*if (existeCodigoPendente)
                 {
                     return Unauthorized(new { mensagem = "Código de verificação pendente. Por favor, verifique seu email." });
@@ -47,11 +44,11 @@ namespace back_end.src.Controllers.User
         {
             try
             {
-                var existingCode = await mediator.Send(new QueryCodigoPendente(command.Email));
+                /**var existingCode = await mediator.Send(new QueryCodigoPendente(command.Email));
                 if (existingCode)
                 {
                     return Conflict(new { mensagem = "Já existe um código de verificação pendente para este email. Por favor, verifique seu email." });
-                }
+                }**/
                 var hash = new HashServices();
                 command.Senha = hash.ComputeHash(command.Senha);
                 var result = await mediator.Send(command);

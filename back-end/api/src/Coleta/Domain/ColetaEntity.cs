@@ -12,12 +12,17 @@ namespace back_end.src.Domain.Coleta
 {
     public class ColetaEntity
     {
-        public int Id { get; private set; }
-        public int CorpoHidricoId { get; private set; }
-        public DateTimeOffset DataHora { get; private set; }
-        public double? Latitude { get; private set; }
-        public double? Longitude { get; private set; }
-        public double? ProfundidadeMetros { get; private set; }
+        public int Id { get;  set; }
+        public int CorpoHidricoId { get;  set; }
+        public CorpoHidricoEntity CorpoHidrico { get; private set; } = null!;
+        public List<ImagemEntity> Imagens { get; private set; } = [];
+        public List<MetalPesadoEntity> MetaisPesados { get; private set; } = [];
+        public List<CianoBacteriaEntity> CianoBacterias { get; private set; } = [];
+        public DateTimeOffset DataHora { get;  set; }
+        public double? Latitude { get;  set; }
+        public double? Longitude { get;  set; }
+        public double? ProfundidadeMetros { get;  set; }
+
 
         public ColetaEntity() { }
         public ColetaEntity(
@@ -28,8 +33,8 @@ namespace back_end.src.Domain.Coleta
             double? profundidade
         )
         {
-            if (corpoHidricoId < 0)
-                throw new Exception("Id inválido!");
+            if (corpoHidricoId <= 0)
+                throw new ArgumentException("Id inválido!");
 
             this.CorpoHidricoId = corpoHidricoId;
             this.DataHora = dataHora;
@@ -42,6 +47,12 @@ namespace back_end.src.Domain.Coleta
 
         public void AdicionarMedicao(MedicoesEntity medicao)
         {
+            ArgumentNullException.ThrowIfNull(medicao);
+            if (medicao.ColetaId != 0 && medicao.ColetaId != Id)
+                throw new InvalidOperationException("A medição pertence a outra coleta.");
+            if (Id > 0)
+                medicao.VincularColeta(Id);
+
             var existente = Medicoes.Any(x => x.codigoMedicao == medicao.codigoMedicao);
 
             if (existente)

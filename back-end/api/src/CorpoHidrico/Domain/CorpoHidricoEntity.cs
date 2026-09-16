@@ -15,7 +15,7 @@ namespace back_end.src.Domain.CorpoHidrico
         private bool EhPrivado { get; set; }
 
         public List<UserEntity> users { get; private set; }
-        public List<Coleta.ColetaEntity> Coletas { get; private set; }
+        public List<Coleta.ColetaEntity> Coletas { get; private set; } = [];
         public List<Imagem.ImagemEntity> Imagens { get; private set; }
 
         public CorpoHidricoEntity() { }
