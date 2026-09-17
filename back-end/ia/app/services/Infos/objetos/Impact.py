@@ -18,7 +18,7 @@ class Impact():
     def impact(self,heavyMetais=None):
         detectado = ""
         if not heavyMetais:
-            return "Foi detectada a presença de lixo no lago. O descarte irregular pode contaminar a água e aumentar a concentração de metais pesados."
+            return f"{self.mensagem()}"
         for metal,value in heavyMetais.items():
             metal = self.heavyMetais(metal,float(value))
             if metal == None:

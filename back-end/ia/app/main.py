@@ -1,4 +1,5 @@
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.responses import Response
 from ultralytics import YOLO
 import os
 import numpy as np
@@ -18,7 +19,7 @@ app = FastAPI(
 #Modelo de analise de imagem
 trainVersion = "train";
 servicesPath = os.path.join(os.getcwd(), "services")
-modelComputerVison = YOLO(f"{servicesPath}/computerVision/runs/detect/{trainVersion}/weights/best.pt")
+modelComputerVison = YOLO(f"{servicesPath}/ComputerVision/runs/detect/{trainVersion}/weights/best.pt")
 
 #Modelo de predição (já treinado no google colab)
 path_modelo = f'{os.getcwd()}/services/Predict/model/best_model.pkl'
@@ -60,7 +61,7 @@ result = [
 
 
 async def predict_image(img):
-    imgPredict = modelComputerVison.predict(img, conf=0.25, save=False,show=True, save_txt=False)
+    imgPredict = modelComputerVison.predict(img, conf=0.25, save=False, show=False, save_txt=False)
     return imgPredict
 
 async def _instaciateObjetcDeteced(box):
@@ -71,7 +72,8 @@ async def _instaciateObjetcDeteced(box):
             return Lixo(box, conf, "lixo")
         case 2:
             return Urbano(box,conf,"Urbano")
-    return Lixo(box, conf, "lixo")
+        case _:
+            return Lixo(box,-1,"lixo")
 
 
 
@@ -99,11 +101,22 @@ async def predict(file: UploadFile = File(...)):
     conteudo = await file.read()
     nparr = np.frombuffer(conteudo, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    imgPredict = predict_image(img)
-    return {
-        "msg": "Predição realizada com sucesso",
-        "predictions": str(imgPredict)
-    }
+
+    if img is None:
+        raise HTTPException(status_code=400, detail="O arquivo enviado não é uma imagem válida")
+
+    imgPredict = await predict_image(img)
+    imagemAnotada = imgPredict[0].plot()
+    sucesso, imagemJpeg = cv2.imencode(".jpg", imagemAnotada)
+
+    if not sucesso:
+        raise HTTPException(status_code=500, detail="Não foi possível gerar a imagem predita")
+
+    return Response(
+        content=imagemJpeg.tobytes(),
+        media_type="image/jpeg",
+        headers={"Content-Disposition": 'inline; filename="predicao.jpg"'}
+    )
     
 async def _predict(data: Amostra):
     predicted = modelPredicao.predict(data.decode())

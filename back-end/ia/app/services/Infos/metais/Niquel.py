@@ -1,4 +1,4 @@
-from .Metal import Metal
+from .metal import Metal
 class Niquel(Metal):
     def __init__(self, valor, unidadeMedida = "µg/L",limite=25):
         super().__init__("Níquel", valor, unidadeMedida,limite)

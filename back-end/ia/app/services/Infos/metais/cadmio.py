@@ -1,4 +1,4 @@
-from .Metal import Metal
+from .metal import Metal
 class Cadmio(Metal):
     def __init__(self, valor, unidadeMedida = "µg/L",limite = 1):
         super().__init__("Cádmio", valor, unidadeMedida,limite)

@@ -1,4 +1,4 @@
-from .Metal import Metal
+from .metal import Metal
 class Maganes(Metal):
     def __init__(self, valor, unidadeMedida = "mg/L",limite = 0.1):
         super().__init__("Maganês", valor, unidadeMedida,limite)

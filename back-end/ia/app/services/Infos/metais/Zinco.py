@@ -1,4 +1,4 @@
-from .Metal import Metal
+from .metal import Metal
 class Zinco(Metal):
     def __init__(self, valor, unidadeMedida = "µg/L",limite = 180):
         super().__init__("Zinco", valor, unidadeMedida,limite)
