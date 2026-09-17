@@ -15,7 +15,7 @@ namespace back_end.src.Controllers.Vision
     {
         private readonly WaterPathDbContext context;
         private static readonly HttpClient client = new HttpClient();
-        private readonly string urlFastAPI = "http://127.0.0.1:8000";
+        private readonly string urlFastAPI = "https://watherpathia.onrender.com";
 
         public ControllerVision(WaterPathDbContext context)
         {

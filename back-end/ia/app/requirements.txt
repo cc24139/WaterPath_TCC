@@ -17,4 +17,5 @@ joblib == 1.5.3
 
 pandas
 numpy
+openpyxl
 
