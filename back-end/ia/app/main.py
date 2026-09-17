@@ -1,40 +1,114 @@
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import Response
-from ultralytics import YOLO
+import ast
 import os
-import numpy as np
-import joblib
+from functools import lru_cache
+from pathlib import Path
+from threading import Lock
+
+for variable in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
+    os.environ[variable] = "1"
+
 import cv2
-import pandas as pd
-import json
-import sklearn as sk
+import numpy as np
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.responses import JSONResponse, Response
+from PIL import Image, ImageOps, UnidentifiedImageError
+from pydantic import ValidationError
+
 from DTOs.Amostra import Amostra
 from services.Infos.objetos.Lixo import Lixo
 from services.Infos.objetos.Urbano import Urbano
-app = FastAPI(
-    title="API de IA",
-    description="API para predição com YOLO",
-    version="1.0.0"
-)
-#Modelo de analise de imagem
-trainVersion = "train";
-servicesPath = os.path.join(os.getcwd(), "services")
-modelComputerVison = YOLO(f"{servicesPath}/ComputerVision/runs/detect/{trainVersion}/weights/best.pt")
 
-#Modelo de predição (já treinado no google colab)
-path_modelo = f'{os.getcwd()}/services/Predict/model/best_model.pkl'
-modelPredicao = joblib.load(path_modelo)
-# Dados testes 
-dataTestPATH = f'{os.getcwd()}/services/Predict/data/Data_Lake Onego_V2.xlsx'
+cv2.setNumThreads(1)
+MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+MAX_REQUEST_BYTES = MAX_UPLOAD_BYTES + 64 * 1024
+MAX_IMAGE_PIXELS = 4_000_000
+MAX_IMAGE_SIDE = 1280
+Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
+servicesPath = Path(__file__).resolve().parent / "services"
+trainVersion = "train"
+dataTestPATH = servicesPath / "Predict/data/Data_Lake Onego_V2.xlsx"
+
+
+class InferenceLimits:
+    def __init__(self, app):
+        self.app = app
+        self.lock = Lock()
+
+    async def __call__(self, scope, receive, send):
+        paths = {"/predict", "/predict/test", "/vision/predict", "/vision/infos"}
+        if scope["type"] != "http" or scope["path"].rstrip("/") not in paths:
+            return await self.app(scope, receive, send)
+        headers = dict(scope["headers"])
+        try:
+            length = int(headers.get(b"content-length", b"0"))
+        except ValueError:
+            return await JSONResponse({"detail": "Content-Length inválido"}, status_code=400)(scope, receive, send)
+        if length > MAX_REQUEST_BYTES:
+            return await JSONResponse({"detail": "Envie uma imagem de até 4 MB"}, status_code=413)(scope, receive, send)
+        if not self.lock.acquire(blocking=False):
+            return await JSONResponse(
+                {"detail": "Servidor ocupado. Tente novamente em instantes."},
+                status_code=503,
+                headers={"Retry-After": "2"},
+            )(scope, receive, send)
+        received = 0
+
+        async def limited_receive():
+            nonlocal received
+            message = await receive()
+            received += len(message.get("body", b""))
+            if received > MAX_REQUEST_BYTES:
+                raise HTTPException(status_code=413, detail="Envie uma imagem de até 4 MB")
+            return message
+
+        try:
+            await self.app(scope, limited_receive, send)
+        finally:
+            self.lock.release()
+
+
+app = FastAPI(title="API de IA", description="API para predição com YOLO", version="1.0.0")
+app.add_middleware(InferenceLimits)
+
+
+@lru_cache(maxsize=1)
+def vision_model():
+    import onnxruntime as ort
+
+    options = ort.SessionOptions()
+    options.intra_op_num_threads = 1
+    options.inter_op_num_threads = 1
+    options.enable_cpu_mem_arena = False
+    options.enable_mem_pattern = False
+    path = Path(os.getenv("YOLO_MODEL_PATH", str(servicesPath / "ComputerVision/best.onnx")))
+    return ort.InferenceSession(str(path), sess_options=options, providers=["CPUExecutionProvider"])
+
+
+def vision_names():
+    return ast.literal_eval(vision_model().get_modelmeta().custom_metadata_map["names"])
+
+
+@lru_cache(maxsize=1)
+def quality_model():
+    import joblib
+
+    model = joblib.load(servicesPath / "Predict/model/best_model.pkl", mmap_mode="r")
+    parameters = model.get_params(deep=True)
+    limits = {key: 1 for key in parameters if key.split("__")[-1] in {"n_jobs", "thread_count", "nthread"}}
+    if limits:
+        model.set_params(**limits)
+    return model
+
+
 features = [
-      "T, °C",
-      "рН",
-      "TSS, mg/L",
-      "Color, mg Pt-Co/L",
-      "TOC, mg/L",
-      "CODMn, mg О/L",
-      "CODCr, мгО/л",
-      "BOD5, mg О2/L",
+    "T, °C",
+    "рН",
+    "TSS, mg/L",
+    "Color, mg Pt-Co/L",
+    "TOC, mg/L",
+    "CODMn, mg О/L",
+    "CODCr, мгО/л",
+    "BOD5, mg О2/L",
     "PO4-P, µg/L",
     "TP, µg/L",
     "NH4-N, mgN/L",
@@ -58,93 +132,130 @@ result = [
 ]
 
 
+def read_image(file):
+    if file.size is not None and file.size > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="Envie uma imagem de até 4 MB")
+    try:
+        file.file.seek(0, 2)
+        if file.file.tell() > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail="Envie uma imagem de até 4 MB")
+        file.file.seek(0)
+        with Image.open(file.file) as source:
+            if source.width * source.height > MAX_IMAGE_PIXELS:
+                raise HTTPException(status_code=413, detail="A imagem deve ter até 4 megapixels")
+            source.draft("RGB", (MAX_IMAGE_SIDE, MAX_IMAGE_SIDE))
+            source.thumbnail((MAX_IMAGE_SIDE, MAX_IMAGE_SIDE))
+            with ImageOps.exif_transpose(source) as oriented:
+                with oriented.convert("RGB") as rgb:
+                    return cv2.cvtColor(np.asarray(rgb), cv2.COLOR_RGB2BGR)
+    except Image.DecompressionBombError as exc:
+        raise HTTPException(status_code=413, detail="A imagem deve ter até 4 megapixels") from exc
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail="O arquivo enviado não é uma imagem válida") from exc
 
 
-async def predict_image(img):
-    imgPredict = modelComputerVison.predict(img, conf=0.25, save=False, show=False, save_txt=False)
-    return imgPredict
+def predict_image(img):
+    session = vision_model()
+    height, width = img.shape[:2]
+    size = session.get_inputs()[0].shape[2]
+    scale = min(size / height, size / width)
+    resized = cv2.resize(img, (round(width * scale), round(height * scale)))
+    left = round((size - resized.shape[1]) / 2 - 0.1)
+    top = round((size - resized.shape[0]) / 2 - 0.1)
+    padded = np.full((size, size, 3), 114, dtype=np.uint8)
+    padded[top:top + resized.shape[0], left:left + resized.shape[1]] = resized
+    tensor = np.ascontiguousarray(padded[:, :, ::-1].transpose(2, 0, 1)[None], dtype=np.float32)
+    tensor /= 255.0
+    output = session.run(None, {session.get_inputs()[0].name: tensor})[0][0].T
+    scores = output[:, 4:].max(axis=1)
+    selected = scores > 0.25
+    output = output[selected]
+    scores = scores[selected]
+    if not len(output):
+        return []
+    classes = output[:, 4:].argmax(axis=1)
+    boxes = output[:, :4].copy()
+    boxes[:, :2] -= boxes[:, 2:] / 2
+    indices = cv2.dnn.NMSBoxesBatched(boxes.tolist(), scores.tolist(), classes.tolist(), 0.25, 0.7)
+    detections = []
+    for index in np.asarray(indices).reshape(-1)[:300]:
+        x, y, w, h = boxes[index]
+        coordinates = np.array([x - left, y - top, x + w - left, y + h - top]) / scale
+        coordinates[[0, 2]] = coordinates[[0, 2]].clip(0, width)
+        coordinates[[1, 3]] = coordinates[[1, 3]].clip(0, height)
+        detections.append((coordinates, float(scores[index]), int(classes[index])))
+    return detections
 
-async def _instaciateObjetcDeteced(box):
-    conf = box.conf[0]
-    name = box.cls[0]
-    match(name):
-        case 0:
-            return Lixo(box, conf, "lixo")
-        case 2:
-            return Urbano(box,conf,"Urbano")
-        case _:
-            return Lixo(box,-1,"lixo")
 
-
-
-async def _relatorioImg(predictedImg,predictedHeavyMetais):
-    relatorio = []
-    for resultsIMG in predictedImg:
-        for box in resultsIMG.boxes:
-            x1, y1, x2, y2 = box.xyxy[0]
-            obj = await _instaciateObjetcDeteced(box)
-            relatorio += [{obj.impact(predictedHeavyMetais)}]
-    return relatorio
-    
+def image_report(predictions, metals):
+    report = []
+    for box, confidence, label in predictions:
+        if label == 2:
+            obj = Urbano(box, confidence, "Urbano")
+        else:
+            obj = Lixo(box, confidence if label == 0 else -1, "lixo")
+        report.append([obj.impact(metals)])
+    return report
 
 
 @app.get("/vision/infos")
-async def getInfos():
-    return {"msg:": "Informações do modelo de visão computacional", 
-            "names": modelComputerVison.names, 
-            "trainVersion": trainVersion}
-    
-    
+def getInfos():
+    return {
+        "msg:": "Informações do modelo de visão computacional",
+        "names": vision_names(),
+        "trainVersion": trainVersion,
+    }
+
 
 @app.post("/vision/predict")
-async def predict(file: UploadFile = File(...)):
-    conteudo = await file.read()
-    nparr = np.frombuffer(conteudo, np.uint8)
-    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-    if img is None:
-        raise HTTPException(status_code=400, detail="O arquivo enviado não é uma imagem válida")
-
-    imgPredict = await predict_image(img)
-    imagemAnotada = imgPredict[0].plot()
-    sucesso, imagemJpeg = cv2.imencode(".jpg", imagemAnotada)
-
-    if not sucesso:
+def predict(file: UploadFile = File(...)):
+    img = read_image(file)
+    predictions = predict_image(img)
+    names = vision_names()
+    for box, confidence, label in predictions:
+        x1, y1, x2, y2 = box.round().astype(int)
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 180, 255), 2)
+        cv2.putText(img, f"{names[label]} {confidence:.2f}", (x1, max(y1 - 8, 16)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 180, 255), 1)
+    success, jpeg = cv2.imencode(".jpg", img)
+    if not success:
         raise HTTPException(status_code=500, detail="Não foi possível gerar a imagem predita")
-
     return Response(
-        content=imagemJpeg.tobytes(),
+        content=jpeg.tobytes(),
         media_type="image/jpeg",
-        headers={"Content-Disposition": 'inline; filename="predicao.jpg"'}
+        headers={"Content-Disposition": 'inline; filename="predicao.jpg"'},
     )
-    
-async def _predict(data: Amostra):
-    predicted = modelPredicao.predict(data.decode())
-    response = {}
-    for metal, value in zip(result, predicted[0]):
-        response[metal] = f"{value.round(4)}"
-    return response
+
+
+def predict_metals(data):
+    predicted = quality_model().predict(data.decode())
+    return {metal: f"{value.round(4)}" for metal, value in zip(result, predicted[0])}
+
 
 @app.post("/predict")
-async def predictQuality(data:str = Form(...),image:UploadFile = File(...)):
-    dataAmostra = Amostra.parse_raw(data)
-    predicted = await _predict(dataAmostra)
-    conteudo = await image.read()
-    nparr = np.frombuffer(conteudo, np.uint8)
-    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    imgPredict = await predict_image(img)
-    relatorioImg = await _relatorioImg(imgPredict,predicted)
+def predictQuality(data: str = Form(...), image: UploadFile = File(...)):
+    try:
+        sample = Amostra.model_validate_json(data)
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail="Dados da amostra inválidos") from exc
+    img = read_image(image)
+    predicted = predict_metals(sample)
+    predictions = predict_image(img)
     return {
         "msg": "Predição realizada com sucesso",
         "predictions": predicted,
-        "predictedHeavyMetais": dataAmostra.dict(),
-        "relatorioImg": relatorioImg
+        "predictedHeavyMetais": sample.model_dump(),
+        "relatorioImg": image_report(predictions, predicted),
     }
-#rota apena para dar dados para testar a predição
+
+
 @app.get("/predict/test")
-async def predict_test():
+def predict_test():
+    if os.getenv("ENABLE_TEST_ENDPOINT", "false").lower() != "true":
+        raise HTTPException(status_code=404, detail="Rota de teste desabilitada")
+    import pandas as pd
+    from sklearn.model_selection import train_test_split
+
     dados = pd.read_excel(dataTestPATH)
-    dados = pd.DataFrame(dados)
     dados.columns = dados.columns.str.strip()
     dados = dados.dropna()
     dados[features] = dados[features].map(tratar_censurado)
@@ -152,13 +263,13 @@ async def predict_test():
     dados = dados.dropna()
     X = dados.loc[:, features]
     Y = dados.loc[:, result]
-    TrainX, TestX, TrainY, TestY = sk.model_selection.train_test_split(
+    _, TestX, _, TestY = train_test_split(
         X,
         Y,
         test_size=0.2,
         random_state=42
     )
-    predicoes = modelPredicao.predict(TestX)
+    predicoes = quality_model().predict(TestX)
     PredY = pd.DataFrame(
         predicoes,
         columns=result,
@@ -168,9 +279,9 @@ async def predict_test():
     resultado = []
     for i in TestX.index:
         resultado.append({
-        "entrada": TestX.loc[i].to_dict(),
-        "real": TestY.loc[i].to_dict(),
-        "predito": PredY.loc[i].to_dict()
+            "entrada": TestX.loc[i].to_dict(),
+            "real": TestY.loc[i].to_dict(),
+            "predito": PredY.loc[i].to_dict()
         })
     return resultado
 
@@ -180,20 +291,7 @@ async def root():
     return {"msg": "API funcionando"}
 
 
-
 def tratar_censurado(valor):
     if isinstance(valor, str) and valor.startswith("<"):
-        limite = float(valor[1:])
-        return limite / 2
-
+        return float(valor[1:]) / 2
     return float(valor)
-
-
- 
-def infos():
-    print(modelComputerVison.names)   
-
-infos()
-#Para rodar: uvicorn main:app --reload
-#Para rodar mac:  python3 -m uvicorn main:app --reload
-#Para rodar linux: python -m uvicorn main:app --reload

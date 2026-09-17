@@ -1,21 +1,13 @@
-fastapi[standard]
-uvicorn[standard]
-opencv-python==4.14.0.94
+fastapi
+uvicorn
 python-multipart
 pillow
-
-ultralytics
-
-torch
-torchvision
-
-xgboost == 3.4.1
-catboost == 1.2.10
-scikit-learn == 1.6.1
-joblib == 1.5.3
-
-
+opencv-python-headless==4.14.0.94
+xgboost-cpu==3.4.1
+catboost==1.2.10
+scikit-learn==1.6.1
+joblib==1.5.3
 pandas
 numpy
 openpyxl
-
+onnxruntime==1.30.0
