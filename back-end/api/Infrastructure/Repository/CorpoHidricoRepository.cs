@@ -86,7 +86,7 @@ namespace back_end.src.Infrastructure.Repository
         public List<int> ObterColetasDoCorpoHidrico(int corpoHidricoId)
         {
             return context
-                .Coletas.Where(c => c.CorpoHidrico.Id == corpoHidricoId)
+                .Coletas.Where(c => c.CorpoHidricoId == corpoHidricoId)
                 .Select(c => c.Id)
                 .ToList();
         }

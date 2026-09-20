@@ -8,7 +8,10 @@ public class QueryObterColetaPorId : IRequest<ColetaEntity?>
     public int Id { get; set; }
 }
 
-public class QueryObterTodasColetas : IRequest<List<ColetaEntity>> { }
+public class QueryObterTodasColetas : IRequest<List<ColetaEntity>>
+{
+
+}
 
 public class QueryObterColetasPorPeriodo : IRequest<List<ColetaEntity>>
 {

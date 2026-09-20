@@ -126,43 +126,6 @@ namespace back_end.Migrations
                     b.ToTable("CianoBacterias", "waterPath");
                 });
 
-            modelBuilder.Entity("back_end.src.Domain.Codigo.CodigoEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Codigo")
-                        .IsRequired()
-                        .HasMaxLength(6)
-                        .HasColumnType("character varying(6)");
-
-                    b.Property<DateTime>("DataExpiracao")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("DataGeracao")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("Usado")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("UsuarioId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("emailUsuario")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("Codigos", "waterPath");
-                });
-
             modelBuilder.Entity("back_end.src.Domain.Coleta.ColetaEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -171,36 +134,20 @@ namespace back_end.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<float>("CloroResidual")
-                        .HasColumnType("real");
-
-                    b.Property<float>("ColiformesTotais")
-                        .HasColumnType("real");
-
                     b.Property<int>("CorpoHidricoId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("Data")
+                    b.Property<DateTimeOffset>("DataHora")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("EscherichiaColi")
-                        .HasColumnType("boolean");
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
 
-                    b.Property<float>("Floretos")
-                        .HasColumnType("real");
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
 
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<float>("OxigenioDissolvido")
-                        .HasColumnType("real");
-
-                    b.Property<float>("Ph")
-                        .HasColumnType("real");
-
-                    b.Property<float>("Turbidez")
-                        .HasColumnType("real");
+                    b.Property<double?>("ProfundidadeMetros")
+                        .HasColumnType("double precision");
 
                     b.HasKey("Id");
 
@@ -378,6 +325,42 @@ namespace back_end.Migrations
                     b.ToTable("QualidadesFuturas", "waterPath");
                 });
 
+            modelBuilder.Entity("back_end.src.Medicoes.Domain.MedicoesEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ColetaId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("censurado")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("codigoMedicao")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("limite")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("unidade")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double?>("valor")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ColetaId", "codigoMedicao")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Medicoes_ColetaId_codigoMedicao");
+
+                    b.ToTable("Medicoes", "waterPath");
+                });
+
             modelBuilder.Entity("QualidadeCianoBacterias", b =>
                 {
                     b.HasOne("back_end.src.Domain.CianoBacteria.CianoBacteriaEntity", null)
@@ -436,17 +419,6 @@ namespace back_end.Migrations
                         .HasForeignKey("QualidadeFuturaEntityId");
 
                     b.Navigation("Coleta");
-                });
-
-            modelBuilder.Entity("back_end.src.Domain.Codigo.CodigoEntity", b =>
-                {
-                    b.HasOne("Domain.User.UserEntity", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("back_end.src.Domain.Coleta.ColetaEntity", b =>
@@ -527,11 +499,24 @@ namespace back_end.Migrations
                     b.Navigation("CorpoHidrico");
                 });
 
+            modelBuilder.Entity("back_end.src.Medicoes.Domain.MedicoesEntity", b =>
+                {
+                    b.HasOne("back_end.src.Domain.Coleta.ColetaEntity", "Coleta")
+                        .WithMany("Medicoes")
+                        .HasForeignKey("ColetaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Coleta");
+                });
+
             modelBuilder.Entity("back_end.src.Domain.Coleta.ColetaEntity", b =>
                 {
                     b.Navigation("CianoBacterias");
 
                     b.Navigation("Imagens");
+
+                    b.Navigation("Medicoes");
 
                     b.Navigation("MetaisPesados");
                 });

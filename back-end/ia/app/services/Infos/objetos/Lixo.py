@@ -1,5 +1,7 @@
 from .Impact import Impact
 from services.Infos.metais.chumbo import Chumbo
+from services.Infos.metais.Zinco import Zinco
+from services.Infos.metais.cadmio import Cadmio
 class Lixo(Impact):
     def __init__(self,obj,confidence=0.1,name="lixo"):
         super().__init__(obj,confidence,name)
@@ -13,10 +15,18 @@ class Lixo(Impact):
             "impact": self.impact(heavyMetais)
         }
     
+    
+    def mensagem(self):
+        return "Foi detectado a presença de lixo no lago, isso pode impactar na presença de zinco,chumbo e cadmio"
+    
     def heavyMetais(self,metal,value):
-        print(metal)
-        return Chumbo(float(value),"µg/L")
-        match(metal):
-            case "Pb, ":
-                return Chumbo(self.obj, "Pb, µg/L")
-                
+        
+        if not metal in self._AllMetals:
+            return None
+        match (metal):
+            case "Zn, µg/L":
+                return Zinco(value)
+            case "Pb, µg/L":
+                return Chumbo(value)
+            case "Cd, µg/L":
+                return Cadmio(value)

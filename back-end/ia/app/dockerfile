@@ -1,23 +1,39 @@
+FROM python:3.13.15-slim AS exporter
+
+ENV YOLO_CONFIG_DIR=/tmp/ultralytics OMP_NUM_THREADS=1
+WORKDIR /export
+RUN pip install --no-cache-dir torch==2.14.0+cpu torchvision==0.29.0+cpu --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir ultralytics-opencv-headless==8.4.138 onnx==1.22.0
+COPY services/ComputerVision/runs/detect/train/weights/best.pt .
+RUN python -c "from ultralytics import YOLO; YOLO('best.pt').export(format='onnx', imgsz=640, batch=1, dynamic=False, simplify=False, opset=17, nms=False, device='cpu')"
+
 FROM python:3.13.15-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    YOLO_CONFIG_DIR=/tmp/ultralytics \
+    MPLCONFIGDIR=/tmp/matplotlib \
+    OMP_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    NUMEXPR_NUM_THREADS=1 \
+    MALLOC_ARENA_MAX=2
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    libgl1 \
-    libglib2.0-0 \
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-
-ENV YOLO_CONFIG_DIR=/tmp
-
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY main.py .
+COPY DTOs ./DTOs
+COPY services/Infos ./services/Infos
+COPY services/Predict/model/best_model.pkl ./services/Predict/model/best_model.pkl
+COPY services/Predict/data/Data_Lake* ./services/Predict/data/
+COPY --from=exporter /export/best.onnx ./services/ComputerVision/best.onnx
 
 EXPOSE 10000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
+CMD ["sh", "-c", "exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000} --workers 1 --limit-concurrency 4 --backlog 8 --timeout-keep-alive 5"]
