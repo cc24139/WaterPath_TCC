@@ -32,8 +32,6 @@ O Projeto propôe-se cria
 
 ### Execução
 
-## 🧪 Testes
-
 ## 📊 Resultados Obtidos
 
 ## 📸 Demonstração / Screenshots
