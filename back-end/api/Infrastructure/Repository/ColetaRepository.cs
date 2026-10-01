@@ -83,6 +83,26 @@ namespace back_end.src.Infrastructure.Repository
             return Consultar().SingleOrDefault(c => c.Id == id);
         }
 
+        public List<ColetaEntity> ObterPorCorpoHidricoEPeriodo(int corpoHidricoId, string dataInicio, string dataFim)
+        {
+            return Consultar()
+                .Where(c =>
+                    c.CorpoHidricoId == corpoHidricoId
+                    && c.DataHora >= DateTimeOffset.Parse(dataInicio).ToUniversalTime()
+                    && c.DataHora <= DateTimeOffset.Parse(dataFim).ToUniversalTime()
+                )
+                .ToList();
+        }
+
+        public List<ColetaEntity> ObterPorData(DateTime data)
+        {
+            var dataInicio = new DateTimeOffset(data.Date, TimeSpan.Zero);
+            var dataFim = new DateTimeOffset(data.Date.AddDays(1).AddTicks(-1), TimeSpan.Zero);
+            return Consultar()
+                .Where(c => c.DataHora >= dataInicio && c.DataHora <= dataFim)
+                .ToList();
+        }
+        
         public List<ColetaEntity> ObterPorPeriodo(
             int corpoHidricoId,
             string dataInicio,

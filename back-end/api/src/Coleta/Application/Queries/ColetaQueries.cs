@@ -36,3 +36,15 @@ public class QueryObterColetaRecente : IRequest<ColetaEntity?>
 {
     public int CorpoHidricoId { get; set; }
 }
+
+public class QueryObterColetasPorData : IRequest<List<ColetaEntity>>
+{
+    public DateTime Data { get; set; }
+}
+
+public class QueryObterColetasPorCorpoHidricoEPeriodo : IRequest<List<ColetaEntity>>
+{
+    public int CorpoHidricoId { get; set; }
+    public DateTime DataInicio { get; set; }
+    public DateTime DataFim { get; set; }
+}

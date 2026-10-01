@@ -7,6 +7,7 @@ using Application.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using back_end.src.Domain.CorpoHidrico;
 
 namespace back_end.src.Controllers.CorpoHidrico
 {
@@ -53,6 +54,14 @@ namespace back_end.src.Controllers.CorpoHidrico
                 var corpoHidrico = await mediator.Send(new QueryObterCorpoHidricoPorId { Id = id });
                 if (corpoHidrico == null)
                     return NotFound("Corpo hídrico não encontrado");
+                //salva o corpoHidrico no token para consultas
+                var corpoHidricoClaim = User.Claims.FirstOrDefault(c => c.Type == "corpoHidricoId");
+                if (corpoHidricoClaim != null)
+                    corpoHidricoClaim = new Claim("corpoHidricoId", corpoHidrico.Id.ToString());
+                else
+                    ((ClaimsIdentity)User.Identity).AddClaim(
+                        new Claim("corpoHidricoId", corpoHidrico.Id.ToString())
+                    );
                 return Ok(CorpoHidricoDTO.FromEntity(corpoHidrico));
             }
             catch (ArgumentException ex)
@@ -148,5 +157,23 @@ namespace back_end.src.Controllers.CorpoHidrico
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpGet("nome/{nome}")]
+        public async Task<IActionResult> ObterPorNome(string nome)
+        {
+            try
+            {
+                var corpoHidrico = await mediator.Send(new QueryObterCorpoHidricoPorNome { Nome = nome });
+                if (corpoHidrico == null)
+                    return NotFound("Corpo hídrico não encontrado");
+                return Ok(CorpoHidricoDTO.FromEntity(corpoHidrico));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
+
+
 }

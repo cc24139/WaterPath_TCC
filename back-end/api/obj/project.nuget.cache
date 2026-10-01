@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "bl3f6ExuMtg=",
+  "dgSpecHash": "fSUn83pAVaI=",
   "success": true,
   "projectFilePath": "C:\\Users\\lf446\\OneDrive\\Documentos\\GitHub\\WaterPath_TCC\\back-end\\api\\back-end.csproj",
   "expectedPackageFiles": [
@@ -49,15 +49,5 @@
     "C:\\Users\\lf446\\.nuget\\packages\\system.composition.typedparts\\7.0.0\\system.composition.typedparts.7.0.0.nupkg.sha512",
     "C:\\Users\\lf446\\.nuget\\packages\\system.identitymodel.tokens.jwt\\8.17.0\\system.identitymodel.tokens.jwt.8.17.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1900",
-      "level": "Warning",
-      "message": "Ocorreu um erro ao obter os dados de vulnerabilidade do pacote: Não é possível carregar o índice de serviço para a origem https://api.nuget.org/v3/index.json.",
-      "projectPath": "C:\\Users\\lf446\\OneDrive\\Documentos\\GitHub\\WaterPath_TCC\\back-end\\api\\back-end.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\Users\\lf446\\OneDrive\\Documentos\\GitHub\\WaterPath_TCC\\back-end\\api\\back-end.csproj",
-      "targetGraphs": []
-    }
-  ]
+  "logs": []
 }

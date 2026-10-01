@@ -5,6 +5,7 @@ using Application.Queries.Coleta;
 using back_end.src.Domain.Coleta;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace back_end.src.Controllers.Coleta
 {
@@ -74,17 +75,67 @@ namespace back_end.src.Controllers.Coleta
                 return Ok(coletas.Select(c => new
                 {
                     c.Id,
-                    c.Nome,
-                    c.Data,
-                    c.Ph,
-                    c.OxigenioDissolvido,
-                    c.Turbidez,
-                    c.CondutividadeEletrica,
-                    c.SolidosSuspensosTotais,
-                    c.Sodio,
-                    c.Cloreto,
-                    CorpoHidrico = c.CorpoHidrico == null ? null : new { c.CorpoHidrico.Id },
-                }));
+                    c.DataHora,
+                    c.Medicoes,
+                    c.CorpoHidricoId,
+                }));    
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("corpo-hidrico/{idCorpoHidrico}")]
+        public async Task<IActionResult> ObterPorCorpoHidrico(int idCorpoHidrico)
+        {
+            try
+            {
+                var coletas = await mediator.Send(new QueryObterColetasPorCorpoHidrico { CorpoHidricoId = idCorpoHidrico });
+                return Ok(coletas);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpGet("periodo/{corpoHidricoId}")]
+        public async Task<IActionResult> ObterPorPeriodo(int corpoHidricoId, [FromQuery] DateTime dataInicio, [FromQuery] DateTime dataFim)
+        {
+            try
+            {
+                var coletas = await mediator.Send(new QueryObterColetasPorPeriodo { CorpoHidricoId = corpoHidricoId, DataInicio = dataInicio, DataFim = dataFim });
+                return Ok(coletas);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpGet("data/{data}")]
+        public async Task<IActionResult> ObterPorData(DateTime data)
+        {
+            try
+            {
+                var idCorpoHidrico = User.Claims.FirstOrDefault(c => c.Type == "corpoHidricoId")?.Value;
+                var coletas = await mediator.Send(new QueryObterColetasPorData { Data = data });
+                return Ok(coletas);
             }
             catch (InvalidOperationException ex)
             {

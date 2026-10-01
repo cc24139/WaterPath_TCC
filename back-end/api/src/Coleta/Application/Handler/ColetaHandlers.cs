@@ -90,3 +90,41 @@ public class ObterTodasColetasHandler : IRequestHandler<QueryObterTodasColetas, 
         return Task.FromResult(coletas);
     }
 }
+
+public class ObterColetasPorCorpoHidricoHandler : IRequestHandler<QueryObterColetasPorCorpoHidrico, List<ColetaEntity>>
+{
+    private readonly IColetaRepository coletaRepository;
+
+    public ObterColetasPorCorpoHidricoHandler(IColetaRepository coletaRepository)
+    {
+        this.coletaRepository = coletaRepository;
+    }
+
+    public Task<List<ColetaEntity>> Handle(
+        QueryObterColetasPorCorpoHidrico request,
+        CancellationToken cancellationToken
+    )
+    {
+        var coletas = coletaRepository.ObterPorCorpoHidrico(request.CorpoHidricoId);
+        return Task.FromResult(coletas);
+    }
+}
+
+public class ObterColetasPorDataHandler : IRequestHandler<QueryObterColetasPorData, List<ColetaEntity>>
+{
+    private readonly IColetaRepository coletaRepository;
+
+    public ObterColetasPorDataHandler(IColetaRepository coletaRepository)
+    {
+        this.coletaRepository = coletaRepository;
+    }
+
+    public Task<List<ColetaEntity>> Handle(
+        QueryObterColetasPorData request,
+        CancellationToken cancellationToken
+    )
+    {
+        var coletas = coletaRepository.ObterPorData(request.Data);
+        return Task.FromResult(coletas);
+    }
+}

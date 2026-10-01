@@ -49,6 +49,23 @@ public class MedicoesRepository : IMedicoesRepository
 
     public List<MedicoesEntity> ObterTodos() =>
         context.Medicoes.AsNoTracking().OrderBy(m => m.Id).ToList();
+    
+    public List<MedicoesEntity> ObterPorCodigo(int coletaId, Medicao codigo) =>
+        context.Medicoes.AsNoTracking().Where(m => m.ColetaId == coletaId && m.codigoMedicao == codigo).ToList();
+    
+    public List<MedicoesEntity> ObterPorPeriodo(int coletaId, DateTime dataInicio, DateTime dataFim) =>
+        context.Medicoes.AsNoTracking()
+            .Where(m => m.ColetaId == coletaId && m.Coleta.DataHora >= dataInicio && m.Coleta.DataHora <= dataFim)
+            .OrderBy(m => m.Coleta.DataHora)
+            .ToList();
+    
+    public List<MedicoesEntity> ObterPorCodigoEPeriodo(int coletaId, Medicao codigo, DateTime dataInicio, DateTime dataFim) =>
+        context.Medicoes.AsNoTracking()
+            .Where(m => m.ColetaId == coletaId && m.codigoMedicao == codigo && m.Coleta.DataHora >= dataInicio && m.Coleta.DataHora <= dataFim)
+            .OrderBy(m => m.Coleta.DataHora)
+            .ToList();
+    
+    
 
     private MedicoesEntity Encontrar(int coletaId, int medicaoId) =>
         context.Medicoes.SingleOrDefault(m => m.ColetaId == coletaId && m.Id == medicaoId)

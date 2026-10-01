@@ -2,6 +2,7 @@ using back_end.src.Medicoes.Application;
 using back_end.src.Medicoes.Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace back_end.src.Medicoes.Controller;
 
@@ -47,6 +48,9 @@ public class MedicoesController : ControllerBase
             await mediator.Send(medicao, cancellationToken);
             return Ok("Medição atualizada com sucesso");
         });
+
+    [Authorize]
+    [HttpGet]
 
     [HttpDelete("{idColeta:int}/{idMedicao:int}")]
     public Task<IActionResult> Deletar(int idColeta, int idMedicao, CancellationToken cancellationToken) =>

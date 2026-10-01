@@ -23,3 +23,8 @@ public class QueryObterColetasDoCorpoHidrico : IRequest<List<int>>
 {
     public int CorpoHidricoId { get; set; }
 }   
+
+public class QueryObterCorpoHidricoPorNome : IRequest<CorpoHidricoEntity>
+    {
+        public string Nome { get; set; }
+    }
