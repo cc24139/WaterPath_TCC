@@ -27,6 +27,7 @@ namespace Infrastructure.Data
         public DbSet<QualidadeFuturaEntity> QualidadesFuturas { get; set; }
 
         public DbSet<MedicoesEntity> Medicoes { get; set; }
+        public DbSet<back_end.src.IA.Domain.PredicaoIAEntity> PredicoesIA { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -41,6 +42,7 @@ namespace Infrastructure.Data
 
 
             modelBuilder.ApplyConfiguration(new MedicoesTableConfigure());
+            modelBuilder.ApplyConfiguration(new PredicaoIATableConfigure());
 
             base.OnModelCreating(modelBuilder);
         }

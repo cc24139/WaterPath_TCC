@@ -325,6 +325,60 @@ namespace back_end.Migrations
                     b.ToTable("QualidadesFuturas", "waterPath");
                 });
 
+            modelBuilder.Entity("back_end.src.IA.Domain.PredicaoIAEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ColetaId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ContentTypeOriginal")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ContentTypeResultado")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CriadaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EntradaJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<byte[]>("ImagemOriginal")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<byte[]>("ImagemResultado")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("NomeArquivo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResultadoJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ColetaId", "CriadaEm");
+
+                    b.ToTable("PredicoesIA", "waterPath");
+                });
+
             modelBuilder.Entity("back_end.src.Medicoes.Domain.MedicoesEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -497,6 +551,17 @@ namespace back_end.Migrations
                         .IsRequired();
 
                     b.Navigation("CorpoHidrico");
+                });
+
+            modelBuilder.Entity("back_end.src.IA.Domain.PredicaoIAEntity", b =>
+                {
+                    b.HasOne("back_end.src.Domain.Coleta.ColetaEntity", "Coleta")
+                        .WithMany()
+                        .HasForeignKey("ColetaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Coleta");
                 });
 
             modelBuilder.Entity("back_end.src.Medicoes.Domain.MedicoesEntity", b =>

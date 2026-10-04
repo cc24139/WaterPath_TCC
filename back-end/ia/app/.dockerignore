@@ -6,9 +6,14 @@
 !services/
 !services/Infos/
 !services/Infos/**
+!services/integration.py
 !services/Predict/
+!services/Predict/schema.py
 !services/Predict/model/
 !services/Predict/model/best_model.pkl
+!services/Predict/model/metals_v2_20261004/
+!services/Predict/model/metals_v2_20261004/quality_model.joblib
+!services/Predict/model/metals_v2_20261004/manifest.json
 !services/Predict/data/
 !services/Predict/data/Data_Lake*.xlsx
 !services/ComputerVision/

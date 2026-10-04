@@ -1,53 +1,31 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
+from services.Predict.schema import FIELDS
 
 
 class Amostra(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
 
     # Localização e identificação — opcionais
     estacao: Optional[str] = None
     latitude: Optional[str] = None
     longitude: Optional[str] = None
     data: Optional[str] = None
-    profundidade: Optional[float] = None
+    # Profundidade é metadado; não participa da regressão v2.
+    profundidade: Optional[float] = Field(default=None, ge=0)
     estacao_ano: Optional[str] = None
 
-    # Features utilizadas pelo modelo — obrigatórias
+    # Quatro medições essenciais, na unidade publicada por /predict/infos.
     temperatura: float
-    ph: float
-    condutividade_eletrica: float
-    cor: float
-    solidos_suspensos_totais: float
+    ph: float = Field(ge=0, le=14)
+    condutividade_eletrica: float = Field(ge=0)
+    oxigenio_dissolvido: float = Field(ge=0, description="Oxigênio dissolvido medido, em mg/L; não saturação em %")
+    solidos_suspensos_totais: Optional[float] = Field(default=None, ge=0)
+    carbono_organico_total: Optional[float] = Field(default=None, ge=0)
+    fosforo_total: Optional[float] = Field(default=None, ge=0, description="µg P/L")
 
-    nitrogenio_amoniacal: float
-    nitrito: float
-    nitrato: float
-    nitrogenio_total: float
+    def decode(self, columns=None):
+        import math
 
-    fosfato: float
-    fosforo_total: float
-
-    carbono_organico_total: float
-    demanda_quimica_oxigenio_permanganato: float
-    demanda_quimica_oxigenio_dicromato: float
-    demanda_bioquimica_oxigenio_5_dias: float
-
-    def decode(self):
-        return [[
-            self.temperatura,
-            self.ph,
-            self.solidos_suspensos_totais,
-            self.cor,
-            self.carbono_organico_total,
-            self.demanda_quimica_oxigenio_permanganato,
-            self.demanda_quimica_oxigenio_dicromato,
-            self.demanda_bioquimica_oxigenio_5_dias,
-            self.fosfato,
-            self.fosforo_total,
-            self.nitrogenio_amoniacal,
-            self.nitrito,
-            self.nitrato,
-            self.nitrogenio_total,
-            self.condutividade_eletrica,
-            self.profundidade
-        ]]
+        values = {column: getattr(self, field, None) for field, (column, _) in FIELDS.items()}
+        return [[values[column] if values[column] is not None else math.nan for column in (columns or list(values))]]

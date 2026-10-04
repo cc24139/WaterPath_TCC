@@ -1,6 +1,6 @@
-train: ../train/images
-val: ../train/images
-test: ../test/images
+train: train.txt
+val: val.txt
+test: test.txt
 
 nc: 3
 names: ['Lixo', 'drainage connection', 'urbano']

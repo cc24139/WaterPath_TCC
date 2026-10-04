@@ -22,10 +22,9 @@ class Impact():
         for metal,value in heavyMetais.items():
             metal = self.heavyMetais(metal,float(value))
             if metal == None:
-                break
-            print(metal.valor,metal.definirLimite())
+                continue
             if metal.valor > metal.definirLimite():
-                detectado += f"{metal.nome} acima do limite ({metal.valor} {metal.unidadeMedida}) \n"
+                detectado += f"{metal.nome} previsto acima do limite de referência ({metal.valor} {metal.unidadeMedida}) \n"
         return f"{self.mensagem()} \n {detectado}"
             
     def mensagem(self):

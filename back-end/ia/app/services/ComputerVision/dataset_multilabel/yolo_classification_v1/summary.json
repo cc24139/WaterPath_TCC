@@ -1,0 +1,70 @@
+{
+  "manifest_images": 165,
+  "reviewed_images": 146,
+  "excluded_images": 19,
+  "counts": {
+    "lixo": {
+      "train": {
+        "ausente": 11,
+        "presente": 30
+      },
+      "val": {
+        "ausente": 7,
+        "presente": 3
+      },
+      "test": {
+        "ausente": 11,
+        "presente": 2
+      }
+    },
+    "drainage_connection": {
+      "train": {
+        "ausente": 51,
+        "presente": 7
+      },
+      "val": {
+        "ausente": 15,
+        "presente": 7
+      },
+      "test": {
+        "ausente": 10,
+        "presente": 3
+      }
+    },
+    "urbano": {
+      "train": {
+        "ausente": 54,
+        "presente": 56
+      },
+      "val": {
+        "ausente": 9,
+        "presente": 14
+      },
+      "test": {
+        "ausente": 4,
+        "presente": 8
+      }
+    }
+  },
+  "group_counts": {
+    "train": 28,
+    "val": 10,
+    "test": 7
+  },
+  "leakage_checks": {
+    "group_overlap": 0,
+    "file_hash_overlap": 0,
+    "decoded_pixel_overlap": 0
+  },
+  "unknown_labels": {
+    "lixo": 82,
+    "drainage_connection": 53,
+    "urbano": 1
+  },
+  "notes": [
+    "Rótulos resultam de revisão visual assistida, sem validação humana independente.",
+    "Imagens locais herdadas não têm licença de redistribuição comprovada.",
+    "A divisão mantém grupos de origem juntos; não garante independência de local para todas as fotos externas.",
+    "Não há modelo treinado neste passo."
+  ]
+}

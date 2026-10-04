@@ -7,7 +7,8 @@ xgboost-cpu==3.4.1
 catboost==1.2.10
 scikit-learn==1.6.1
 joblib==1.5.3
-pandas
-numpy
+pandas==3.0.6
+numpy==2.5.3
+scipy==1.18.1
 openpyxl
 onnxruntime==1.30.0

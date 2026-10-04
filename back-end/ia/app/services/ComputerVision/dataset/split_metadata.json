@@ -1,0 +1,10 @@
+{
+  "seed": 42,
+  "images": 106,
+  "groups": 106,
+  "counts": {
+    "val": 16,
+    "test": 16,
+    "train": 74
+  }
+}

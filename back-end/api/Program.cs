@@ -17,6 +17,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using back_end.src.IA.Application;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -69,6 +70,13 @@ builder.Services.AddScoped<IImagemRepository, ImagemRepository>();
 builder.Services.AddScoped<IMetalPesadoRepository, MetalPesadoRepository>();
 builder.Services.AddScoped<IQualidadeRepository, QualidadeRepository>();
 builder.Services.AddScoped<IQualidadeFuturaRepository, QualidadeFuturaRepository>();
+builder.Services.AddScoped<PredicaoIAService>();
+builder.Services.AddHttpClient<IaClient>(client =>
+{
+    var url = builder.Configuration["IA:BaseUrl"] ?? "http://localhost:8000";
+    client.BaseAddress = new Uri(url.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(builder.Configuration.GetValue("IA:TimeoutSeconds", 120));
+});
 
 //CORS
 builder.Services.AddCors(options =>
@@ -77,7 +85,8 @@ builder.Services.AddCors(options =>
         "AllowAll",
         builder =>
         {
-            builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+            builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
+                .WithExposedHeaders("X-Predicao-Id", "Location");
         }
     );
 });

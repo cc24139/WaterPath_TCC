@@ -1,0 +1,166 @@
+{
+  "version": "metals_v2_20261004",
+  "source_doi": "10.5281/zenodo.18459694",
+  "source_url": "https://zenodo.org/records/18459694/files/GFQA_v3.zip?download=1",
+  "license": "CC BY 4.0",
+  "attribution": "Heinle, Moritz; Lisniak, Dmytro; Saile, Philipp; UNEP GEMS/Water Data Centre, GFQA v3 (2026)",
+  "archive_sha256": "82b169dcbf5abf30066020b176b82474b23a2dec0a108a351045f31a6476e92a",
+  "archive_md5": "00f3ea19ce529753977eb3aeb08fbc47",
+  "samples_sha256": "74842509a0a449dbfdd47d37a594049cf9ea344b4d419a19ee1184206e320b65",
+  "records": 14052,
+  "stations": 777,
+  "countries": {
+    "Austria": 1593,
+    "Canada": 3094,
+    "Finland": 29,
+    "Ireland": 1539,
+    "Italy": 1931,
+    "Mexico": 135,
+    "Serbia": 3579,
+    "Sweden": 2151,
+    "United States of America (the)": 1
+  },
+  "feature_observations": {
+    "T, °C": 14052,
+    "рН": 14052,
+    "EC, µS/cm": 14052,
+    "DO, mg/L": 14052,
+    "TSS, mg/L": 8475,
+    "TOC, mg/L": 7839,
+    "TN, mg/L": 10417,
+    "TP, µg/L": 13565
+  },
+  "required_measured_features": [
+    "T, °C",
+    "рН",
+    "EC, µS/cm",
+    "DO, mg/L"
+  ],
+  "features": [
+    "T, °C",
+    "рН",
+    "EC, µS/cm",
+    "DO, mg/L",
+    "TSS, mg/L",
+    "TOC, mg/L",
+    "TN, mg/L",
+    "TP, µg/L"
+  ],
+  "targets": [
+    "Fe, mg/L",
+    "Mn, mg/L",
+    "Cr, µg/L",
+    "Ni, µg/L",
+    "Cu, µg/L",
+    "Zn, µg/L",
+    "Cd, µg/L",
+    "Pb, µg/L"
+  ],
+  "join": "exact station + date + time + depth; total fraction only; conflicting duplicates excluded",
+  "censored_values": "<LOD -> LOD/2, approximate labels retained with count; no fabricated targets",
+  "quality": "Good/Fair/Unknown; excludes estimated/suspect/contamination/pending and integrated observations",
+  "audit": {
+    "Cd-Tot": {
+      "quality_or_integrated_excluded": 10929,
+      "conflicting_samples": 388,
+      "matched": 314734,
+      "remaining": 314734
+    },
+    "Pb-Tot": {
+      "quality_or_integrated_excluded": 543,
+      "conflicting_samples": 347,
+      "matched": 304624,
+      "remaining": 304624
+    },
+    "Cr-Tot": {
+      "quality_or_integrated_excluded": 368,
+      "conflicting_samples": 715,
+      "matched": 274041,
+      "remaining": 274041
+    },
+    "Ni-Tot": {
+      "quality_or_integrated_excluded": 90,
+      "conflicting_samples": 139,
+      "matched": 270743,
+      "remaining": 270743
+    },
+    "Cu-Tot": {
+      "quality_or_integrated_excluded": 169,
+      "conflicting_samples": 45,
+      "matched": 175073,
+      "remaining": 175073
+    },
+    "Zn-Tot": {
+      "quality_or_integrated_excluded": 121,
+      "conflicting_samples": 24,
+      "matched": 169868,
+      "remaining": 169868
+    },
+    "Fe-Tot": {
+      "invalid_value_or_unit": 79,
+      "quality_or_integrated_excluded": 37,
+      "conflicting_samples": 18,
+      "matched": 105943,
+      "remaining": 105943
+    },
+    "Mn-Tot": {
+      "quality_or_integrated_excluded": 26,
+      "conflicting_samples": 2856,
+      "matched": 100230,
+      "remaining": 100230
+    },
+    "TEMP": {
+      "quality_or_integrated_excluded": 399,
+      "conflicting_samples": 575,
+      "matched": 48559,
+      "remaining": 100230
+    },
+    "pH": {
+      "invalid_value_or_unit": 3,
+      "conflicting_samples": 9110,
+      "matched": 45854,
+      "remaining": 100230
+    },
+    "EC": {
+      "invalid_value_or_unit": 9,
+      "quality_or_integrated_excluded": 1,
+      "conflicting_samples": 8889,
+      "matched": 38680,
+      "remaining": 100230
+    },
+    "O2-Dis": {
+      "quality_or_integrated_excluded": 13,
+      "conflicting_samples": 187,
+      "matched": 30874,
+      "remaining": 100230
+    },
+    "TSS": {
+      "quality_or_integrated_excluded": 4,
+      "conflicting_samples": 221,
+      "matched": 33765,
+      "remaining": 100230
+    },
+    "TOC": {
+      "conflicting_samples": 42,
+      "matched": 25842,
+      "remaining": 100230
+    },
+    "TN": {
+      "conflicting_samples": 117,
+      "matched": 43721,
+      "remaining": 100230
+    },
+    "TP": {
+      "quality_or_integrated_excluded": 42,
+      "conflicting_samples": 130,
+      "matched": 54529,
+      "remaining": 100230
+    }
+  },
+  "limitations": [
+    "Default times may not uniquely identify laboratory aliquots.",
+    "Observations below quantification limit are approximate.",
+    "No paired images; this dataset does not train YOLO.",
+    "No Brazilian stations in this archive; validate locally before claiming geographic generalization."
+  ]
+}
