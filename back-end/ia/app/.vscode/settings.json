@@ -1,13 +1,4 @@
 {
-  "dotnet.defaultSolution": "back-end/api/back-end.sln",
-  "[csharp]": {
-    "editor.quickSuggestions": {
-      "other": true,
-      "comments": false,
-      "strings": false
-    },
-    "editor.suggestOnTriggerCharacters": true
-  },
   "workbench.editorAssociations": {
     "*.copilotmd": "vscode.markdown.preview.editor",
     "*.parquet": "duckdb.dataFileViewer",

@@ -2,6 +2,6 @@ back-end/.env
 .venv-training/
 **/__pycache__/
 *.pyc
-back-end/ia/app/services/Predict/model/metals_v2_20261004/data/external/gemstat/GFQA_v3.zip
+back-end/ia/app/services/Predict/model/metals_v2*/data/
 back-end/ia/app/services/Predict/model/metals_v2_20261004/historico/
 back-end/ia/app/services/Predict/model/metals_v2_20261004/runs/
