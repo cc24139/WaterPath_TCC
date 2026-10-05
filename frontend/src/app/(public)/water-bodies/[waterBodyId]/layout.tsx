@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { MonitoringSidebar } from "@/features/river-analysis/components/MonitoringSidebar";
+import { MonitoringSidebar } from "@/features/water-body-monitoring/components/MonitoringSidebar";
 
 export default async function WaterBodyLayout({ children, params }: {
   children: ReactNode;

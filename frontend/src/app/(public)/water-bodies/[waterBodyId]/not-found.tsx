@@ -1,1 +1,1 @@
-export { default } from "@/features/river-analysis/components/WaterBodyNotFound";
+export { default } from "@/features/water-body-monitoring/components/WaterBodyNotFound";

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseWaterBodyId } from "../src/features/river-analysis/utils/waterBodyId.ts";
+import { parseWaterBodyId } from "../src/features/water-body-monitoring/utils/waterBodyId.ts";
 import { buildRivers, readNumber, readTimestamp } from "../src/features/search/utils/riverData.ts";
 import { measurementChart } from "../src/features/search/utils/measurementChart.ts";
 

@@ -7,7 +7,21 @@
 - `parseWaterBodyId` valida IDs positivos de 32 bits em todas as páginas desta área. A entrada redireciona para o dashboard.
 - O dashboard consulta os detalhes no cliente com `useGetById`: trata carregamento, sucesso, 401, 403, 404 e falhas inesperadas, cancela requisições ao sair e ignora respostas antigas. A consulta de detalhes não redireciona automaticamente no 401; a interface oferece login com retorno ao dashboard.
 - O 404 recebido no navegador mostra o componente de recurso não encontrado como estado local; ele não altera o status HTTP da página. IDs inválidos são tratados com `notFound()` no servidor.
-- O dashboard de sucesso ainda contém apenas um título. Dados de apresentação, medições, gráficos, integração das outras telas e proteção da inserção permanecem nas próximas etapas.
+- O dashboard agora possui a primeira implementação descrita abaixo. Integração das outras telas e proteção da inserção permanecem nas próximas etapas.
+
+**Primeira implementação do dashboard**
+
+Organização: `features/water-body-monitoring/components` concentra os componentes compartilhados; `dashboard` reúne seus componentes, hooks e utilitários; `analysis/components` contém os componentes de análise existentes. `WaterBodyReport` pertence a `features/report/components`. A validação de ID continua compartilhada em `water-body-monitoring/utils`.
+
+- O contrato de leitura segue `ColetaEntity` e `MedicoesEntity` do backend: `dataHora`, `corpoHidricoId` e a lista `medicoes`. O DTO específico está em `src/api/dtos/monitoringDTO.ts`; campos nulos podem ser omitidos pela configuração de serialização da API.
+- `useWaterBodyDashboard` carrega detalhes e coletas por corpo hídrico, cancela consultas ao sair e preserva coletas anteriores quando a atualização falha. A ausência de coletas é apresentada somente após uma consulta bem-sucedida.
+- O cabeçalho mostra nome e localização reais. Os parâmetros atuais vêm da coleta mais recente, independentemente do período selecionado.
+- A consulta de coletas usa `GET /api/coleta/corpo-hidrico/{id}`. Nesta primeira versão, o período é filtrado no cliente; `period=7|30|90|365` na URL controla o gráfico, o histórico e o CSV. O intervalo termina no horário da última consulta bem-sucedida. A opção de 12 meses corresponde a 365 dias.
+- O histórico mostra até cinco coletas; o CSV contém todas as coletas do intervalo, com unidades e horários de Brasília. A tabela permite rolagem horizontal em telas pequenas.
+- O gráfico oferece pH, turbidez, oxigênio dissolvido e temperatura. Não compara unidades diferentes, não transforma valores ausentes em zero e não usa limites de detecção como valores exatos. Medições censuradas aparecem como `< limite` nos parâmetros, na tabela e no CSV.
+- IQA atual, status, evolução de IQA, tendência e diagnóstico mostram indisponibilidade: `QualidadeEntity` não contém data nem vínculo com coleta. Não foram criados campos ou regras de classificação no backend.
+- Componentes compartilhados (`DashboardPanel`, configuração de parâmetros e formatadores) mantêm apresentação, unidades e exportação consistentes. A interface utiliza os componentes `Card` e `Button` existentes.
+- Testes específicos: `npm.cmd run test:dashboard`. Conferir também login, acesso à API real e apresentação no navegador em celular e desktop.
 
 Os exemplos abaixo documentam a proposta original e alternativas de integração; não representam todos os arquivos atuais. Validação desta entrega: lint sem erros (um aviso preexistente em `api/routes.tsx`), build concluído e 13 testes aprovados. A integração com a API em execução ainda precisa de conferência manual com sessões e registros reais.
 
@@ -50,7 +64,7 @@ Exemplo para substituir o conteúdo de `layout.tsx`, depois de criar `Monitoring
 
 ```tsx
 import type { ReactNode } from "react";
-import { MonitoringSidebar } from "@/features/river-analysis/components/MonitoringSidebar";
+import { MonitoringSidebar } from "@/features/water-body-monitoring/components/MonitoringSidebar";
 
 type WaterBodyLayoutProps = {
   children: ReactNode;
@@ -75,7 +89,7 @@ export default async function WaterBodyLayout({
 }
 ```
 
-Exemplo de novo arquivo `src/features/river-analysis/components/MonitoringSidebar.tsx`:
+Exemplo de novo arquivo `src/features/water-body-monitoring/components/MonitoringSidebar.tsx`:
 
 ```tsx
 "use client";
@@ -157,7 +171,7 @@ if (loading) {
 }
 ```
 
-Para reutilizar o esqueleto nos dois cenários, extraia-o para `features/river-analysis/components/MonitoringSkeleton.tsx` e importe-o no arquivo especial e na feature. Evite fazer a feature depender de um arquivo de rota.
+Para reutilizar o esqueleto nos dois cenários, extraia-o para `features/water-body-monitoring/components/MonitoringSkeleton.tsx` e importe-o no arquivo especial e na feature. Evite fazer a feature depender de um arquivo de rota.
 
 Para salvar uma coleta ou gerar um relatório, use um estado local como `isSubmitting` ou `isGenerating`. O botão existente em `src/components/ui/Button.tsx` já oferece `isLoading`. Bloqueie envios duplicados e mantenha os valores do formulário durante a tentativa.
 

@@ -1,1 +1,1 @@
-export { default } from "@/features/river-analysis/components/MonitoringSkeleton";
+export { default } from "@/features/water-body-monitoring/components/MonitoringSkeleton";

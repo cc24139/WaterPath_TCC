@@ -3,6 +3,15 @@ import { ColetaCadastroDTO } from "../dtos/coletaDTO";
 import { apiFetch } from "../apiFetch";
 
 export const coletaServices = {
+  async getByWaterBody(id: number, signal?: AbortSignal): Promise<Response> {
+    return apiFetch(`${routes.coleta}corpo-hidrico/${id}`, { signal }, { redirectOnUnauthorized: false });
+  },
+
+  async getByPeriod(id: number, from: string, to: string, signal?: AbortSignal): Promise<Response> {
+    const query = new URLSearchParams({ dataInicio: from, dataFim: to });
+    return apiFetch(`${routes.coleta}periodo/${id}?${query}`, { signal }, { redirectOnUnauthorized: false });
+  },
+
   async create(data: ColetaCadastroDTO): Promise<Response> {
     return apiFetch(routes.coleta, {
       method: "POST",
