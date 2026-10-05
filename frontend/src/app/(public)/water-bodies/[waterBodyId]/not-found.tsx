@@ -1,3 +1,1 @@
-export default function WaterBodyNotFound() {
-  return null;
-}
+export { default } from "@/features/river-analysis/components/WaterBodyNotFound";

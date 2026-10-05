@@ -1,3 +1,1 @@
-export default function WaterBodyLoading() {
-  return null;
-}
+export { default } from "@/features/river-analysis/components/MonitoringSkeleton";

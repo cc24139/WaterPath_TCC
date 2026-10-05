@@ -11,8 +11,8 @@ export const corpoHidricoServices = {
     });
   },
 
-  async getById(id: number): Promise<Response> {
-    return apiFetch(`${routes.corpoHidrico}${id}`);
+  async getById(id: number, signal?: AbortSignal): Promise<Response> {
+    return apiFetch(`${routes.corpoHidrico}${id}`, { signal }, { redirectOnUnauthorized: false });
   },
 
   async getAll(signal?: AbortSignal): Promise<Response> {

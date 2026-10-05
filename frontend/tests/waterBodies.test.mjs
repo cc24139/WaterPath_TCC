@@ -1,9 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { parseWaterBodyId } from "../src/features/river-analysis/utils/waterBodyId.ts";
 import { buildRivers, readNumber, readTimestamp } from "../src/features/search/utils/riverData.ts";
 import { measurementChart } from "../src/features/search/utils/measurementChart.ts";
 
 const bodies = [{ id: 1, nome: "Rio de teste", localizacao: "Niterói/RJ", users: [{ id: 3 }] }];
+
+test("route IDs match positive backend Int32 values without ambiguous formats", () => {
+  for (const value of ["", "0", "-1", "01", "1.5", "1e2", "+1", " 1", "abc", "2147483648", "999999999999999999999"]) {
+    assert.equal(parseWaterBodyId(value), null, value);
+  }
+  assert.equal(parseWaterBodyId("1"), 1);
+  assert.equal(parseWaterBodyId("2147483647"), 2147483647);
+});
 const collection = (overrides = {}) => ({ id: 1, corpoHidrico: { id: 1 }, data: "2026-01-01T12:00:00", ph: 7, turbidez: 2, oxigenioDissolvido: 5, ...overrides });
 
 test("empty responses stay empty, without demo values", () => {

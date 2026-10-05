@@ -1,5 +1,16 @@
 **Guia de implementação da área de um corpo hídrico**
 
+**Estado da implementação — etapas 1 a 4 concluídas**
+
+- O layout agora compartilha sidebar e área principal. `MonitoringSidebar` preserva o ID nos links; o relatório mantém seu conteúdo em `WaterBodyReport`, sem duplicar sidebar ou `<main>`.
+- `loading.tsx` e `not-found.tsx` reutilizam componentes da feature. `error.tsx` mantém as ações de recuperação.
+- `parseWaterBodyId` valida IDs positivos de 32 bits em todas as páginas desta área. A entrada redireciona para o dashboard.
+- O dashboard consulta os detalhes no cliente com `useGetById`: trata carregamento, sucesso, 401, 403, 404 e falhas inesperadas, cancela requisições ao sair e ignora respostas antigas. A consulta de detalhes não redireciona automaticamente no 401; a interface oferece login com retorno ao dashboard.
+- O 404 recebido no navegador mostra o componente de recurso não encontrado como estado local; ele não altera o status HTTP da página. IDs inválidos são tratados com `notFound()` no servidor.
+- O dashboard de sucesso ainda contém apenas um título. Dados de apresentação, medições, gráficos, integração das outras telas e proteção da inserção permanecem nas próximas etapas.
+
+Os exemplos abaixo documentam a proposta original e alternativas de integração; não representam todos os arquivos atuais. Validação desta entrega: lint sem erros (um aviso preexistente em `api/routes.tsx`), build concluído e 13 testes aprovados. A integração com a API em execução ainda precisa de conferência manual com sessões e registros reais.
+
 Este documento orienta a implementação dos arquivos especiais desta pasta. Os exemplos são propostas para copiar e adaptar; a criação deste README não implementa esses comportamentos.
 
 Base do projeto: Next.js 16.2.4, App Router, React 19 e Tailwind CSS. Caminhos iniciados com `src/` são relativos a `frontend/`.
