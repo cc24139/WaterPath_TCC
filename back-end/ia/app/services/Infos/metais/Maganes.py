@@ -1,0 +1,15 @@
+from .metal import Metal
+
+
+class Maganes(Metal):
+    codigo = "Mn"
+
+    def __init__(self, valor, unidadeMedida="mg/L", limite=0.1):
+        super().__init__("Maganês", valor, unidadeMedida, limite)
+
+    def mensagem(self):
+        return (
+            "A concentração de manganês ultrapassa o limite de qualidade da água. "
+            "Níveis elevados podem afetar organismos aquáticos e indicar alteração "
+            "nas condições geoquímicas ou contaminação do corpo hídrico."
+        )

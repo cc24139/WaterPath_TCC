@@ -9,6 +9,7 @@ import joblib
 import pandas as pd
 
 from services.Predict.schema import FEATURES, FIELDS, REQUIRED_FIELDS, TARGETS
+from services.Infos.metais import create_metals
 
 DEFAULT_MODEL_PATH = Path(__file__).parent / "Predict/model/metals_v2/quality_model.joblib"
 
@@ -43,7 +44,7 @@ def predict_metals(sample):
     columns = list(model.feature_names_in_)
     inputs = pd.DataFrame(sample.decode(columns), columns=columns)
     values = model.predict(inputs)[0]
-    return {metal: float(value.round(4)) for metal, value in zip(TARGETS, values)}
+    return create_metals({metal: float(value.round(4)) for metal, value in zip(TARGETS, values)})
 
 
 def model_infos():

@@ -17,6 +17,7 @@ COPY DTOs ./DTOs
 COPY services/integration.py ./services/integration.py
 COPY services/vision.py ./services/vision.py
 COPY services/metals.py ./services/metals.py
+COPY services/Infos ./services/Infos
 COPY services/risk ./services/risk
 COPY services/Predict/schema.py ./services/Predict/schema.py
 COPY services/Predict/model/metals_v2/quality_model.joblib ./services/Predict/model/metals_v2/quality_model.joblib

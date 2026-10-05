@@ -13,6 +13,10 @@ from PIL import Image
 
 from main import app
 from services import metals, vision
+from services.Infos.metais.metal import Metal
+from services.Infos.objetos.Lixo import Lixo
+from services.integration import build_visual_report
+from services.risk.classification import classify_risk
 
 APP_DIR = Path(__file__).resolve().parents[1]
 PHOTO = APP_DIR / "services/ComputerVision/dataset/train/images/000058_jpg.rf.zumct7JlQ1EznlPftdka.jpg"
@@ -56,6 +60,18 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.text)
         values = [item["value"] for item in response.json()["metalPredictions"]]
         self.assertEqual(values, [0.0928, 0.01, 0.4463, 0.5, 0.5, 3.5088, 0.05, 0.4732])
+
+    def test_real_pipeline_passes_domain_objects_to_report_and_risk(self):
+        with patch("main.build_visual_report", wraps=build_visual_report) as report, \
+             patch("main.classify_risk", wraps=classify_risk) as risk:
+            response = self.upload(data=self.sample)
+        self.assertEqual(response.status_code, 200, response.text)
+        images, predicted_metals, _ = report.call_args.args
+        self.assertEqual(len(images), 1)
+        self.assertIsInstance(images[0], Lixo)
+        self.assertEqual(len(predicted_metals), 8)
+        self.assertTrue(all(isinstance(metal, Metal) for metal in predicted_metals))
+        self.assertIs(risk.call_args.args[0], images)
 
     def test_boxes_and_confidence_preserved(self):
         image = vision.read_image(UploadFile(filename="rio.jpg", file=io.BytesIO(self.photo)))

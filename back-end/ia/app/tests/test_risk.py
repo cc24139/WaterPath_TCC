@@ -4,18 +4,20 @@ import unittest
 from fastapi import HTTPException
 
 from DTOs.Amostra import Amostra
+from services.Infos.objetos import create_images
 from services.risk.classification import classify_risk, parse_history
 
 
 class RiskTests(unittest.TestCase):
     def classify(self, classes=(), ph=7, oxygen=6, levels=()):
         sample = Amostra(temperatura=22, ph=ph, condutividade_eletrica=100, oxigenio_dissolvido=oxygen)
-        detections = [{"className": name, "count": 1} for name in classes]
+        names = dict(enumerate(classes))
+        images = create_images([([0, 0, 10, 10], 0.5, label) for label in names], names)
         history = parse_history(json.dumps([
             {"predictionId": index + 1, "coletaId": index + 1, "baseRiskLevel": level}
             for index, level in enumerate(levels)
         ]))
-        return classify_risk(detections, sample, history)
+        return classify_risk(images, sample, history)
 
     def test_approved_three_levels(self):
         self.assertEqual(self.classify()["riskLevel"], 1)
@@ -30,6 +32,11 @@ class RiskTests(unittest.TestCase):
         for ph in (6, 9):
             self.assertEqual(self.classify(ph=ph, oxygen=5)["riskLevel"], 1)
         self.assertEqual(self.classify(ph=5.99)["riskLevel"], 2)
+
+    def test_unknown_and_repeated_visual_classes(self):
+        self.assertEqual(self.classify(classes=("desconhecida", "turbidez"))["riskLevel"], 1)
+        self.assertEqual(self.classify(classes=("Lixo", "Lixo", "urbano"))["riskLevel"], 2)
+        self.assertEqual(self.classify(ph=5, oxygen=4)["riskLevel"], 2)
 
     def test_history_requires_three_occurrences(self):
         result = self.classify(levels=(2, 3, 1, 1, 1))

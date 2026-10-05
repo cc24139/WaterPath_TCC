@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from DTOs.Amostra import Amostra
 from services import metals, vision
 from services.integration import build_visual_report, structured_metals
+from services.Infos.objetos import create_images
 from services.Predict.schema import TARGETS
 from services.risk.classification import classify_risk, parse_history
 
@@ -38,8 +39,9 @@ def analyze_image(image, data=None, include_annotation=False, history="[]"):
     model = vision.load_model()
     predictions = vision.predict_image(img, model)
     names = vision.class_names(model)
-    predicted_metals = metals.predict_metals(sample) if sample is not None else {}
-    report = build_visual_report(predictions, predicted_metals, names, img.shape)
+    images = create_images(predictions, names)
+    predicted_metals = metals.predict_metals(sample) if sample is not None else []
+    report = build_visual_report(images, predicted_metals, img.shape)
     result = {
         "detections": report["detections"],
         "totalObjects": sum(item["count"] for item in report["detections"]),
@@ -47,7 +49,7 @@ def analyze_image(image, data=None, include_annotation=False, history="[]"):
     }
     if include_annotation:
         if sample is not None:
-            result.update(classify_risk(report["detections"], sample, previous_samples))
+            result.update(classify_risk(images, sample, previous_samples))
         result["visionModelVersion"] = vision.model_version()
         if sample is not None:
             result["metalModelVersion"] = metals.model_metadata()["version"]

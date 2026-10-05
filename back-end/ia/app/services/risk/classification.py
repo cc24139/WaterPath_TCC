@@ -1,11 +1,9 @@
 
 import json
-
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 RULE_VERSION = "waterpath-risk-v1"
-RELEVANT_CLASSES = {"lixo", "drainage connection", "urbano"}
 RISK_LABELS = {1: "baixo", 2: "moderado", 3: "alto"}
 
 
@@ -31,9 +29,8 @@ def parse_history(data):
         raise HTTPException(status_code=422, detail="Histórico de risco inválido") from exc
 
 
-def classify_risk(detections, sample, history):
-    visual_classes = sorted({item["className"] for item in detections
-                             if item["count"] > 0 and item["className"].lower() in RELEVANT_CLASSES})
+def classify_risk(images, sample, history):
+    visual_classes = sorted({image.name for image in images if image.indica_risco()})
     reasons = []
     if visual_classes:
         reasons.append(f"Sinal visual: {', '.join(visual_classes)}.")
@@ -51,16 +48,16 @@ def classify_risk(detections, sample, history):
         reasons.append("Sem sinais atuais pelos critérios de triagem avaliados.")
     if previous_alerts >= 3:
         reasons.append(f"Recorrência: {previous_alerts} das {len(history)} coletas anteriores apresentaram alerta.")
+    return getResponse(level, base_level, RISK_LABELS[level], reasons,history)
+    
+    
+def getResponse(level, base_level, risk_label, risk_reasons, history):
     return {
         "riskLevel": level,
         "baseRiskLevel": base_level,
-        "riskLabel": RISK_LABELS[level],
-        "riskReasons": reasons,
-        "riskRuleVersion": RULE_VERSION,
-        "history": {
-            "evaluatedCollections": len(history),
-            "alertCollections": previous_alerts,
-            "adjustment": level - base_level,
-            "samples": [item.model_dump(by_alias=True) for item in history],
-        },
+        "riskLabel": risk_label,
+        "riskReasons": risk_reasons,
+        "history": history
     }
+
+

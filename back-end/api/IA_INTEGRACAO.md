@@ -10,6 +10,10 @@ A API principal usa ASP.NET Core 10, Entity Framework Core 9 e PostgreSQL. A IA 
 4. `services/risk/classification.py` combina as detecções reais, pH, oxigênio dissolvido e recorrência para calcular o nível de risco pela regra aprovada.
 5. A API principal salva a imagem original, a anotada, a entrada e o resultado completo no mesmo registro de `waterPath.PredicoesIA`, vinculado à coleta. A gravação ocorre em um único `SaveChanges`, após uma resposta válida da IA.
 
+Na IA, as concentrações são objetos de `Metal` e suas oito subclasses em `services/Infos/metais/*.py`. Cada detecção é um objeto de `Impact`, `Lixo`, `Urbano` ou `Drenagem`, com caixa, confiança, nome e identificador. As subclasses guardam as associações a metais e a indicação de sinal visual. `Turbidez` foi recuperada do histórico, onde era apenas um exemplo sem critérios; continua neutra.
+
+`interpretation` é uma função de `services/integration.py`, não um arquivo separado. Ela chama `impact()` do objeto visual, que consulta os valores, unidades e limites dos objetos de metais. O nível de 1 a 3 continua em `services/risk/classification.py`, consultando `indica_risco()` dos mesmos objetos visuais e as medições e o histórico. Os arquivos-fonte também são incluídos na imagem Docker; arquivos `.pyc` não substituem essas definições.
+
 Os modelos e seus pesos não foram alterados nem retreinados. A classificação de risco é uma regra de triagem aplicada à inferência real do YOLO e às medições; o YOLO atual não é um classificador treinado diretamente com rótulos de risco 1–3.
 
 ## Regra de risco aprovada

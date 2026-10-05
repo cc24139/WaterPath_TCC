@@ -1,4 +1,4 @@
-"""Leitura, detecção e anotação com os pesos ONNX existentes."""
+"""Funções otimizadas para o render não bloquear por memoria """
 import ast
 import hashlib
 import os

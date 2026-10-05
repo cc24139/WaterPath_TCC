@@ -7,6 +7,11 @@
 !services/integration.py
 !services/vision.py
 !services/metals.py
+!services/Infos/
+!services/Infos/metais/
+!services/Infos/metais/*.py
+!services/Infos/objetos/
+!services/Infos/objetos/*.py
 !services/risk/
 !services/risk/*.py
 !services/Predict/
