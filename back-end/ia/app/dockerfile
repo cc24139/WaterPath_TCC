@@ -1,17 +1,7 @@
-FROM python:3.13.15-slim AS exporter
-
-ENV YOLO_CONFIG_DIR=/tmp/ultralytics
-WORKDIR /export
-RUN pip install --no-cache-dir torch==2.14.0+cpu torchvision==0.29.0+cpu --index-url https://download.pytorch.org/whl/cpu
-RUN pip install --no-cache-dir ultralytics-opencv-headless==8.4.138 onnx==1.22.0
-COPY services/ComputerVision/runs/detect/train/weights/best.pt .
-RUN python -c "from ultralytics import YOLO; YOLO('best.pt').export(format='onnx', imgsz=640, batch=1, dynamic=False, simplify=False, opset=17, nms=False, device='cpu')"
-
 FROM python:3.13.15-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    YOLO_CONFIG_DIR=/tmp/ultralytics \
     MPLCONFIGDIR=/tmp/matplotlib
 
 WORKDIR /app
@@ -24,13 +14,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py .
 COPY DTOs ./DTOs
-COPY services/Infos ./services/Infos
 COPY services/integration.py ./services/integration.py
+COPY services/vision.py ./services/vision.py
+COPY services/metals.py ./services/metals.py
+COPY services/risk ./services/risk
 COPY services/Predict/schema.py ./services/Predict/schema.py
-COPY services/Predict/model/metals_v2_20261004/quality_model.joblib ./services/Predict/model/metals_v2_20261004/quality_model.joblib
-COPY services/Predict/model/metals_v2_20261004/manifest.json ./services/Predict/model/metals_v2_20261004/manifest.json
-COPY services/Predict/data/Data_Lake* ./services/Predict/data/
-COPY --from=exporter /export/best.onnx ./services/ComputerVision/best.onnx
+COPY services/Predict/model/metals_v2/quality_model.joblib ./services/Predict/model/metals_v2/quality_model.joblib
+COPY services/Predict/model/metals_v2/manifest.json ./services/Predict/model/metals_v2/manifest.json
+COPY services/ComputerVision/best.onnx ./services/ComputerVision/best.onnx
 
 EXPOSE 10000
 

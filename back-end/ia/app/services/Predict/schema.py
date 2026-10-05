@@ -14,9 +14,3 @@ FEATURES = [column for column, _ in FIELDS.values()]
 TARGETS = ["Fe, mg/L", "Mn, mg/L", "Cr, µg/L", "Ni, µg/L",
            "Cu, µg/L", "Zn, µg/L", "Cd, µg/L", "Pb, µg/L"]
 REQUIRED_FIELDS = ("temperatura", "ph", "condutividade_eletrica", "oxigenio_dissolvido")
-LEGACY_FEATURES = [
-    "T, °C", "рН", "TSS, mg/L", "Color, mg Pt-Co/L", "TOC, mg/L",
-    "CODMn, mg О/L", "CODCr, мгО/л", "BOD5, mg О2/L", "PO4-P, µg/L",
-    "TP, µg/L", "NH4-N, mgN/L", "NO2-N, mgN/L", "NO3-N, mgN/L",
-    "TN, mg/L", "EC, μS/сm at 25 °C", "Depth, m",
-]

@@ -1,5 +1,6 @@
 back-end/.env
 .venv-training/
+.venv-ia/
 **/__pycache__/
 *.pyc
 back-end/ia/app/services/Predict/model/metals_v2*/data/
