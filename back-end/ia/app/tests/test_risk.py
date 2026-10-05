@@ -48,6 +48,10 @@ class RiskTests(unittest.TestCase):
         self.assertEqual(result["history"]["alertCollections"], 3)
         self.assertEqual(result["history"]["evaluatedCollections"], 5)
         self.assertEqual(len(result["history"]["samples"]), 5)
+        self.assertEqual(result["riskRuleVersion"], "waterpath-risk-v1")
+        self.assertEqual(result["history"]["samples"][0],
+                         {"predictionId": 1, "coletaId": 1, "baseRiskLevel": 2})
+        json.dumps(result)  # O contrato HTTP também deve aceitar histórico não vazio.
         self.assertTrue(any("Recorrência" in reason for reason in result["riskReasons"]))
 
     def test_history_never_exceeds_level_three(self):

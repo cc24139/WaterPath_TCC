@@ -122,6 +122,67 @@ A resposta `201` contém o ID, a coleta, o resultado com nível de risco e os li
 
 `POST /api/vision`, com `file` e `coletaId`, mantém sua resposta JPEG e os cabeçalhos `X-Predicao-Id` e `Location`. Agora também salva o JSON das detecções. Essa rota não recebe medições e não atribui risco combinado. As rotas existentes da IA `/predict`, `/vision/predict`, `/predict/infos`, `/vision/infos` e a rota de teste opcional foram preservadas.
 
+## Consultar risco atual de um corpo hídrico
+
+`GET /api/corpohidrico/{id}/risco-atual` exige um JWT válido, seguindo a consulta por ID de corpo hídrico. O controller envia uma query pelo MediatR, o handler valida o resultado persistido e o repositório consulta o EF Core. A relação usada é `CorpoHidrico -> Coleta (CorpoHidricoId) -> PredicaoIA (ColetaId)`. O IQA de `Qualidade` não é um nível de risco e não é convertido em risco nesta consulta.
+
+Não havia uma definição implementada de “risco atual”. Foi adotado o resultado válido da **coleta mais recente**, ordenando de forma decrescente por `Coleta.DataHora`, `Coleta.Id`, `PredicaoIA.CriadaEm` e `PredicaoIA.Id`. Assim, reprocessar uma coleta antiga não substitui o resultado de uma coleta mais recente; os IDs tornam os empates determinísticos. Coletas sem resultado válido são puladas, sem limitar a busca à janela de cinco usada pela classificação do histórico.
+
+Só entram predições `integrada` com o contrato já exigido pelo `IaClient`: `riskRuleVersion = waterpath-risk-v1`, `riskLevel` e `baseRiskLevel` inteiros de 1 a 3, motivos em uma lista de textos e `history` como objeto. JSON inválido, outra versão, ausência de classificação e análise apenas visual são ignorados. A resposta copia o nível final, o rótulo opcional e os motivos salvos; não recalcula o nível base nem o ajuste histórico. Se o rótulo não estiver salvo, permanece ausente. A consulta não chama a IA, não gera predição nem altera dados; a projeção não carrega as imagens.
+
+Exemplo de requisição (substitua o ID e o token):
+
+```powershell
+curl.exe 'http://localhost:5189/api/corpohidrico/1/risco-atual' -H 'Authorization: Bearer SEU_TOKEN'
+```
+
+Exemplo ilustrativo de resposta `200`:
+
+```json
+{
+  "corpoHidricoId": 1,
+  "nivelRisco": 2,
+  "rotuloRisco": "moderado",
+  "motivos": ["Sinal visual: Lixo."],
+  "coletaId": 7,
+  "dataColeta": "2026-10-05T12:00:00+00:00",
+  "predicaoId": 12,
+  "dataPredicao": "2026-10-05T12:05:00Z",
+  "versaoRegraRisco": "waterpath-risk-v1"
+}
+```
+
+| Situação | HTTP | Resposta |
+| --- | --- | --- |
+| Sem JWT válido | 401 | Desafio de autenticação existente |
+| ID zero ou negativo | 400 | `Informe um ID de corpo hídrico válido.` |
+| ID não numérico ou fora de `Int32` | 400 | Validação automática do ASP.NET Core (`ProblemDetails`) |
+| Corpo hídrico inexistente | 404 | `Corpo hídrico não encontrado` |
+| Corpo existente sem resultado válido | 404 | `Corpo hídrico sem resultado de risco válido` |
+
+Os erros textuais seguem as ações existentes de corpo hídrico. Ausência de dados nunca produz nível 1.
+
+### Verificação em 5 de outubro de 2026
+
+As APIs locais estavam paradas e foram iniciadas com o perfil `http` da API principal e o ambiente Python `.venv-training` já existente. Nenhuma URL persistente ou credencial foi alterada.
+
+| Serviço | Evidência HTTP | Resultado |
+| --- | --- | --- |
+| API principal, `http://localhost:5189` | GET de corpos hídricos e coletas: 200; nova rota: 401 sem JWT, 400 para ID inválido e 404 para ID inexistente | Rodando e acessando PostgreSQL |
+| IA local, `http://127.0.0.1:8000` | GET `/` e `/predict/infos`: 200; inferência real pelo cliente C# e consulta posterior de risco | Rodando; integração local passou após correção do contrato |
+| IA configurada, `https://watherpathia.onrender.com` | GET `/` e `/openapi.json`: 200; POST `/analyze`: 200 | Acessível, mas uma resposta recebida pelo cliente C# estava incompatível |
+
+Há dois impedimentos no ambiente configurado:
+
+- A tabela `waterPath.PredicoesIA` não existe no PostgreSQL (`42P01`). Tanto GET de risco para um corpo existente quanto POST de predição com uma coleta existente retornaram 500. O POST falhou ao consultar o histórico, antes de chamar a IA ou gravar dados. A migração existente `20261004181139_PersistirPredicoesIA` precisa ser aplicada nesse banco; nesta tarefa o banco não foi migrado.
+- Na IA hospedada, o teste real via `IaClient` rejeitou uma resposta sem `riskRuleVersion` e com `history` como lista. Uma chamada independente também recebeu esses campos incompatíveis, embora outra chamada tenha retornado o contrato completo. É necessário publicar/verificar a versão corrigida da IA hospedada antes de considerar a integração configurada funcional.
+
+Na IA local foi corrigida apenas a montagem da resposta: versão da regra, contagens do histórico, ajuste efetivo e amostras com os aliases do contrato. Os critérios e cálculos de classificação existentes foram preservados.
+
+Validação: **39 testes C# passaram**, incluindo o fluxo HTTP com modelos reais da IA local, persistência em SQLite descartável e consulta autenticada da nova rota; **26 testes Python passaram** com os pesos existentes. Os testes de consulta cobrem isolamento por corpo hídrico, reanálise de coleta antiga, empates, contratos inválidos, análises visuais, risco baixo realmente salvo, ausência de dados e autenticação. A compilação passou com avisos de nulabilidade preexistentes. O fluxo completo foi validado no banco descartável; não foi possível validar uma resposta de risco 200 no PostgreSQL configurado pela tabela ausente.
+
+A geração de `/openapi/v1.json` da API principal também retornou 500 por exceder a profundidade JSON de 64. O mesmo erro foi reproduzido com a compilação anterior, sem esta alteração. A rota foi verificada por requisições HTTP diretas; a falha preexistente do OpenAPI não foi alterada.
+
 Erros: `400` para arquivo inválido ou JSON malformado; `404` para coleta/predição inexistente; `413` para arquivo grande; `422` para medições/histórico inválidos; `502` para IA indisponível ou resposta inválida; `504` para timeout. Falhas da IA não criam uma predição parcial. Os detalhes internos das falhas ficam no log da IA.
 
 ## Verificação automatizada

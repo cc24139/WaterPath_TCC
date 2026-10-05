@@ -198,6 +198,14 @@ public class PredicaoIATests : IAsyncLifetime
         Assert.Equal(bytes, await api.GetByteArrayAsync($"/api/ia/predicoes/{saved.Id}/imagem/original"));
         Assert.Equal(saved.ImagemResultado, await api.GetByteArrayAsync($"/api/ia/predicoes/{saved.Id}/imagem"));
         Assert.Equal(HttpStatusCode.OK, (await api.GetAsync($"/api/ia/predicoes/{saved.Id}")).StatusCode);
+        api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TestJwt.Token());
+        var riskResponse = await api.GetAsync($"/api/corpohidrico/{collection.CorpoHidricoId}/risco-atual");
+        Assert.Equal(HttpStatusCode.OK, riskResponse.StatusCode);
+        using var currentRisk = JsonDocument.Parse(await riskResponse.Content.ReadAsStringAsync());
+        Assert.Equal(saved.Id, currentRisk.RootElement.GetProperty("predicaoId").GetInt32());
+        Assert.Equal(coletaId, currentRisk.RootElement.GetProperty("coletaId").GetInt32());
+        Assert.Equal(result.RootElement.GetProperty("riskLevel").GetInt32(), currentRisk.RootElement.GetProperty("nivelRisco").GetInt32());
+        Assert.Equal(4, await db.PredicoesIA.CountAsync());
         using var invalid = new MultipartFormDataContent();
         invalid.Add(new StringContent(coletaId.ToString()), "coletaId");
         invalid.Add(new StringContent(Sample), "data");
@@ -215,6 +223,9 @@ public class PredicaoIATests : IAsyncLifetime
         builder.Services.AddSingleton(db);
         builder.Services.AddSingleton(ia);
         builder.Services.AddScoped<PredicaoIAService>();
+        builder.Services.AddScoped<back_end.src.Domain.CorpoHidrico.ICorpoHidricoRepository, back_end.src.Infrastructure.Repository.CorpoHidricoRepository>();
+        builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ControllerIA).Assembly));
+        TestJwt.Configure(builder.Services);
         builder.Services.AddControllers().AddApplicationPart(typeof(ControllerIA).Assembly);
         var app = builder.Build();
         app.MapControllers();

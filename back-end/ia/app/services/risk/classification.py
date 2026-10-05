@@ -57,7 +57,13 @@ def getResponse(level, base_level, risk_label, risk_reasons, history):
         "baseRiskLevel": base_level,
         "riskLabel": risk_label,
         "riskReasons": risk_reasons,
-        "history": history
+        "riskRuleVersion": RULE_VERSION,
+        "history": {
+            "evaluatedCollections": len(history),
+            "alertCollections": sum(item.base_risk_level >= 2 for item in history),
+            "adjustment": level - base_level,
+            "samples": [item.model_dump(by_alias=True) for item in history],
+        },
     }
 
 

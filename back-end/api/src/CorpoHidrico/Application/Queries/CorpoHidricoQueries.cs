@@ -1,5 +1,6 @@
 using back_end.src.Domain.CorpoHidrico;
 using MediatR;
+using Application.DTOs;
 
 namespace Application.Queries.CorpoHidrico;
 
@@ -7,6 +8,8 @@ public class QueryObterCorpoHidricoPorId : IRequest<CorpoHidricoEntity?>
 {
     public int Id { get; set; }
 }
+
+public record QueryObterRiscoAtual(int Id) : IRequest<RiscoAtualDTO?>;
 
 public class QueryObterTodosCorposHidricos : IRequest<List<CorpoHidricoEntity>> { }
 public class QueryObterCorposHidricosPorUsuario : IRequest<List<CorpoHidricoEntity>>

@@ -91,6 +91,18 @@ namespace back_end.src.Infrastructure.Repository
                 .ToList();
         }
 
+        public IAsyncEnumerable<ResultadoRiscoPersistido> ObterResultadosRisco(int corpoHidricoId)
+        {
+            return context.PredicoesIA.AsNoTracking()
+                .Where(p => p.Coleta.CorpoHidricoId == corpoHidricoId
+                    && p.Tipo == "integrada" && p.ResultadoJson != null)
+                .OrderByDescending(p => p.Coleta.DataHora).ThenByDescending(p => p.ColetaId)
+                .ThenByDescending(p => p.CriadaEm).ThenByDescending(p => p.Id)
+                .Select(p => new ResultadoRiscoPersistido(
+                    p.Id, p.ColetaId, p.Coleta.DataHora, p.CriadaEm, p.ResultadoJson!))
+                .AsAsyncEnumerable();
+        }
+
         public void AdicionarUsuario(int corpoHidricoId, int userId)
         {
             var corpoHidrico = context

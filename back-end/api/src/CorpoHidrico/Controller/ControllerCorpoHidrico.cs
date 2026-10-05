@@ -70,6 +70,21 @@ namespace back_end.src.Controllers.CorpoHidrico
             }
         }
 
+        [Authorize]
+        [HttpGet("{id}/risco-atual")]
+        public async Task<IActionResult> ObterRiscoAtual(int id, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var risco = await mediator.Send(new QueryObterRiscoAtual(id), cancellationToken);
+                return risco is null
+                    ? NotFound("Corpo hídrico sem resultado de risco válido")
+                    : Ok(risco);
+            }
+            catch (ArgumentException ex) { return BadRequest(ex.Message); }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        }
+
         [HttpGet]
         public async Task<IActionResult> ObterTodos()
         {
