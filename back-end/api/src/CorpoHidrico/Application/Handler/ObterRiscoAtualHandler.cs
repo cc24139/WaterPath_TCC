@@ -30,6 +30,7 @@ public class ObterRiscoAtualHandler(ICorpoHidricoRepository repository)
     {
         try
         {
+            if (!ContratoRisco.Valido(result.EntradaJson, result.ResultadoJson)) return null;
             using var document = JsonDocument.Parse(result.ResultadoJson);
             var root = document.RootElement;
             if (root.ValueKind != JsonValueKind.Object

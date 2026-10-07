@@ -1,6 +1,7 @@
 """Rotas da IA; inferência e apresentação ficam nos serviços."""
 import base64
 import logging
+import json
 import os
 
 import pandas as pd
@@ -27,8 +28,15 @@ async def inference_error(request, error):
 
 def parse_sample(data):
     try:
-        return Amostra.model_validate_json(data)
-    except ValidationError as exc:
+        def unique_fields(pairs):
+            result = {}
+            for key, value in pairs:
+                if key in result:
+                    raise ValueError("Campo duplicado na amostra")
+                result[key] = value
+            return result
+        return Amostra.model_validate(json.loads(data, object_pairs_hook=unique_fields))
+    except (ValueError, ValidationError) as exc:
         raise HTTPException(status_code=422, detail="Dados da amostra inválidos") from exc
 
 

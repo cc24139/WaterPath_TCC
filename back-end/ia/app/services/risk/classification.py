@@ -48,7 +48,14 @@ def classify_risk(images, sample, history):
         reasons.append("Sem sinais atuais pelos critérios de triagem avaliados.")
     if previous_alerts >= 3:
         reasons.append(f"Recorrência: {previous_alerts} das {len(history)} coletas anteriores apresentaram alerta.")
-    return getResponse(level, base_level, RISK_LABELS[level], reasons,history)
+    result = getResponse(level, base_level, RISK_LABELS[level], reasons, history)
+    # Retrato dos valores efetivamente consultados pela regra, sem metais estimados.
+    result["riskInputs"] = {
+        "ph": sample.ph,
+        "oxigenio_dissolvido": sample.oxigenio_dissolvido,
+        "visualClasses": visual_classes,
+    }
+    return result
     
     
 def getResponse(level, base_level, risk_label, risk_reasons, history):

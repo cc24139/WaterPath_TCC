@@ -71,13 +71,7 @@ public class IaClient(HttpClient client)
                 || !root.TryGetProperty("annotatedImageContentType", out var type) || type.GetString() != "image/jpeg"
                 || !root.TryGetProperty("annotatedImage", out var annotated) || annotated.ValueKind != JsonValueKind.String)
                 throw new JsonException();
-            if (data is not null
-                && (!root.TryGetProperty("riskLevel", out var risk) || !risk.TryGetInt32(out var level) || level is < 1 or > 3
-                    || !root.TryGetProperty("baseRiskLevel", out var basis) || !basis.TryGetInt32(out var baseLevel) || baseLevel is < 1 or > 3
-                    || !root.TryGetProperty("riskRuleVersion", out var rule) || rule.GetString() != PredicaoIAService.VersaoRegraRisco
-                    || !root.TryGetProperty("riskReasons", out var reasons) || reasons.ValueKind != JsonValueKind.Array
-                    || !root.TryGetProperty("history", out var historyResult) || historyResult.ValueKind != JsonValueKind.Object))
-                throw new JsonException();
+            if (data is not null && !ContratoRisco.Valido(data, json, history)) throw new JsonException();
             var bytes = Convert.FromBase64String(annotated.GetString()!);
             if (DetectarContentType(bytes) != "image/jpeg") throw new JsonException();
             // A imagem fica no campo binário, sem duplicação no JSON salvo.

@@ -28,7 +28,7 @@ public class ControllerIA(WaterPathDbContext context, PredicaoIAService service)
             var result = await service.CriarAsync(input.ColetaId, input.Image, input.Data, cancellationToken);
             return CreatedAtAction(nameof(Obter), new { id = result.Id }, new
             {
-                result.Id, result.ColetaId, result.Tipo, result.CriadaEm,
+                result.Id, result.ColetaId, result.CorpoHidricoId, result.DataColeta, result.Tipo, result.CriadaEm,
                 Resultado = JsonSerializer.Deserialize<JsonElement>(result.ResultadoJson!),
                 ImagemOriginalUrl = $"/api/ia/predicoes/{result.Id}/imagem/original",
                 ImagemResultadoUrl = $"/api/ia/predicoes/{result.Id}/imagem",
@@ -46,7 +46,7 @@ public class ControllerIA(WaterPathDbContext context, PredicaoIAService service)
         var total = await query.CountAsync(cancellationToken);
         var itens = await query.OrderByDescending(p => p.CriadaEm).ThenByDescending(p => p.Id)
             .Skip((pagina - 1) * tamanhoPagina).Take(tamanhoPagina)
-            .Select(p => new { p.Id, p.ColetaId, p.Tipo, p.CriadaEm }).ToListAsync(cancellationToken);
+            .Select(p => new { p.Id, p.ColetaId, p.CorpoHidricoId, p.DataColeta, p.Tipo, p.CriadaEm }).ToListAsync(cancellationToken);
         return Ok(new { total, pagina, tamanhoPagina, itens });
     }
 
@@ -54,12 +54,12 @@ public class ControllerIA(WaterPathDbContext context, PredicaoIAService service)
     public async Task<IActionResult> Obter(int id, CancellationToken cancellationToken)
     {
         var p = await context.PredicoesIA.AsNoTracking().Where(p => p.Id == id)
-            .Select(p => new { p.Id, p.ColetaId, p.Tipo, p.CriadaEm, p.EntradaJson, p.ResultadoJson })
+            .Select(p => new { p.Id, p.ColetaId, p.CorpoHidricoId, p.DataColeta, p.Tipo, p.CriadaEm, p.EntradaJson, p.ResultadoJson })
             .SingleOrDefaultAsync(cancellationToken);
         if (p is null) return NotFound("Predição não encontrada.");
         return Ok(new
         {
-            p.Id, p.ColetaId, p.Tipo, p.CriadaEm,
+            p.Id, p.ColetaId, p.CorpoHidricoId, p.DataColeta, p.Tipo, p.CriadaEm,
             Entrada = p.EntradaJson is null ? (JsonElement?)null : JsonSerializer.Deserialize<JsonElement>(p.EntradaJson),
             Resultado = p.ResultadoJson is null ? (JsonElement?)null : JsonSerializer.Deserialize<JsonElement>(p.ResultadoJson),
             ImagemOriginalUrl = $"/api/ia/predicoes/{p.Id}/imagem/original",

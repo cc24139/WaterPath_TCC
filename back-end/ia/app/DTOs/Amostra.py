@@ -4,7 +4,7 @@ from services.Predict.schema import FIELDS
 
 
 class Amostra(BaseModel):
-    model_config = ConfigDict(allow_inf_nan=False)
+    model_config = ConfigDict(allow_inf_nan=False, strict=True, extra="forbid")
 
     # Localização e identificação — opcionais
     estacao: Optional[str] = None

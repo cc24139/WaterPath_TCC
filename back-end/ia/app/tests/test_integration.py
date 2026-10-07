@@ -43,9 +43,13 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(result["totalObjects"], 1)
         self.assertEqual(result["riskLevel"], 2)
         self.assertEqual(result["baseRiskLevel"], 2)
+        sample = json.loads(self.sample)
+        self.assertEqual(result["riskInputs"], {"ph": sample["ph"],
+                         "oxigenio_dissolvido": sample["oxigenio_dissolvido"], "visualClasses": ["Lixo"]})
         self.assertEqual(result["history"]["evaluatedCollections"], 0)
         detection = result["detections"][0]
         self.assertEqual(detection["className"], "Lixo")
+        self.assertTrue(detection["indicatesRisk"])
         self.assertAlmostEqual(detection["maxConfidence"], 0.4075051844, places=5)
         self.assertEqual(len(result["metalPredictions"]), 8)
         self.assertEqual(result["metalModelVersion"], "metals_v2_20261004")
@@ -127,6 +131,28 @@ class IntegrationTests(unittest.TestCase):
             with self.subTest(changes=changes):
                 self.assertEqual(self.upload(data=json.dumps(sample)).status_code, 422)
         self.assertEqual(self.upload(data="invalid json").status_code, 422)
+
+    def test_strict_contract_rejects_ignored_fields_and_coercion_before_inference(self):
+        with patch.object(vision, "load_model", side_effect=AssertionError("Entrada inválida")):
+            for changes in ({"ph": "7"}, {"ph": True}, {"oxigenioDissolvido": 6},
+                            {"nitrogenio_total": 1}, {"fosforo_total": -1}, {"data": 123}):
+                sample = json.loads(self.sample)
+                sample.update(changes)
+                with self.subTest(changes=changes):
+                    self.assertEqual(self.upload(data=json.dumps(sample)).status_code, 422)
+            duplicate = self.sample.rstrip()[:-1] + ', "ph": 7}'
+            self.assertEqual(self.upload(data=duplicate).status_code, 422)
+
+    def test_optional_missing_values_keep_model_imputation_and_current_risk(self):
+        sample = json.loads(self.sample)
+        for name in ("solidos_suspensos_totais", "carbono_organico_total", "fosforo_total"):
+            sample[name] = None
+        response = self.upload(data=json.dumps(sample))
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["riskInputs"]["ph"], sample["ph"])
+        self.assertEqual(response.json()["riskInputs"]["oxigenio_dissolvido"], sample["oxigenio_dissolvido"])
+        self.assertEqual(response.json()["riskLevel"], 2)
+        self.assertEqual(len(response.json()["metalPredictions"]), 8)
 
     def test_model_failure_is_explicit(self):
         with patch.object(vision, "load_model", side_effect=FileNotFoundError("Modelo ausente")):

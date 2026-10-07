@@ -54,17 +54,92 @@ public class PredicaoIATests : IAsyncLifetime
         return new FormFile(new MemoryStream(bytes), 0, bytes.Length, "image", "rio.jpg");
     }
 
-    private static string ValidResponse() => JsonSerializer.Serialize(new
-    {
-        detections = new[] { new { classId = 0, className = "Lixo", count = 1 } }, totalObjects = 1,
-        metalPredictions = Array.Empty<object>(), visionModelVersion = "modelo-de-teste",
-        riskLevel = 2, baseRiskLevel = 2, riskRuleVersion = PredicaoIAService.VersaoRegraRisco,
-        riskReasons = new[] { "Sinal visual: Lixo." }, history = new { adjustment = 0 },
-        annotatedImageContentType = "image/jpeg", annotatedImage = Convert.ToBase64String(Jpeg),
-    });
+    private static string ValidResponse(string history = "[]") => RiskFixture.Result(history: history);
 
     private PredicaoIAService Service(Handler handler) => new(db,
         new IaClient(new HttpClient(handler) { BaseAddress = new Uri("http://ia.test/") }));
+
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("{\"temperatura\":22,\"ph\":null,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6}")]
+    [InlineData("{\"temperatura\":22,\"ph\":\"7\",\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6}")]
+    [InlineData("{\"temperatura\":22,\"ph\":true,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6}")]
+    [InlineData("{\"temperatura\":22,\"ph\":15,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6}")]
+    [InlineData("{\"temperatura\":22,\"ph\":7,\"ph\":8,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6}")]
+    public async Task AmostraIncompletaOuComTiposInvalidosNaoChamaIa(string sample)
+    {
+        var handler = new Handler(_ => throw new Exception("Entrada inválida não deve chamar IA"));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), sample, default));
+        Assert.Equal(422, error.StatusCode);
+        Assert.Equal(0, handler.Calls);
+        Assert.Empty(await db.PredicoesIA.ToListAsync());
+    }
+
+    [Fact]
+    public async Task CamposDesconhecidosENumerosNaoFinitosSaoRejeitados()
+    {
+        foreach (var suffix in new[] { ",\"oxigenioDissolvido\":6}", ",\"nitrogenio_total\":1}", ",\"fosforo_total\":1e400}" })
+        {
+            var handler = new Handler(_ => throw new Exception("Não deve chamar IA"));
+            var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), Sample[..^1] + suffix, default));
+            Assert.Equal(422, error.StatusCode);
+        }
+    }
+
+    [Fact]
+    public async Task ColetaFuturaOuDataDivergenteNaoEAnaliseAtual()
+    {
+        var handler = new Handler(_ => throw new Exception("Não deve chamar IA"));
+        var service = Service(handler);
+        var error = await Assert.ThrowsAsync<IaException>(() => service.CriarAsync(coletaId, Upload(),
+            Sample[..^1] + ",\"data\":\"2000-01-01T00:00:00Z\"}", default));
+        Assert.Equal(422, error.StatusCode);
+        var coleta = await db.Coletas.SingleAsync();
+        coleta.DataHora = DateTimeOffset.UtcNow.AddDays(1);
+        await db.SaveChangesAsync();
+        error = await Assert.ThrowsAsync<IaException>(() => service.CriarAsync(coletaId, Upload(), Sample, default));
+        Assert.Equal(422, error.StatusCode);
+        Assert.Equal(0, handler.Calls);
+        Assert.Empty(await db.PredicoesIA.ToListAsync());
+    }
+
+    [Theory]
+    [InlineData("riskInputs", "{\"ph\":7,\"oxigenio_dissolvido\":4,\"visualClasses\":[\"Lixo\"]}")]
+    [InlineData("riskInputs", "{\"ph\":7,\"oxigenio_dissolvido\":6,\"visualClasses\":[]}")]
+    [InlineData("riskInputs", "null")]
+    [InlineData("history", "{\"evaluatedCollections\":1,\"alertCollections\":1,\"adjustment\":0,\"samples\":[{\"predictionId\":123,\"coletaId\":123,\"baseRiskLevel\":2}]}")]
+    [InlineData("riskLevel", "1")]
+    [InlineData("riskReasons", "[1]")]
+    public async Task RespostaDivergenteDosDadosUtilizadosNaoGrava(string field, string value)
+    {
+        var fields = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(ValidResponse())!;
+        fields[field] = JsonSerializer.Deserialize<JsonElement>(value);
+        var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            { Content = new StringContent(JsonSerializer.Serialize(fields)) }));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), Sample, default));
+        Assert.Equal(502, error.StatusCode);
+        Assert.Empty(await db.PredicoesIA.ToListAsync());
+    }
+
+    [Fact]
+    public async Task OpcionaisNulosEUnidadesDoContratoSaoPreservadosNaEntrada()
+    {
+        var sample = Sample[..^1] + ",\"solidos_suspensos_totais\":null,\"carbono_organico_total\":1.5,\"fosforo_total\":18.39}";
+        string? sent = null;
+        var handler = new Handler(async request =>
+        {
+            sent = await Assert.IsType<MultipartFormDataContent>(request.Content)
+                .Single(p => p.Headers.ContentDisposition!.Name == "data").ReadAsStringAsync();
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(ValidResponse()) };
+        });
+        var saved = await Service(handler).CriarAsync(coletaId, Upload(), sample, default);
+        Assert.Equal(sent, saved.EntradaJson);
+        using var json = JsonDocument.Parse(saved.EntradaJson!);
+        Assert.Equal(JsonValueKind.Null, json.RootElement.GetProperty("solidos_suspensos_totais").ValueKind);
+        Assert.Equal(18.39, json.RootElement.GetProperty("fosforo_total").GetDouble());
+        using var result = JsonDocument.Parse(saved.ResultadoJson!);
+        Assert.Equal(6, result.RootElement.GetProperty("riskInputs").GetProperty("oxigenio_dissolvido").GetDouble());
+    }
 
     [Fact]
     public async Task UmaChamadaSalvaResultadoEImagensDaMesmaColeta()
@@ -75,7 +150,9 @@ public class PredicaoIATests : IAsyncLifetime
             var multipart = Assert.IsType<MultipartFormDataContent>(request.Content);
             var parts = multipart.ToArray();
             Assert.Equal(3, parts.Length);
-            Assert.Equal(Sample, await parts.Single(p => p.Headers.ContentDisposition!.Name == "data").ReadAsStringAsync());
+            var sent = await parts.Single(p => p.Headers.ContentDisposition!.Name == "data").ReadAsStringAsync();
+            Assert.Equal(7, ContratoAmostra.Ler(sent).GetProperty("ph").GetDouble());
+            Assert.True(ContratoAmostra.Ler(sent).TryGetProperty("data", out _));
             Assert.Equal(Jpeg, await parts.Single(p => p.Headers.ContentDisposition!.Name == "image").ReadAsByteArrayAsync());
             Assert.Equal("[]", await parts.Single(p => p.Headers.ContentDisposition!.Name == "history").ReadAsStringAsync());
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(ValidResponse()) };
@@ -89,7 +166,9 @@ public class PredicaoIATests : IAsyncLifetime
         Assert.Equal(coletaId, saved.ColetaId);
         Assert.Equal(Jpeg, saved.ImagemOriginal);
         Assert.Equal(Jpeg, saved.ImagemResultado);
-        Assert.Equal(Sample, saved.EntradaJson);
+        Assert.Equal(7, ContratoAmostra.Ler(saved.EntradaJson!).GetProperty("ph").GetDouble());
+        Assert.Equal((await db.Coletas.SingleAsync()).CorpoHidricoId, saved.CorpoHidricoId);
+        Assert.Equal((await db.Coletas.SingleAsync()).DataHora.UtcDateTime, saved.DataColeta);
         using var result = JsonDocument.Parse(saved.ResultadoJson!);
         Assert.Equal(1, result.RootElement.GetProperty("totalObjects").GetInt32());
         Assert.Equal(2, result.RootElement.GetProperty("riskLevel").GetInt32());
@@ -268,7 +347,7 @@ public class PredicaoIATests : IAsyncLifetime
             Assert.Equal(5, samples.Length);
             Assert.Equal(previousIds.Take(5), samples.Select(s => s.GetProperty("coletaId").GetInt32()));
             Assert.All(samples, s => Assert.Equal(1, s.GetProperty("baseRiskLevel").GetInt32()));
-            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(ValidResponse()) };
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(ValidResponse(json)) };
         });
         await Service(handler).CriarAsync(coletaId, Upload(), Sample, default);
         Assert.Equal(1, handler.Calls);
@@ -276,12 +355,15 @@ public class PredicaoIATests : IAsyncLifetime
 
     private async Task SavePrediction(int id, int level, DateTimeOffset created)
     {
+        var collection = await db.Coletas.SingleAsync(c => c.Id == id);
         db.PredicoesIA.Add(new back_end.src.IA.Domain.PredicaoIAEntity
         {
-            ColetaId = id, CriadaEm = created.UtcDateTime, Tipo = "integrada", NomeArquivo = "rio.jpg",
+            ColetaId = id, CorpoHidricoId = collection.CorpoHidricoId, DataColeta = collection.DataHora.UtcDateTime, CriadaEm = created.UtcDateTime, Tipo = "integrada", NomeArquivo = "rio.jpg",
             ContentTypeOriginal = "image/jpeg", ImagemOriginal = Jpeg,
             ContentTypeResultado = "image/jpeg", ImagemResultado = Jpeg,
-            ResultadoJson = JsonSerializer.Serialize(new { baseRiskLevel = level, riskRuleVersion = PredicaoIAService.VersaoRegraRisco }),
+            EntradaJson = level == 3 ? Sample.Replace(":6", ":4") : Sample,
+            ResultadoJson = RiskFixture.Result(sample: level == 3 ? Sample.Replace(":6", ":4") : Sample,
+                classes: level == 1 ? [] : ["Lixo"]),
         });
         await db.SaveChangesAsync();
     }

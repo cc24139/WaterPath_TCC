@@ -14,6 +14,7 @@ def build_visual_report(images, metals, image_shape):
         area_ratio = max(0.0, x2 - x1) * max(0.0, y2 - y1) / (width * height)
         if name not in grouped:
             grouped[name] = {
+                "indicatesRisk": image.indica_risco(),
                 "classId": image.class_id, "className": name, "count": 0,
                 "maxConfidence": 0.0, "meanBoxAreaRatio": 0.0,
                 "interpretation": interpretation(image, metals),

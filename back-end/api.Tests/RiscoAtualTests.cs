@@ -54,13 +54,9 @@ public class RiscoAtualTests : IAsyncLifetime
         new ObterRiscoAtualHandler(new CorpoHidricoRepository(db))
             .Handle(new QueryObterRiscoAtual(id ?? corpoId), default);
 
-    private static string Risk(int level = 2, string[]? reasons = null) => JsonSerializer.Serialize(new
-    {
-        riskLevel = level, baseRiskLevel = level,
-        riskLabel = level == 1 ? "baixo" : level == 2 ? "moderado" : "alto",
-        riskReasons = reasons ?? ["Sinal visual: Lixo."],
-        riskRuleVersion = PredicaoIAService.VersaoRegraRisco, history = new { adjustment = 0 },
-    });
+    private static string Risk(int level = 2, string[]? reasons = null) => RiskFixture.Result(
+        sample: level == 3 ? RiskFixture.Sample.Replace(":6", ":4") : RiskFixture.Sample,
+        classes: level == 1 ? [] : ["Lixo"], reasons: reasons);
 
     private async Task<ColetaEntity> Collection(DateTimeOffset at, int? body = null)
     {
@@ -75,7 +71,9 @@ public class RiscoAtualTests : IAsyncLifetime
     {
         var predicao = new PredicaoIAEntity
         {
-            ColetaId = coleta.Id, CriadaEm = at.UtcDateTime, Tipo = type, ResultadoJson = json,
+            ColetaId = coleta.Id, CorpoHidricoId = coleta.CorpoHidricoId, DataColeta = coleta.DataHora.UtcDateTime,
+            EntradaJson = json is not null && json.Contains("\"oxigenio_dissolvido\":4")
+                ? RiskFixture.Sample.Replace(":6", ":4") : RiskFixture.Sample, CriadaEm = at.UtcDateTime, Tipo = type, ResultadoJson = json,
             NomeArquivo = "teste.jpg", ContentTypeOriginal = "image/jpeg", ImagemOriginal = [1],
             ContentTypeResultado = "image/jpeg", ImagemResultado = [2],
         };
@@ -158,6 +156,44 @@ public class RiscoAtualTests : IAsyncLifetime
     {
         await Prediction(await Collection(date), date, Risk(), "vision");
         Assert.Null(await Query());
+    }
+
+    [Fact]
+    public async Task AlterarColetaNaoReescreveReferenciaDaClassificacao()
+    {
+        var collection = await Collection(date);
+        var expected = await Prediction(collection, date, Risk());
+        var other = new CorpoHidricoEntity("Outro", "Local", 10, false);
+        db.CorposHidricos.Add(other);
+        await db.SaveChangesAsync();
+        collection.DataHora = date.AddDays(-5);
+        collection.CorpoHidricoId = other.Id;
+        await db.SaveChangesAsync();
+        var result = await Query();
+        Assert.Equal(expected.Id, result!.PredicaoId);
+        Assert.Equal(date, result.DataColeta);
+        Assert.Null(await Query(other.Id));
+    }
+
+    [Fact]
+    public async Task LegadosSemRetratoENiveisSemEntradaNaoViramRiscoBaixo()
+    {
+        var legacy = await Prediction(await Collection(date), date, Risk(1));
+        legacy.CorpoHidricoId = null;
+        legacy.DataColeta = null;
+        var incomplete = await Prediction(await Collection(date), date, Risk(1));
+        incomplete.EntradaJson = null;
+        await db.SaveChangesAsync();
+        Assert.Null(await Query());
+        Assert.Equal(2, await db.PredicoesIA.CountAsync());
+    }
+
+    [Fact]
+    public async Task ReferenciaFuturaNaoEExpostaComoRiscoAtual()
+    {
+        var expected = await Prediction(await Collection(date), date, Risk());
+        await Prediction(await Collection(DateTimeOffset.UtcNow.AddDays(1)), date, Risk(1));
+        Assert.Equal(expected.Id, (await Query())!.PredicaoId);
     }
 
     [Fact]

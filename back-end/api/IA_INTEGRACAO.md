@@ -2,6 +2,8 @@
 
 A API principal usa ASP.NET Core 10, Entity Framework Core 9 e PostgreSQL. A IA usa FastAPI, ONNX Runtime para o YOLO de detecção e um modelo joblib de regressão de oito metais. O frontend existente usa Next.js/React e não foi alterado.
 
+O contrato atual e os detalhes de persistência estão em [CONTRATO_PREDICAO.md](CONTRATO_PREDICAO.md); ele usa a API de IA como referência.
+
 ## Fluxo
 
 1. O cliente envia uma imagem e as medições da amostra para `POST /api/ia/predicoes`.
@@ -38,7 +40,7 @@ Esse uso dos dados é **consulta ao histórico durante a classificação**. Salv
 
 O armazenamento existente foi preservado: JSONs em `jsonb`, imagens em `bytea`, chave estrangeira para a coleta. Excluir uma coleta exclui suas predições. O contexto histórico fica copiado no resultado; seus IDs referenciam as predições usadas, que podem ser excluídas com as respectivas coletas.
 
-Não foi necessário criar uma nova migração: os campos de risco entram no `ResultadoJson` existente. A migração `PersistirPredicoesIA` precisa estar aplicada no banco desejado. Ela **não foi executada no PostgreSQL configurado nesta alteração**.
+Os dados utilizados pela classificação ficam em `ResultadoJson.riskInputs` e `history`, junto da entrada enviada. A migração adicional `ReferenciarDadosClassificacao` copia a entidade e o instante observado para as novas predições. As duas migrações precisam estar aplicadas no banco desejado. **Não foram executadas no PostgreSQL configurado nesta alteração**. Registros legados são preservados sem preenchimento presumido e ficam fora da classificação até uma reanálise verificável.
 
 A conexão e a chave JWT continuam nas variáveis existentes `ConnectionString` e `JWT_KEY`, carregadas pelo `.env` local ou pelo ambiente. Foi removida uma conexão com credenciais fixas do `appsettings.json`, que não era usada pelo registro atual do contexto. Não coloque credenciais no código ou neste documento.
 
@@ -126,9 +128,9 @@ A resposta `201` contém o ID, a coleta, o resultado com nível de risco e os li
 
 `GET /api/corpohidrico/{id}/risco-atual` exige um JWT válido, seguindo a consulta por ID de corpo hídrico. O controller envia uma query pelo MediatR, o handler valida o resultado persistido e o repositório consulta o EF Core. A relação usada é `CorpoHidrico -> Coleta (CorpoHidricoId) -> PredicaoIA (ColetaId)`. O IQA de `Qualidade` não é um nível de risco e não é convertido em risco nesta consulta.
 
-Não havia uma definição implementada de “risco atual”. Foi adotado o resultado válido da **coleta mais recente**, ordenando de forma decrescente por `Coleta.DataHora`, `Coleta.Id`, `PredicaoIA.CriadaEm` e `PredicaoIA.Id`. Assim, reprocessar uma coleta antiga não substitui o resultado de uma coleta mais recente; os IDs tornam os empates determinísticos. Coletas sem resultado válido são puladas, sem limitar a busca à janela de cinco usada pela classificação do histórico.
+Não havia uma definição implementada de “risco atual”. Foi adotado o resultado válido da **coleta mais recente**, ordenando de forma decrescente por `PredicaoIA.DataColeta`, `PredicaoIA.ColetaId`, `PredicaoIA.CriadaEm` e `PredicaoIA.Id`. O instante e a entidade são cópias feitas na análise, sem depender de edições posteriores da coleta. Assim, reprocessar uma coleta antiga não substitui o resultado de uma coleta mais recente; os IDs tornam os empates determinísticos. Coletas sem resultado válido são puladas, sem limitar a busca à janela de cinco usada pela classificação do histórico.
 
-Só entram predições `integrada` com o contrato já exigido pelo `IaClient`: `riskRuleVersion = waterpath-risk-v1`, `riskLevel` e `baseRiskLevel` inteiros de 1 a 3, motivos em uma lista de textos e `history` como objeto. JSON inválido, outra versão, ausência de classificação e análise apenas visual são ignorados. A resposta copia o nível final, o rótulo opcional e os motivos salvos; não recalcula o nível base nem o ajuste histórico. Se o rótulo não estiver salvo, permanece ausente. A consulta não chama a IA, não gera predição nem altera dados; a projeção não carrega as imagens.
+Só entram predições `integrada` com entidade/instante copiados e contrato verificável pelo `IaClient`: amostra válida, `riskInputs` correspondentes aos valores enviados e às detecções, histórico compatível, `riskRuleVersion = waterpath-risk-v1`, níveis inteiros de 1 a 3, rótulo e motivos válidos. JSON inválido, outra versão, ausência de classificação, instantes futuros e análise apenas visual são ignorados. A resposta copia o nível final, o rótulo e os motivos salvos, após conferir sua consistência pela regra existente. A consulta não chama a IA, não gera predição nem altera dados; a projeção não carrega as imagens.
 
 Exemplo de requisição (substitua o ID e o token):
 
@@ -179,34 +181,4 @@ Há dois impedimentos no ambiente configurado:
 
 Na IA local foi corrigida apenas a montagem da resposta: versão da regra, contagens do histórico, ajuste efetivo e amostras com os aliases do contrato. Os critérios e cálculos de classificação existentes foram preservados.
 
-Validação: **39 testes C# passaram**, incluindo o fluxo HTTP com modelos reais da IA local, persistência em SQLite descartável e consulta autenticada da nova rota; **26 testes Python passaram** com os pesos existentes. Os testes de consulta cobrem isolamento por corpo hídrico, reanálise de coleta antiga, empates, contratos inválidos, análises visuais, risco baixo realmente salvo, ausência de dados e autenticação. A compilação passou com avisos de nulabilidade preexistentes. O fluxo completo foi validado no banco descartável; não foi possível validar uma resposta de risco 200 no PostgreSQL configurado pela tabela ausente.
-
-A geração de `/openapi/v1.json` da API principal também retornou 500 por exceder a profundidade JSON de 64. O mesmo erro foi reproduzido com a compilação anterior, sem esta alteração. A rota foi verificada por requisições HTTP diretas; a falha preexistente do OpenAPI não foi alterada.
-
-Erros: `400` para arquivo inválido ou JSON malformado; `404` para coleta/predição inexistente; `413` para arquivo grande; `422` para medições/histórico inválidos; `502` para IA indisponível ou resposta inválida; `504` para timeout. Falhas da IA não criam uma predição parcial. Os detalhes internos das falhas ficam no log da IA.
-
-## Verificação automatizada
-
-Na raiz, instale as dependências de teste Python e execute:
-
-```powershell
-& .venv-ia/Scripts/python.exe -m pip install -r back-end/ia/app/requirements-test.txt
-Push-Location back-end/ia/app
-& ../../../.venv-ia/Scripts/python.exe -B -m unittest discover -s tests -v
-Pop-Location
-dotnet test back-end/api.Tests/WaterPath.Api.Tests.csproj --artifacts-path "$env:TEMP/waterpath-tests"
-```
-
-Os testes Python usam os pesos e uma imagem reais do repositório; verificam detecção, preservação das coordenadas/confiança e das oito concentrações anteriores à reorganização, risco, limiares, histórico, imagem anotada, EXIF, arquivo inválido, limite de tamanho e falha do modelo. Os testes C# de erros isolam a IA e usam SQLite em memória para verificar persistência, associação, leitura das imagens, seleção de histórico, comunicação/timeout e ausência de registros parciais. Esses cenários de erro não substituem a classificação real da aplicação.
-
-Para ativar o teste C# que faz chamadas à IA real, mantenha a IA local aberta e execute da raiz:
-
-```powershell
-$env:WATERPATH_IA_TEST_URL = 'http://127.0.0.1:8000/'
-$env:WATERPATH_TEST_IMAGE = (Resolve-Path 'back-end/ia/app/services/ComputerVision/dataset/train/images/000058_jpg.rf.zumct7JlQ1EznlPftdka.jpg').Path
-dotnet test back-end/api.Tests/WaterPath.Api.Tests.csproj --artifacts-path "$env:TEMP/waterpath-tests"
-```
-
-Esse teste cria coletas em um banco SQLite descartável, faz três análises reais anteriores e uma atual por HTTP entre as APIs, verifica o peso do histórico, lê as imagens salvas e rejeita um JPEG corrompido sem aumentar a quantidade de predições. O servidor HTTP C# de teste usa os mesmos controllers e serviço de persistência da API principal. Não acessa nem altera o PostgreSQL configurado.
-
-Resultado desta alteração: **17 testes Python e 14 testes C# passaram**, incluindo o teste com IA real via HTTP. A compilação da API passou; permanecem avisos de nulabilidade preexistentes em outras áreas. PostgreSQL, construção Docker e atualização do serviço hospedado não foram verificados/executados. A integração está verificada localmente; o uso no ambiente hospedado depende dessas etapas de configuração e publicação.
+Validação atual: **58 testes C# passaram**, incluindo o fluxo HTTP com modelos reais da IA local, persistência em SQLite descartável e consulta autenticada de risco; **28 testes Python passaram** com os pesos existentes. Há cobertura de entradas estritas, ausências opcionais, amostras incompletas, respostas divergentes, histórico, identidade/instante copiados, legados/futuros, isolamento, empates e ausência de gravações parciais. A geração SQL da nova migração e o snapshot EF passaram sem acesso ao PostgreSQL configurado. A compilação mantém avisos de nulabilidade preexistentes. O SDK instalado 10.0.101 e um ambiente temporário Python 3.12 com scikit-learn 1.6.1 foram usados; no macOS, o OpenMP fornecido pelo scikit-learn foi disponibilizado apenas ao processo de teste. Nenhum pacote do projeto ou modelo foi alterado para contornar problemas do ambiente.
