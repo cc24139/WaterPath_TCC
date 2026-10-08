@@ -1,9 +1,9 @@
-import { LuDroplet, LuThermometer, LuWaves, LuWind } from "react-icons/lu";
+import { LuDroplet, LuThermometer, LuZap, LuWind } from "react-icons/lu";
 import type { MonitoringColetaDTO } from "@/api/dtos/monitoringDTO";
 import { dashboardMetrics, formatMetric, formatMonitoringDate, getMeasurement } from "../utils/dashboardData";
 import { DashboardPanel } from "./DashboardPanel";
 
-const icons = [LuDroplet, LuWaves, LuWind, LuThermometer];
+const icons = [LuDroplet, LuZap, LuWind, LuThermometer];
 
 export function CurrentParametersCard({ latest, basePath }: { latest?: MonitoringColetaDTO; basePath: string }) {
   return (

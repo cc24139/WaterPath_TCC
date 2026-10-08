@@ -1,30 +1,28 @@
-export interface ColetaRelationDTO {
-  id: number;
+import type { MonitoringColetaDTO } from "./monitoringDTO";
+
+export interface MedicaoCadastroDTO {
+  codigoMedicao: string;
+  valor: number;
+  unidade: string;
+}
+
+export interface MetalMedidoCadastroDTO {
+  nome: string;
+  concentracao: number;
+  unidade: string;
 }
 
 export interface ColetaCadastroDTO {
-  nome: string;
-  data: string;
-  ph: number;
-  oxigenioDissolvido: number;
-  turbidez: number;
-  cloroResidual: number;
-  floretos: number;
-  coliformesTotais: number;
-  escherichiaColi: boolean;
-  corpoHidrico: ColetaRelationDTO;
+  corpoHidricoId: number;
+  dataHora: string;
+  medicoes: MedicaoCadastroDTO[];
+  metaisPesados?: MetalMedidoCadastroDTO[];
 }
 
-export interface ColetaDTO {
-  id: number;
-  nome: string;
-  data: string;
-  ph: number;
-  oxigenioDissolvido: number;
-  turbidez: number;
-  cloroResidual: number;
-  floretos: number;
-  coliformesTotais: number;
-  escherichiaColi: boolean;
-  corpoHidrico?: ColetaRelationDTO;
+export type ColetaAtualizacaoDTO = Omit<ColetaCadastroDTO, "metaisPesados">;
+
+export interface ColetaDTO extends MonitoringColetaDTO {
+  metaisPesados?: MetalMedidoCadastroDTO[];
+  responsavelId?: number | null;
+  responsavelNome?: string | null;
 }

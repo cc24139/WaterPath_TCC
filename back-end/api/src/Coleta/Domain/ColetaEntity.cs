@@ -19,6 +19,8 @@ namespace back_end.src.Domain.Coleta
         public List<MetalPesadoEntity> MetaisPesados { get; private set; } = [];
         public List<CianoBacteriaEntity> CianoBacterias { get; private set; } = [];
         public DateTimeOffset DataHora { get;  set; }
+        public int? ResponsavelId { get; private set; }
+        public string? ResponsavelNome { get; private set; }
         public double? Latitude { get;  set; }
         public double? Longitude { get;  set; }
         public double? ProfundidadeMetros { get;  set; }
@@ -44,6 +46,14 @@ namespace back_end.src.Domain.Coleta
         }
 
         public List<MedicoesEntity> Medicoes { get; private set; } = [];
+
+        public void RegistrarResponsavel(int id, string nome)
+        {
+            if (id <= 0 || string.IsNullOrWhiteSpace(nome))
+                throw new ArgumentException("Responsável inválido.");
+            ResponsavelId = id;
+            ResponsavelNome = nome;
+        }
 
         public void AdicionarMedicao(MedicoesEntity medicao)
         {

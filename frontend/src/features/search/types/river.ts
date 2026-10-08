@@ -4,7 +4,7 @@ export type RiverMeasurement = {
   id: string;
   timestamp: number;
   ph: number | null;
-  turbidity: number | null;
+  conductivity: number | null;
   dissolvedOxygen: number | null;
 };
 

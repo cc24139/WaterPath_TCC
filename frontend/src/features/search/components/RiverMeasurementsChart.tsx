@@ -7,7 +7,7 @@ import { measurementChart } from "../utils/measurementChart";
 
 const metrics = {
   ph: { label: "pH" },
-  turbidity: { label: "Turbidez" },
+  conductivity: { label: "Condutividade elétrica (µS/cm)" },
   dissolvedOxygen: { label: "Oxigênio dissolvido" },
 } as const;
 type Metric = keyof typeof metrics;

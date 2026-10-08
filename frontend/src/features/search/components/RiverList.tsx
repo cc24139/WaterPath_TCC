@@ -1,5 +1,6 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { LuArrowRight, LuWaves } from "react-icons/lu";
+import { LuArrowRight, LuWaves, LuZap } from "react-icons/lu";
 import { Card } from "@/components/ui/Card";
 import type { River } from "../types/river";
 import { formatCollectionDate, formatMeasurement, getRiverStatusClassName } from "../utils/riverData";
@@ -42,7 +43,7 @@ function RiverCard({ river, isSelected }: { river: River; isSelected: boolean })
           <p className="mt-1 text-xs text-text-secondary">{latest ? `${formatCollectionDate(latest.timestamp)} (UTC)` : "Nenhuma coleta disponível."}</p>
           <dl className="mt-3 grid grid-cols-1 gap-2 text-xs text-text-secondary sm:grid-cols-3">
             <InfoItem label="pH" value={formatMeasurement(latest?.ph)} />
-            <InfoItem label="Turbidez" value={formatMeasurement(latest?.turbidity)} />
+            <InfoItem label="Condutividade elétrica (µS/cm)" value={formatMeasurement(latest?.conductivity)}/>
             <InfoItem label="Oxigênio dissolvido" value={formatMeasurement(latest?.dissolvedOxygen)} />
           </dl>
           <div className="mt-4 flex items-center justify-between gap-4 border-t border-placeholder/60 pt-3">
@@ -76,6 +77,6 @@ function RiverCard({ river, isSelected }: { river: River; isSelected: boolean })
   );
 }
 
-function InfoItem({ label, value }: { label: string; value: string }) {
-  return <div><dt className="font-semibold">{label}</dt><dd className="mt-1">{value}</dd></div>;
+function InfoItem({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
+  return <div><dt className="flex items-center gap-1.5 font-semibold">{icon}{label}</dt><dd className="mt-1">{value}</dd></div>;
 }

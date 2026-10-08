@@ -1,38 +1,18 @@
-export interface AddAnalysisFormValues {
-  // API ID of the selected water body, stored as a string for the select input.
-  waterBody: string;
-  analysisDate: string;
-  collectionPoint: string;
-  responsible: string;
-  analysisType: string;
-  ph: string;
-  temperature: string;
-  turbidity: string;
-  conductivity: string;
-  tds: string;
-  heavyMetals: string;
-  visualCondition: string;
-  observations: string;
-  manualDiagnosis: string;
-}
-
-export interface AddAnalysisFormState extends AddAnalysisFormValues {
-  imageName: string;
-  imagePreviewUrl: string;
-}
-
-export type AddAnalysisFieldName = keyof AddAnalysisFormValues;
-
-export interface SelectOption {
-  label: string;
-  value: string;
-}
-
+export type IndicatorName =
+  | "temperatura" | "ph" | "condutividade_eletrica" | "oxigenio_dissolvido"
+  | "solidos_suspensos_totais" | "carbono_organico_total" | "fosforo_total";
+export type MetalSymbol = "Fe" | "Mn" | "Cr" | "Ni" | "Cu" | "Zn" | "Cd" | "Pb";
+export type AddAnalysisFieldName = "waterBody" | "analysisDate" | IndicatorName;
+export type AddAnalysisFormState = Record<AddAnalysisFieldName, string> & {
+  metals: Partial<Record<MetalSymbol, string>>;
+};
+export type AddAnalysisErrors = Partial<Record<AddAnalysisFieldName | MetalSymbol | "image", string>>;
+export interface SelectOption { label: string; value: string }
 export interface AnalysisFieldConfig {
-  name: AddAnalysisFieldName;
+  name: IndicatorName;
   label: string;
+  unit: string;
+  measurementCode: string;
   placeholder: string;
-  helper?: string;
-  type?: "text" | "date";
-  inputMode?: "decimal" | "numeric" | "text";
+  required: boolean;
 }

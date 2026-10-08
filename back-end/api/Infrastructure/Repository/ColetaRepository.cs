@@ -120,7 +120,9 @@ namespace back_end.src.Infrastructure.Repository
 
         private IQueryable<ColetaEntity> Consultar() => context.Coletas
             .AsNoTracking()
-            .Include(c => c.Medicoes);
+            .Include(c => c.Medicoes)
+            .Include(c => c.MetaisPesados)
+            .AsSplitQuery();
 
         private void ValidarCorpoHidrico(int id)
         {

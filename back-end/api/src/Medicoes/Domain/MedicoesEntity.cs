@@ -34,8 +34,10 @@ public class MedicoesEntity
             throw new ArgumentException("Código de medição inválido.");
         if (string.IsNullOrWhiteSpace(unidade))
             throw new ArgumentException("Informe a unidade da medição.");
-        if (valor is double v && (!double.IsFinite(v) || v < 0))
-            throw new ArgumentException("O valor deve ser finito e não negativo.");
+        if (valor is double v && (!double.IsFinite(v) || (codigo != Medicao.Temperatura && v < 0)))
+            throw new ArgumentException("O valor deve ser finito e não negativo, exceto temperatura.");
+        if (codigo == Medicao.Ph && valor > 14)
+            throw new ArgumentException("O pH deve estar entre 0 e 14.");
         if (!censurado && valor is null)
             throw new ArgumentException("Informe o valor da medição não censurada.");
         if (limite is double l && (!double.IsFinite(l) || l <= 0))

@@ -2,7 +2,7 @@ import type { MedicaoDTO, MonitoringColetaDTO } from "../../../../api/dtos/monit
 
 export const dashboardMetrics = [
   { key: "ph", code: 1, name: "Ph", label: "pH", unit: "" },
-  { key: "turbidity", code: 3, name: "Turbidez", label: "Turbidez", unit: "NTU" },
+  { key: "conductivity", code: 4, name: "CondutividadeEletrica", label: "Condutividade elétrica", unit: "µS/cm" },
   { key: "oxygen", code: 2, name: "OxigenioDissolvido", label: "Oxigênio dissolvido", unit: "mg/L" },
   { key: "temperature", code: 0, name: "Temperatura", label: "Temperatura", unit: "°C" },
 ] as const;

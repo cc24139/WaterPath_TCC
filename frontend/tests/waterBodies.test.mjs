@@ -13,7 +13,7 @@ test("route IDs match positive backend Int32 values without ambiguous formats", 
   assert.equal(parseWaterBodyId("1"), 1);
   assert.equal(parseWaterBodyId("2147483647"), 2147483647);
 });
-const collection = (overrides = {}) => ({ id: 1, corpoHidrico: { id: 1 }, data: "2026-01-01T12:00:00", ph: 7, turbidez: 2, oxigenioDissolvido: 5, ...overrides });
+const collection = (overrides = {}) => ({ id: 1, corpoHidrico: { id: 1 }, data: "2026-01-01T12:00:00", ph: 7, condutividadeEletrica: 210, condutividadeEletricaUnidade: "µS/cm", oxigenioDissolvido: 5, ...overrides });
 
 test("empty responses stay empty, without demo values", () => {
   assert.deepEqual(buildRivers([], [], []), { rivers: [], warnings: [] });
@@ -32,11 +32,11 @@ test("missing, malformed and nonfinite numbers never become zero", () => {
 
 test("normalizes string IDs, PascalCase fields and flat relations", () => {
   const { rivers, warnings } = buildRivers([{ Id: "1", Nome: "Rio", Localizacao: "RJ", Users: [{ Id: "3" }] }], [
-    { Id: "4", CorpoHidricoId: "1", Data: "2026-01-01", Ph: "7,2", Turbidez: "0", OxigenioDissolvido: "5.1" },
+    { Id: "4", CorpoHidricoId: "1", Data: "2026-01-01", Ph: "7,2", CondutividadeEletrica: "0", CondutividadeEletricaUnidade: "µS/cm", OxigenioDissolvido: "5.1" },
   ], [{ Id: "1", CorpoHidricoId: "1", IQA: "82" }]);
   assert.deepEqual(warnings, []);
   assert.equal(rivers[0].measurements[0].ph, 7.2);
-  assert.equal(rivers[0].measurements[0].turbidity, 0);
+  assert.equal(rivers[0].measurements[0].conductivity, 0);
   assert.deepEqual(rivers[0].userIds, ["3"]);
   assert.equal(rivers[0].iqa, 82);
 });
@@ -61,10 +61,10 @@ test("orphan, duplicate and invalid-date records are not assigned to a river", (
 });
 
 test("invalid metrics leave a gap, valid zero measurements are preserved", () => {
-  const { rivers } = buildRivers(bodies, [collection({ ph: 15, turbidez: -1, oxigenioDissolvido: 0 })], []);
+  const { rivers } = buildRivers(bodies, [collection({ ph: 15, condutividadeEletrica: -1, oxigenioDissolvido: 0 })], []);
   const point = rivers[0].measurements[0];
   assert.equal(point.ph, null);
-  assert.equal(point.turbidity, null);
+  assert.equal(point.conductivity, null);
   assert.equal(point.dissolvedOxygen, 0);
 });
 
@@ -98,9 +98,35 @@ test("chart preserves missing-value gaps and does not draw a trend for one sampl
 });
 
 test("chart handles equal timestamps and constant zero values without dividing by zero", () => {
-  const measurements = buildRivers(bodies, [collection({ id: 1, turbidez: 0 }), collection({ id: 2, turbidez: 0 })], []).rivers[0].measurements;
-  const chart = measurementChart(measurements, "turbidity");
+  const measurements = buildRivers(bodies, [collection({ id: 1, condutividadeEletrica: 0 }), collection({ id: 2, condutividadeEletrica: 0 })], []).rivers[0].measurements;
+  const chart = measurementChart(measurements, "conductivity");
   assert.equal(chart.segments.length, 0);
   assert.ok(chart.maximum > 0);
   assert.ok(chart.points.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y)));
+});
+
+test("current collection contract reads conductivity code 4, never turbidity code 3", () => {
+  for (const code of [4, "4", "CondutividadeEletrica"]) {
+    const { rivers } = buildRivers(bodies, [{ id: 10, corpoHidricoId: 1, dataHora: "2026-10-01T12:00:00Z", medicoes: [
+      { codigoMedicao: 3, valor: 20, unidade: "NTU", censurado: false },
+      { codigoMedicao: code, valor: 312, unidade: "µS/cm", censurado: false },
+      { codigoMedicao: 1, valor: 7, unidade: "pH", censurado: false },
+      { codigoMedicao: 2, valor: 6, unidade: "mg/L", censurado: false },
+    ] }], []);
+    assert.equal(rivers[0].measurements[0].conductivity, 312);
+    assert.equal(rivers[0].measurements[0].ph, 7);
+    assert.equal(rivers[0].measurements[0].dissolvedOxygen, 6);
+  }
+});
+
+test("missing, censored, duplicate or incompatible conductivity is not plotted as an exact value", () => {
+  const ec = { codigoMedicao: 4, valor: 100, unidade: "µS/cm", censurado: false };
+  for (const medicoes of [[], [{ codigoMedicao: 3, valor: 10, unidade: "NTU" }], [{ ...ec, censurado: true, limite: 100 }], [{ ...ec, unidade: "mS/cm" }], [ec, ec]]) {
+    const { rivers } = buildRivers(bodies, [collection({ medicoes })], []);
+    assert.equal(rivers[0].measurements[0].conductivity, null);
+  }
+  assert.equal(buildRivers(bodies, [collection({ condutividadeEletricaUnidade: undefined })], []).rivers[0].measurements[0].conductivity, null);
+  for (const unidade of ["µS/cm", "μS/cm", "uS/cm"]) {
+    assert.equal(buildRivers(bodies, [collection({ medicoes: [{ ...ec, valor: 0, unidade }] })], []).rivers[0].measurements[0].conductivity, 0);
+  }
 });

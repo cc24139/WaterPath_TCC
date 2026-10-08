@@ -22,7 +22,7 @@ interface WaterBodiesViewProps {
   demo?: boolean;
 }
 
-export function WaterBodiesView({
+export function   WaterBodiesView({
   rivers,
   loading = false,
   error = null,
@@ -87,9 +87,9 @@ export function WaterBodiesView({
         <details className="mt-4 text-xs text-text-secondary">
           <summary className="cursor-pointer rounded font-semibold text-primary focus-visible:outline-primary">Como interpretar os dados</summary>
           <div className="mt-2 space-y-2">
-            <p>Os gráficos mostram apenas medições registradas, nas datas disponíveis. Intervalos sem coleta não representam medições nem previsões. As escalas de turbidez e oxigênio se ajustam aos valores de cada corpo hídrico.</p>
+            <p>Os gráficos mostram apenas medições registradas, nas datas disponíveis. Intervalos sem coleta não representam medições nem previsões. As escalas de condutividade elétrica e oxigênio se ajustam aos valores de cada corpo hídrico.</p>
             <p>O IQA é apresentado na escala de 0 a 100, sem data informada. A classificação visual segue as faixas usadas no projeto: Crítica abaixo de 50; Atenção de 50 a menos de 75; Boa de 75 a menos de 90; Ótima a partir de 90. Ela não indica, por si só, potabilidade.</p>
-            <p>As unidades de turbidez e oxigênio não estão informadas nos registros. Confirme a unidade das medições antes de comparar fontes diferentes.</p>
+            <p>A condutividade elétrica é apresentada em µS/cm quando a unidade está identificada no registro. Medições ausentes ou incompatíveis aparecem como não informadas.</p>
           </div>
         </details>
 

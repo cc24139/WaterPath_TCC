@@ -6,6 +6,7 @@ using back_end.src.Domain.Coleta;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace back_end.src.Controllers.Coleta
 {
@@ -21,11 +22,20 @@ namespace back_end.src.Controllers.Coleta
         }
 
         [HttpPost]
-        public async Task<IActionResult> Cadastrar([FromBody] ColetaInput input)
+        public async Task<IActionResult> Cadastrar([FromBody] ColetaCadastroInput input)
         {
             try
             {
+                if (Request.Headers.ContainsKey("Authorization") && User.Identity?.IsAuthenticated != true)
+                    return Unauthorized("Sessão inválida. Entre novamente para cadastrar a coleta.");
                 var coleta = input.ToEntity();
+                if (User.Identity?.IsAuthenticated == true)
+                {
+                    if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var responsavelId)
+                        || string.IsNullOrWhiteSpace(User.Identity.Name))
+                        return Unauthorized("Identificação do responsável indisponível. Entre novamente.");
+                    coleta.RegistrarResponsavel(responsavelId, User.Identity.Name);
+                }
                 await mediator.Send(
                     new CommandCadastrarColeta
                     {
@@ -77,6 +87,9 @@ namespace back_end.src.Controllers.Coleta
                     c.Id,
                     c.DataHora,
                     c.Medicoes,
+                    c.MetaisPesados,
+                    c.ResponsavelId,
+                    c.ResponsavelNome,
                     c.CorpoHidricoId,
                 }));    
             }

@@ -2,6 +2,7 @@ import {
   LuCalendar,
   LuClock3,
   LuFilter,
+  LuZap,
   LuTriangleAlert,
 } from "react-icons/lu";
 
@@ -9,10 +10,10 @@ import { RiverInsightListCard } from "./RiverInsightListCard";
 
 const detectedProblems = [
   {
-    title: "Alta Turbidez",
-    description: "Valores acima do ideal podem comprometer a vida aquática.",
-    colorClass: "text-[#FF4D4D]",
-    icon: <LuTriangleAlert className="h-5 w-5" />,
+    title: "Condutividade elétrica",
+    description: "Compare as medições em µS/cm com o histórico do corpo hídrico.",
+    colorClass: "text-primary",
+    icon: <LuZap className="h-5 w-5" />,
   },
   {
     title: "DQO elevada",

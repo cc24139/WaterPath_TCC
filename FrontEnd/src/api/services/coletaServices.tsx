@@ -1,5 +1,5 @@
 import { routes } from "../routes";
-import { ColetaCadastroDTO } from "../dtos/coletaDTO";
+import type { ColetaAtualizacaoDTO, ColetaCadastroDTO } from "../dtos/coletaDTO";
 import { apiFetch } from "../apiFetch";
 
 export const coletaServices = {
@@ -17,7 +17,7 @@ export const coletaServices = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
-    });
+    }, { redirectOnUnauthorized: false });
   },
 
   async getById(id: number): Promise<Response> {
@@ -28,7 +28,7 @@ export const coletaServices = {
     return apiFetch(routes.coleta, { signal }, { authenticated: false });
   },
 
-  async update(id: number, data: ColetaCadastroDTO): Promise<Response> {
+  async update(id: number, data: ColetaAtualizacaoDTO): Promise<Response> {
     return apiFetch(`${routes.coleta}${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

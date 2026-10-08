@@ -7,6 +7,7 @@ export interface QualidadeFuturaCadastroDTO {
   data: string;
   ph: number;
   oxigenioDissolvido: number;
+  // Contrato legado da API de qualidade futura; não usado nos indicadores da interface.
   turbidez: number;
   cloroResidual: number;
   floretos: number;
@@ -21,6 +22,7 @@ export interface QualidadeFuturaDTO {
   data: string;
   ph: number;
   oxigenioDissolvido: number;
+  // Contrato legado da API de qualidade futura; não usado nos indicadores da interface.
   turbidez: number;
   cloroResidual: number;
   floretos: number;

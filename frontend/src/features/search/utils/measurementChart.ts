@@ -1,6 +1,6 @@
 import type { RiverMeasurement } from "../types/river";
 
-export type MeasurementMetric = "ph" | "turbidity" | "dissolvedOxygen";
+export type MeasurementMetric = "ph" | "conductivity" | "dissolvedOxygen";
 
 export function measurementChart(measurements: RiverMeasurement[], metric: MeasurementMetric) {
   const largest = measurements.reduce((max, point) => Math.max(max, point[metric] ?? 0), 1);

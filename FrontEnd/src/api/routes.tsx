@@ -1,5 +1,4 @@
-const localUrl = "http://localhost:5189/api/";
-const baseUrl = "https://waterpath-tcc.onrender.com/api/";
+const baseUrl = `${(process.env.NEXT_PUBLIC_API_URL ?? "https://waterpath-tcc.onrender.com/api").replace(/\/+$/, "")}/`;
 export const routes = {
   user: `${baseUrl}user/`,
   codigo: `${baseUrl}codigo/`,
@@ -10,5 +9,6 @@ export const routes = {
   cianoBacteria: `${baseUrl}cianobacteria/`,
   qualidade: `${baseUrl}qualidade/`,
   qualidadeFutura: `${baseUrl}qualidadefutura/`,
+  predicoes: `${baseUrl}ia/predicoes/`,
   vision: `${baseUrl}vision/`,
 };

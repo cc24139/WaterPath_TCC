@@ -40,6 +40,28 @@ function metric(value: unknown, max = Infinity): number | null {
   return number !== null && number >= 0 && number <= max ? number : null;
 }
 
+function collectionMetric(collection: unknown, code: number, name: string, legacyName: string, max = Infinity, unit?: string): number | null {
+  const measurements = field(collection, "medicoes");
+  if (measurements !== undefined) {
+    if (!Array.isArray(measurements)) return null;
+    const matches = measurements.filter((item) => {
+      const measurementCode = field(item, "codigoMedicao");
+      return measurementCode === code || measurementCode === String(code)
+        || (typeof measurementCode === "string" && measurementCode.toLowerCase() === name.toLowerCase());
+    });
+    if (matches.length !== 1 || field(matches[0], "censurado") === true) return null;
+    if (unit && !matchesUnit(field(matches[0], "unidade"), unit)) return null;
+    return metric(field(matches[0], "valor"), max);
+  }
+  // Legacy flat records are accepted only with an explicit conductivity unit.
+  if (unit && !matchesUnit(field(collection, `${legacyName}Unidade`), unit)) return null;
+  return metric(field(collection, legacyName), max);
+}
+
+function matchesUnit(value: unknown, expected: string): boolean {
+  return typeof value === "string" && value.trim().replace(/[μu]/g, "µ") === expected;
+}
+
 export function readTimestamp(value: unknown): number | null {
   if (typeof value !== "string") return null;
   const match = /^(\d{4})-(\d{2})-(\d{2})(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?$/.exec(value);
@@ -111,7 +133,7 @@ export function buildRivers(bodies: unknown[], collections: unknown[], qualities
   for (const collection of collections) {
     const collectionId = id(field(collection, "id"));
     const riverId = bodyId(collection);
-    const timestamp = readTimestamp(field(collection, "data"));
+    const timestamp = readTimestamp(field(collection, "dataHora") ?? field(collection, "data"));
     if (!riverId || !collectionId || timestamp === null || collectionIds.has(collectionId)) {
       ignoredCollections++;
       continue;
@@ -122,11 +144,11 @@ export function buildRivers(bodies: unknown[], collections: unknown[], qualities
     const measurement: RiverMeasurement = {
       id: collectionId,
       timestamp,
-      ph: metric(field(collection, "ph"), 14),
-      turbidity: metric(field(collection, "turbidez")),
-      dissolvedOxygen: metric(field(collection, "oxigenioDissolvido")),
+      ph: collectionMetric(collection, 1, "Ph", "ph", 14),
+      conductivity: collectionMetric(collection, 4, "CondutividadeEletrica", "condutividadeEletrica", Infinity, "µS/cm"),
+      dissolvedOxygen: collectionMetric(collection, 2, "OxigenioDissolvido", "oxigenioDissolvido"),
     };
-    if ([measurement.ph, measurement.turbidity, measurement.dissolvedOxygen].includes(null)) invalidMetrics++;
+    if ([measurement.ph, measurement.conductivity, measurement.dissolvedOxygen].includes(null)) invalidMetrics++;
     river.measurements.push(measurement);
   }
 

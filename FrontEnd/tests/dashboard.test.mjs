@@ -28,8 +28,8 @@ test("enum codes support numeric and string serialization, preserving temperatur
 });
 
 test("censored values show the detection limit and are excluded from numerical charts", () => {
-  const value = measurement({ valor: null, censurado: true, limite: 0.42, unidade: "NTU" });
-  assert.equal(formatMetric(value), "< 0,42 NTU");
+  const value = measurement({ valor: null, censurado: true, limite: 0.42, unidade: "µS/cm" });
+  assert.equal(formatMetric(value), "< 0,42 µS/cm");
   assert.equal(measurementValue(value), null);
   const omittedNulls = measurement({ censurado: true, limite: 0.42 });
   delete omittedNulls.valor;
@@ -48,4 +48,18 @@ test("CSV includes units, censoring and escaped cells without formula execution"
   assert.ok(csv.startsWith("\uFEFF"));
   assert.ok(csv.includes('7,02 =bad;""unit""'));
   assert.ok(csv.includes('"IQA"') === false);
+});
+
+test("conductivity cards, charts and CSV use the backend conductivity code and unit", () => {
+  const metric = dashboardMetrics.find((item) => item.key === "conductivity");
+  assert.ok(metric);
+  for (const code of [4, "4", "CondutividadeEletrica"]) {
+    const item = collection({ medicoes: [measurement({ codigoMedicao: 3, valor: 20, unidade: "NTU" }), measurement({ codigoMedicao: code, valor: 312, unidade: "µS/cm" })] });
+    assert.equal(formatMetric(getMeasurement(item, metric)), "312 µS/cm");
+    const csv = buildMeasurementsCsv([item]);
+    assert.ok(csv.includes('"Condutividade elétrica"'));
+    assert.ok(csv.includes('"312 µS/cm"'));
+    assert.ok(!csv.includes("NTU"));
+  }
+  assert.equal(getMeasurement(collection({ medicoes: [measurement({ codigoMedicao: 3, unidade: "NTU" })] }), metric), undefined);
 });

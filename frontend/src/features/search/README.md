@@ -9,26 +9,24 @@ a lista com aviso de indisponibilidade. Uma resposta vazia é diferente de erro.
 ## Contrato e integração
 
 - Corpos hídricos: `id`, `nome`, `localizacao`, `users[].id`.
-- Coletas: `id`, `data`, `ph`, `turbidez`, `oxigenioDissolvido`, `corpoHidrico.id`.
+- Coletas: `id`, `dataHora`, `corpoHidricoId` e `medicoes[]` com `codigoMedicao`, `valor`, `unidade` e `censurado`.
+- Condutividade elétrica: código `4` ou `CondutividadeEletrica`, em `µS/cm` (também aceita as grafias `μS/cm` e `uS/cm`). O código `3` não é usado como substituto.
+- Registros planos legados continuam aceitos com `data`, `ph`, `oxigenioDissolvido` e `corpoHidrico.id`. Para condutividade, exigem `condutividadeEletrica` e `condutividadeEletricaUnidade` explícitos.
 - Qualidade: `id`, `iqa`, `corpoHidrico.id`. Não há data, unidade ou coleta associada.
 - O adaptador também aceita campos em PascalCase, `IQA`, relações por
   `corpoHidricoId` e números como strings com ponto ou vírgula decimal. Não aceita
   objetos de paginação como se fossem listas; uma alteração desse contrato deve
   atualizar o carregador e os testes.
-- Os GETs de coletas e qualidade foram ajustados no backend para carregar a
-  relação com o corpo hídrico e projetar os campos escalares e IDs relacionados.
-  Isso evita vínculos ausentes e a serialização de grafos de entidades cíclicos.
-  Os endpoints individuais e de escrita continuam com seus contratos anteriores.
-  As alterações do backend precisam ser publicadas para disponibilizar esses vínculos.
+- A leitura usa o contrato atual de coletas sem misturar valores de outros parâmetros. A presença de `medicoes` tem prioridade sobre campos planos legados.
 - Busca por nome/localização, seleção, contagem e filtros usam a lista real.
-  "Meus corpos hídricos" usa `users[].id`, pois a coleta não informa seu autor.
+  "Meus corpos hídricos" usa `users[].id`, que relaciona usuários ao corpo hídrico.
   Esse filtro de interface não substitui autorização no servidor.
 
 ## Gráficos e valores ausentes
 
 O antigo gráfico de IQA tinha números e meses fixos. Como `QualidadeEntity` não
 possui data nem vínculo com uma coleta, um histórico temporal de IQA não pode ser
-obtido desse contrato. A tela apresenta o histórico de pH, turbidez ou oxigênio
+obtido desse contrato. A tela apresenta o histórico de pH, condutividade elétrica ou oxigênio
 dissolvido das coletas. Para implementar IQA ao longo do tempo será necessário
 persistir a data da avaliação ou a referência à coleta e expor isso na leitura.
 A data de uma previsão de qualidade futura não é a data de uma medição de IQA.
@@ -48,9 +46,9 @@ A data de uma previsão de qualidade futura não é a data de uma medição de I
 - Um parâmetro ausente quebra a linha. Não há interpolação, suavização ou média
   mensal. Uma única medição é um ponto. Coletas no mesmo instante permanecem
   separadas na tabela e não são conectadas entre si; pontos iguais podem se sobrepor.
-- A escala de pH é fixa em 0–14. Turbidez e oxigênio usam zero como base e máximo
+- A escala de pH é fixa em 0–14. Condutividade elétrica e oxigênio usam zero como base e máximo
   ajustado aos dados de cada card; alturas visuais entre cards não são comparáveis
-  sem ler os eixos. As unidades não são inventadas: o contrato não as especifica.
+  sem ler os eixos. Condutividade usa µS/cm; unidades ausentes/incompatíveis, medições censuradas ou códigos duplicados ficam indisponíveis para o gráfico. O contrato plano legado não informa unidade de oxigênio.
 - "Última coleta" usa a data, com ID como desempate determinístico, e não preenche
   seus valores ausentes com valores de outra coleta. A tabela permite ver empates.
 - Um único IQA válido é exibido como registro sem data. Havendo mais de um registro,
@@ -59,8 +57,7 @@ A data de uma previsão de qualidade futura não é a data de uma medição de I
   e explicitadas na tela; não constituem validação normativa de qualidade.
 - Temperatura, foto ilustrativa e porcentagem de IQA foram retiradas. Os valores
   detalhados das coletas ficam na tabela expansível do próprio card.
-- O link "Ver Análise" aponta para `/water-bodies/{id}`, preparado para a futura
-  tela de análise completa. A página de destino ainda precisa ser implementada.
+- O link "Ver Análise" aponta para o monitoramento em `/water-bodies/{id}`.
 
 ## Validação
 
@@ -81,8 +78,9 @@ Na consulta de verificação, a API publicada retornou dois corpos hídricos e l
 vazias de coletas e qualidade. Nessa situação, a tela deve mostrar ausência de
 medições, sem desenhar curvas de demonstração.
 
-A compilação local do backend exige SDK .NET 10 (o ambiente de verificação tinha
-somente SDK 8). Há também uma inconsistência preexistente a revisar antes de publicar:
-`ColetaTableConfigure` ainda referencia `CloroResidual`, `Floretos`,
-`ColiformesTotais` e `EscherichiaColi`, ausentes na `ColetaEntity` atual. A adequação
-do modelo e das migrações do banco não foi incluída nesta integração de leitura.
+
+## Condutividade elétrica na interface
+
+Cards, seleção de indicadores, tabelas e gráficos passaram a usar condutividade elétrica. O dashboard também exporta a medição no CSV e usa o ícone `LuZap`, da mesma família de ícones do projeto. Os dados demonstrativos foram atualizados para amostras sintéticas em µS/cm.
+
+O DTO de qualidade futura mantém o campo legado `turbidez`, pois ele ainda faz parte do contrato desse endpoint no backend; o campo não alimenta as medições de condutividade nem aparece nesses componentes. Não houve alteração do banco ou da regra de risco nesta substituição.
