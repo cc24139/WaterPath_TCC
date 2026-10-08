@@ -32,6 +32,7 @@ def parse_history(data):
 
 
 def classify_risk(images, sample, history):
+    print("classify_risk called with images:", images, "sample:", sample, "history:", history)
     visual_classes = sorted({image.name for image in images if image.indica_risco()})
     reasons = []
     if visual_classes:

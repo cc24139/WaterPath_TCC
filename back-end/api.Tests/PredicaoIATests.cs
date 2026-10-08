@@ -345,7 +345,7 @@ public class PredicaoIATests : IAsyncLifetime
             using var history = JsonDocument.Parse(json);
             var samples = history.RootElement.EnumerateArray().ToArray();
             Assert.Equal(5, samples.Length);
-            Assert.Equal(previousIds.Take(5), samples.Select(s => s.GetProperty("coletaId").GetInt32()));
+            Assert.Equal(previousIds.Take(5).Reverse(), samples.Select(s => s.GetProperty("coletaId").GetInt32()));
             Assert.All(samples, s => Assert.Equal(1, s.GetProperty("baseRiskLevel").GetInt32()));
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(ValidResponse(json)) };
         });
@@ -439,6 +439,203 @@ public class PredicaoIATests : IAsyncLifetime
         var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), sample, default));
         Assert.Equal(502, error.StatusCode);
         Assert.Empty(await db.PredicoesIA.ToListAsync());
+    }
+
+    private static void MedicoesSalvas(ColetaEntity collection)
+    {
+        collection.AdicionarMedicao(new(back_end.src.Medicoes.Domain.Medicao.Temperatura, 25, "°C", false, null));
+        collection.AdicionarMedicao(new(back_end.src.Medicoes.Domain.Medicao.Ph, 7, "pH", false, null));
+        collection.AdicionarMedicao(new(back_end.src.Medicoes.Domain.Medicao.OxigenioDissolvido, 6, "mg/L", false, null));
+        collection.AdicionarMedicao(new(back_end.src.Medicoes.Domain.Medicao.CondutividadeEletrica, 123, "µS/cm", false, null));
+        collection.AdicionarMedicao(new(back_end.src.Medicoes.Domain.Medicao.FosforoTotal, 0.02, "mg/L", false, null));
+        collection.AdicionarMedicao(new(back_end.src.Medicoes.Domain.Medicao.SolidosSuspensosTotais, null, "mg/L", true, 0.1));
+    }
+
+    private static async Task<HttpResponseMessage> EcoAnalise(HttpRequestMessage request, bool echoContext = true)
+    {
+        var parts = Assert.IsType<MultipartFormDataContent>(request.Content).ToArray();
+        var sample = await parts.Single(p => p.Headers.ContentDisposition!.Name == "data").ReadAsStringAsync();
+        var history = await parts.Single(p => p.Headers.ContentDisposition!.Name == "history").ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(RiskFixture.Result(sample, history))!;
+        result["metalModelVersion"] = JsonSerializer.SerializeToElement("modelo-de-teste");
+        result["metalPredictions"] = JsonSerializer.SerializeToElement(new[] { "Fe", "Mn", "Cr", "Ni", "Cu", "Zn", "Cd", "Pb" }
+            .Select(symbol => new { name = symbol, value = 0.1, unit = symbol is "Fe" or "Mn" ? "mg/L" : "µg/L" }));
+        if (echoContext)
+            result["collectionContext"] = JsonSerializer.Deserialize<JsonElement>(await parts.Single(
+                p => p.Headers.ContentDisposition!.Name == "collectionContext").ReadAsStringAsync());
+        return new(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(result)) };
+    }
+
+    [Fact]
+    public async Task AnalisePorLagoViaHttpUsaBancoIsolaEOrdenaHistorico()
+    {
+        var current = await db.Coletas.SingleAsync();
+        MedicoesSalvas(current);
+        var previous = new List<ColetaEntity>();
+        foreach (var days in new[] { 3, 1, 6, 2, 5, 4 })
+        {
+            var collection = new ColetaEntity { CorpoHidricoId = current.CorpoHidricoId, DataHora = current.DataHora.AddDays(-days) };
+            MedicoesSalvas(collection);
+            previous.Add(collection);
+            db.Coletas.Add(collection);
+        }
+        var other = new CorpoHidricoEntity("Outro lago", "Outro local", 1, false);
+        db.CorposHidricos.Add(other);
+        await db.SaveChangesAsync();
+        db.Coletas.Add(new() { CorpoHidricoId = other.Id, DataHora = current.DataHora.AddSeconds(1) });
+        await db.SaveChangesAsync();
+        foreach (var collection in previous) await SavePrediction(collection.Id, 2, current.DataHora);
+        var handler = new Handler(async request =>
+        {
+            var parts = Assert.IsType<MultipartFormDataContent>(request.Content).ToArray();
+            var input = JsonSerializer.Deserialize<JsonElement>(await parts.Single(p => p.Headers.ContentDisposition!.Name == "data").ReadAsStringAsync());
+            Assert.Equal(25, input.GetProperty("temperatura").GetDouble());
+            Assert.Equal(123, input.GetProperty("condutividade_eletrica").GetDouble());
+            Assert.Equal(20, input.GetProperty("fosforo_total").GetDouble());
+            Assert.Equal(JsonValueKind.Null, input.GetProperty("solidos_suspensos_totais").ValueKind);
+            var context = JsonSerializer.Deserialize<JsonElement>(await parts.Single(p => p.Headers.ContentDisposition!.Name == "collectionContext").ReadAsStringAsync());
+            Assert.Equal(current.Id, context.GetProperty("currentCollectionId").GetInt32());
+            var records = context.GetProperty("history").EnumerateArray().ToArray();
+            Assert.Equal(previous.OrderBy(c => c.DataHora).Select(c => c.Id), records.Select(r => r.GetProperty("collectionId").GetInt32()));
+            Assert.All(records, r => Assert.Equal(current.CorpoHidricoId, r.GetProperty("waterBodyId").GetInt32()));
+            return await EcoAnalise(request);
+        });
+        await using var app = await HttpHost(new IaClient(new HttpClient(handler) { BaseAddress = new Uri("http://ia.test/") }));
+        var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
+        using var api = new HttpClient { BaseAddress = new Uri(address) };
+        using var form = new MultipartFormDataContent();
+        form.Add(new ByteArrayContent(Jpeg), "image", "lago.jpg");
+        var response = await api.PostAsync($"/api/ia/predicoes/corpo-hidrico/{current.CorpoHidricoId}", form);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var saved = await db.PredicoesIA.SingleAsync(p => p.ColetaId == current.Id);
+        Assert.Equal(current.CorpoHidricoId, saved.CorpoHidricoId);
+        Assert.Equal(current.DataHora.UtcDateTime, saved.DataColeta);
+        var result = JsonSerializer.Deserialize<JsonElement>(saved.ResultadoJson!);
+        Assert.Equal(6, result.GetProperty("collectionContext").GetProperty("history").GetArrayLength());
+        Assert.Equal(5, result.GetProperty("history").GetProperty("evaluatedCollections").GetInt32());
+        Assert.Equal(3, result.GetProperty("riskLevel").GetInt32());
+        Assert.Equal(1, handler.Calls);
+        api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TestJwt.Token());
+        Assert.Equal(HttpStatusCode.OK, (await api.GetAsync($"/api/corpohidrico/{current.CorpoHidricoId}/risco-atual")).StatusCode);
+    }
+
+    [Theory]
+    [InlineData("inexistente", 404)]
+    [InlineData("sem-coletas", 422)]
+    [InlineData("sem-medicoes", 422)]
+    [InlineData("unidade", 422)]
+    [InlineData("censurada", 422)]
+    [InlineData("futura", 422)]
+    public async Task AnaliseLagoSemDadosValidosNaoChamaIa(string situation, int status)
+    {
+        var current = await db.Coletas.SingleAsync();
+        var riverId = current.CorpoHidricoId;
+        if (situation == "inexistente") riverId = int.MaxValue;
+        if (situation == "sem-coletas") db.Coletas.Remove(current);
+        if (situation is "unidade" or "censurada" or "futura")
+        {
+            MedicoesSalvas(current);
+            var oxygen = current.Medicoes.Single(m => m.codigoMedicao == back_end.src.Medicoes.Domain.Medicao.OxigenioDissolvido);
+            if (situation == "unidade") oxygen.Atualizar(oxygen.codigoMedicao, 6, "%", false, null);
+            if (situation == "censurada") oxygen.Atualizar(oxygen.codigoMedicao, null, "mg/L", true, 5);
+            if (situation == "futura") current.DataHora = DateTimeOffset.UtcNow.AddDays(1);
+        }
+        await db.SaveChangesAsync();
+        var handler = new Handler(_ => throw new Exception("Não deve chamar IA"));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).AnalisarLagoAsync(riverId, Upload(), default));
+        Assert.Equal(status, error.StatusCode);
+        Assert.Equal(0, handler.Calls);
+        Assert.Empty(await db.PredicoesIA.ToListAsync());
+    }
+
+    [Theory]
+    [InlineData("sucesso", 201)]
+    [InlineData("contexto-ausente", 502)]
+    [InlineData("contexto-alterado", 502)]
+    [InlineData("metais-invalidos", 502)]
+    [InlineData("invalida", 502)]
+    [InlineData("indisponivel", 502)]
+    [InlineData("timeout", 504)]
+    [InlineData("salvar", 500)]
+    public async Task AnaliseLagoHistoricoVazioEFalhasSemConclusaoParcial(string situation, int status)
+    {
+        var current = await db.Coletas.SingleAsync();
+        MedicoesSalvas(current);
+        await db.SaveChangesAsync();
+        if (situation == "salvar") await db.Database.ExecuteSqlRawAsync(
+            "CREATE TRIGGER falha_predicao BEFORE INSERT ON PredicoesIA BEGIN SELECT RAISE(ABORT, 'falha simulada'); END;");
+        var handler = new Handler(async request =>
+        {
+            if (situation == "indisponivel") throw new HttpRequestException();
+            if (situation == "timeout") throw new TaskCanceledException();
+            if (situation == "invalida") return new(HttpStatusCode.OK) { Content = new StringContent("{}") };
+            var response = await EcoAnalise(request, situation != "contexto-ausente");
+            if (situation is "contexto-alterado" or "metais-invalidos")
+            {
+                var fields = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(await response.Content.ReadAsStringAsync())!;
+                if (situation == "contexto-alterado") fields["collectionContext"] = JsonSerializer.SerializeToElement(new { waterBodyId = int.MaxValue });
+                else fields["metalPredictions"] = JsonSerializer.SerializeToElement(new[] { new { name = "Pb", value = -1, unit = "mg/L" } });
+                response.Content = new StringContent(JsonSerializer.Serialize(fields));
+            }
+            return response;
+        });
+        var controller = new ControllerIA(db, Service(handler));
+        var response = await controller.AnalisarLago(current.CorpoHidricoId, new() { Image = Upload() }, default);
+        Assert.Equal(status, Assert.IsAssignableFrom<ObjectResult>(response).StatusCode);
+        if (situation == "sucesso")
+        {
+            var saved = await db.PredicoesIA.SingleAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(saved.ResultadoJson!);
+            Assert.Empty(result.GetProperty("collectionContext").GetProperty("history").EnumerateArray());
+        }
+        else
+        {
+            Assert.Empty(await db.PredicoesIA.ToListAsync());
+            Assert.DoesNotContain(db.ChangeTracker.Entries<back_end.src.IA.Domain.PredicaoIAEntity>(), e => e.State == EntityState.Added);
+            await db.SaveChangesAsync();
+            Assert.Empty(await db.PredicoesIA.ToListAsync());
+        }
+    }
+
+    [RealIaFact]
+    public async Task AnaliseLagoComModelosReaisUsaMedicoesSalvas()
+    {
+        var current = await db.Coletas.SingleAsync();
+        MedicoesSalvas(current);
+        db.Coletas.AddRange(new ColetaEntity { CorpoHidricoId = current.CorpoHidricoId, DataHora = current.DataHora.AddDays(-1) },
+            new ColetaEntity { CorpoHidricoId = current.CorpoHidricoId, DataHora = current.DataHora.AddDays(-2) });
+        await db.SaveChangesAsync();
+        using var http = new HttpClient { BaseAddress = new Uri(Environment.GetEnvironmentVariable("WATERPATH_IA_TEST_URL")!) };
+        var bytes = await File.ReadAllBytesAsync(Environment.GetEnvironmentVariable("WATERPATH_TEST_IMAGE")!);
+        await using var app = await HttpHost(new IaClient(http));
+        var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
+        using var api = new HttpClient { BaseAddress = new Uri(address) };
+        using var form = new MultipartFormDataContent();
+        form.Add(new ByteArrayContent(bytes), "image", "lago.jpg");
+        var response = await api.PostAsync($"/api/ia/predicoes/corpo-hidrico/{current.CorpoHidricoId}", form);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var saved = await db.PredicoesIA.SingleAsync();
+        Assert.Equal(current.Id, saved.ColetaId);
+        var result = JsonSerializer.Deserialize<JsonElement>(saved.ResultadoJson!);
+        Assert.Equal(current.Id, result.GetProperty("collectionContext").GetProperty("currentCollectionId").GetInt32());
+        Assert.Equal(8, result.GetProperty("metalPredictions").GetArrayLength());
+        Assert.Equal(2, result.GetProperty("collectionContext").GetProperty("history").GetArrayLength());
+        Assert.Equal(bytes, saved.ImagemOriginal);
+    }
+
+    [Fact]
+    public async Task EmpateNaDataUsaMaiorIdESomenteInstantesAnterioresNoHistorico()
+    {
+        var original = await db.Coletas.SingleAsync();
+        var tied = new ColetaEntity { CorpoHidricoId = original.CorpoHidricoId, DataHora = original.DataHora };
+        MedicoesSalvas(tied);
+        db.Coletas.Add(tied);
+        await db.SaveChangesAsync();
+        var handler = new Handler(request => EcoAnalise(request));
+        var saved = await Service(handler).AnalisarLagoAsync(original.CorpoHidricoId, Upload(), default);
+        Assert.Equal(tied.Id, saved.ColetaId);
+        var result = JsonSerializer.Deserialize<JsonElement>(saved.ResultadoJson!);
+        Assert.Empty(result.GetProperty("collectionContext").GetProperty("history").EnumerateArray());
     }
 
     private async Task SavePrediction(int id, int level, DateTimeOffset created)

@@ -8,11 +8,53 @@ O contrato atual e os detalhes de persistência estão em [CONTRATO_PREDICAO.md]
 
 ## Fluxo
 
+### Análise por lago com observações do banco
+
+`POST /api/ia/predicoes/corpo-hidrico/{corpoHidricoId}` recebe multipart com somente `image` (JPEG/PNG, até 10 MB). O ID identifica o lago/corpo hídrico; as medições são obtidas do banco, sem `data` ou `coletaId` fornecidos pelo cliente.
+
+```powershell
+curl.exe -X POST 'http://localhost:5189/api/ia/predicoes/corpo-hidrico/1' -F 'image=@lago.jpg'
+```
+
+A API consulta as coletas do corpo hídrico solicitado com suas medições e metais observados. Seleciona a maior `DataHora`, desempata pelo maior ID e rejeita a coleta atual sem instante válido ou com instante futuro. O histórico contém todas as coletas de instante estritamente anterior, ordenadas por `DataHora` e ID crescentes. Uma coleta empatada no instante não é uma observação temporal anterior; a atual nunca é repetida no histórico.
+
+As quatro medições obrigatórias vêm de `Medicoes`. Valores ausentes ou censurados nas obrigatórias retornam 422; opcionais ausentes/censurados são enviados como `null`. As unidades precisam corresponder ao contrato: °C, pH, µS/cm e mg/L; variantes µ/μ/u de micro são aceitas. Fósforo salvo em mg/L é convertido explicitamente para µg P/L (multiplicação por 1000); µg/L é preservado. Unidade incompatível é rejeitada, sem presumir conversões. Metais observados da coleta atual seguem em `metais_pesados`, com os símbolos Fe/Mn/Cr/Ni/Cu/Zn/Cd/Pb exigidos pelo contrato.
+
+O multipart enviado a `/analyze` contém `data` (amostra atual), `image`, `history` (até cinco níveis base anteriores pela regra existente) e `collectionContext` (identidade da coleta atual e observações completas de todas as coletas anteriores, incluindo unidades e censura). Histórico sem análises anteriores válidas continua disponível em `collectionContext`, mesmo quando `history` é `[]`. Os critérios da regressão e do risco permanecem os existentes; o contexto observado é validado e devolvido para auditoria, sem treinamento automático ou novos cálculos sobre suas medições.
+
+A IA rejeita IDs repetidos, inclusão da coleta atual, mistura de lagos, ordem inválida, instantes sem fuso e níveis de risco fora da janela de cinco. A API principal exige o mesmo contexto de volta, além de validar risco, oito estimativas finitas com símbolos/unidades esperados, versões e imagem. Uma versão antiga da IA que omita esse contexto retorna 502, sem gravação.
+
+O retorno 201 segue o formato existente e inclui os vínculos com lago/coleta, resultado e URLs das imagens. Amostra atual, resultado completo com contexto, imagem original e anotada são gravados juntos em um único `SaveChanges`. Falha de gravação retorna 500 e remove a entidade pendente do contexto; não existe conclusão antecipada. Lago inexistente retorna 404; lago sem coletas ou medições incompatíveis, 422; IA indisponível/resposta inválida, 502; timeout, 504. Cancelamento da requisição é propagado.
+
+Use `IA__BaseUrl` e `IA__TimeoutSeconds` existentes; o mesmo cliente HTTP atende ambos os fluxos. Não foram introduzidas credenciais nem configuração de autenticação adicional. Publique as duas APIs com suporte a `collectionContext` antes de usar a nova rota. Não há migração nova: o contexto usa `ResultadoJson` (`jsonb`) e a FK `ColetaId` existente. As migrações já documentadas continuam necessárias em um banco ainda desatualizado.
+
+### Análise por coleta com observações enviadas pelo cliente
+
 1. O cliente envia uma imagem e as medições da amostra para `POST /api/ia/predicoes`.
 2. A API principal consulta o histórico do mesmo corpo hídrico e envia imagem, medições e histórico para `POST /analyze` da IA.
 3. O YOLO existente detecta objetos uma única vez. O modelo de metais existente estima as concentrações usando as medições.
 4. `services/risk/classification.py` combina as detecções reais, pH, oxigênio dissolvido e recorrência para calcular o nível de risco pela regra aprovada.
 5. A API principal salva a imagem original, a anotada, a entrada e o resultado completo no mesmo registro de `waterPath.PredicoesIA`, vinculado à coleta. A gravação ocorre em um único `SaveChanges`, após uma resposta válida da IA.
+
+### Verificação da análise por lago em 8 de outubro de 2026
+
+Passaram **90 testes .NET e 46 testes Python**, incluindo os modelos reais locais (YOLO e regressão), o fluxo HTTP da nova rota, persistência em SQLite descartável e consulta posterior do risco. Foram verificados isolamento por lago, seleção por data/hora e desempate por ID, cronologia, ausência de duplicação da atual, histórico completo com janela de risco separada, conversão de fósforo, valores censurados, lago inexistente/sem coletas, resposta inválida/contexto divergente, indisponibilidade, timeout e falha de inserção sem entidade pendente. O PostgreSQL configurado não foi acessado ou migrado nesta validação.
+
+Com a IA local iniciada, execute na raiz do repositório:
+
+```powershell
+$env:WATERPATH_IA_TEST_URL = 'http://127.0.0.1:8000/'
+$env:WATERPATH_TEST_IMAGE = 'C:\caminho\lago.jpg'
+dotnet test back-end/api.Tests/WaterPath.Api.Tests.csproj
+```
+
+Sem essas duas variáveis, os dois testes de integração com modelos via HTTP são ignorados; os demais usam respostas controladas e banco temporário. A suíte Python, executada dentro de `back-end/ia/app` com o ambiente das dependências ativado:
+
+```powershell
+python -X utf8 -B -m unittest discover -s tests
+```
+
+UTF-8 evita falhas de codificação ao imprimir unidades como μg/L no console Windows. Para iniciar a IA no Windows, também pode ser usado `python -X utf8 -m uvicorn main:app --host 127.0.0.1 --port 8000`. A compilação mantém avisos de nulabilidade já existentes; o ambiente Python emite avisos de depreciação de dependências, sem falhas de teste.
 
 Na IA, as concentrações são objetos de `Metal` e suas oito subclasses em `services/Infos/metais/*.py`. Cada detecção é um objeto de `Impact`, `Lixo`, `Urbano` ou `Drenagem`, com caixa, confiança, nome e identificador. As subclasses guardam as associações a metais e a indicação de sinal visual. `Turbidez` foi recuperada do histórico, onde era apenas um exemplo sem critérios; continua neutra.
 

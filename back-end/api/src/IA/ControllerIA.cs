@@ -14,10 +14,38 @@ public class PredicaoIAInput
     [Required] public string Data { get; set; } = null!;
 }
 
+public class AnaliseLagoInput
+{
+    [Required] public IFormFile Image { get; set; } = null!;
+}
+
 [ApiController]
 [Route("api/ia/predicoes")]
 public class ControllerIA(WaterPathDbContext context, PredicaoIAService service) : ControllerBase
 {
+    [HttpPost("corpo-hidrico/{corpoHidricoId:int}")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(PredicaoIAService.LimiteImagem + 1024 * 1024)]
+    public async Task<IActionResult> AnalisarLago(int corpoHidricoId, [FromForm] AnaliseLagoInput input,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await service.AnalisarLagoAsync(corpoHidricoId, input.Image, cancellationToken);
+            return RespostaCriada(result);
+        }
+        catch (IaException ex) { return Problem(statusCode: ex.StatusCode, detail: ex.Message); }
+    }
+
+    private IActionResult RespostaCriada(back_end.src.IA.Domain.PredicaoIAEntity result) =>
+        CreatedAtAction(nameof(Obter), new { id = result.Id }, new
+        {
+            result.Id, result.ColetaId, result.CorpoHidricoId, result.DataColeta, result.Tipo, result.CriadaEm,
+            Resultado = JsonSerializer.Deserialize<JsonElement>(result.ResultadoJson!),
+            ImagemOriginalUrl = $"/api/ia/predicoes/{result.Id}/imagem/original",
+            ImagemResultadoUrl = $"/api/ia/predicoes/{result.Id}/imagem",
+        });
+
     [HttpPost]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(PredicaoIAService.LimiteImagem + 1024 * 1024)]
@@ -26,13 +54,7 @@ public class ControllerIA(WaterPathDbContext context, PredicaoIAService service)
         try
         {
             var result = await service.CriarAsync(input.ColetaId, input.Image, input.Data, cancellationToken);
-            return CreatedAtAction(nameof(Obter), new { id = result.Id }, new
-            {
-                result.Id, result.ColetaId, result.CorpoHidricoId, result.DataColeta, result.Tipo, result.CriadaEm,
-                Resultado = JsonSerializer.Deserialize<JsonElement>(result.ResultadoJson!),
-                ImagemOriginalUrl = $"/api/ia/predicoes/{result.Id}/imagem/original",
-                ImagemResultadoUrl = $"/api/ia/predicoes/{result.Id}/imagem",
-            });
+            return RespostaCriada(result);
         }
         catch (IaException ex) { return Problem(statusCode: ex.StatusCode, detail: ex.Message); }
     }
