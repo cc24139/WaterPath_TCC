@@ -675,3 +675,4 @@ C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\api\obj\Debug\n
 C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\api\obj\Debug\net10.0\back-end.csproj.Up2Date
 C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\api\obj\Debug\net10.0\back-end.genruntimeconfig.cache
 C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\api\obj\Debug\net10.0\ref\back-end.dll
+C:\Users\lf446\OneDrive\Documentos\GitHub\WaterPath_TCC\back-end\api\bin\Debug\net10.0\testing\insomnia-waterpath-rios.json

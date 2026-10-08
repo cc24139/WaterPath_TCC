@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import ValidationError
 
 from DTOs.Amostra import Amostra
+from DTOs.CollectionContext import parse_collection_context
 from services import metals, vision
 from services.integration import build_visual_report, structured_metals
 from services.Infos.objetos import create_images
@@ -40,9 +41,10 @@ def parse_sample(data):
         raise HTTPException(status_code=422, detail="Dados da amostra inválidos") from exc
 
 
-def analyze_image(image, data=None, include_annotation=False, history="[]"):
+def analyze_image(image, data=None, include_annotation=False, history="[]", collection_context=None):
     sample = parse_sample(data) if data is not None else None
     previous_samples = parse_history(history)
+    context = parse_collection_context(collection_context, sample, previous_samples)
     img = vision.read_image(image)
     model = vision.load_model()
     predictions = vision.predict_image(img, model)
@@ -56,6 +58,8 @@ def analyze_image(image, data=None, include_annotation=False, history="[]"):
         "metalPredictions": structured_metals(predicted_metals),
     }
     if include_annotation:
+        if context is not None:
+            result["collectionContext"] = context
         if sample is not None:
             result.update(classify_risk(images, sample, previous_samples))
         result["visionModelVersion"] = vision.model_version()
@@ -68,8 +72,9 @@ def analyze_image(image, data=None, include_annotation=False, history="[]"):
 
 
 @app.post("/analyze")
-def analyze(image: UploadFile = File(...), data: str | None = Form(None), history: str = Form("[]")):
-    return analyze_image(image, data, include_annotation=True, history=history)
+def analyze(image: UploadFile = File(...), data: str | None = Form(None), history: str = Form("[]"),
+            collectionContext: str | None = Form(None)):
+    return analyze_image(image, data, include_annotation=True, history=history, collection_context=collectionContext)
 
 
 @app.post("/predict")
@@ -126,3 +131,5 @@ def predict_test():
 @app.get("/")
 def root():
     return {"msg": "API funcionando"}
+
+# No Windows, uvicorn main:app --reload 

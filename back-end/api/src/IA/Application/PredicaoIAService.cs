@@ -1,4 +1,5 @@
 using System.Text.Json;
+using back_end.src.Domain.Coleta;
 using back_end.src.IA.Domain;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -10,8 +11,33 @@ public class PredicaoIAService(WaterPathDbContext context, IaClient client)
     public const long LimiteImagem = 10 * 1024 * 1024;
     public const string VersaoRegraRisco = "waterpath-risk-v1";
 
-    public async Task<PredicaoIAEntity> CriarAsync(int coletaId, IFormFile image, string? data,
+    public async Task<PredicaoIAEntity> AnalisarLagoAsync(int corpoHidricoId, IFormFile image,
         CancellationToken cancellationToken)
+    {
+        if (corpoHidricoId <= 0) throw new IaException(400, "Informe um ID de corpo hídrico válido.");
+        if (!await context.CorposHidricos.AsNoTracking().AnyAsync(c => c.Id == corpoHidricoId, cancellationToken))
+            throw new IaException(404, "Corpo hídrico não encontrado.");
+        var coletas = await context.Coletas.AsNoTracking()
+            .Where(c => c.CorpoHidricoId == corpoHidricoId)
+            .Include(c => c.Medicoes).Include(c => c.MetaisPesados)
+            .AsSingleQuery()
+            .OrderBy(c => c.DataHora).ThenBy(c => c.Id).ToListAsync(cancellationToken);
+        var atual = coletas.LastOrDefault();
+        if (atual is null) throw new IaException(422, "Corpo hídrico sem coletas para analisar.");
+        var collectionContext = JsonSerializer.Serialize(new
+        {
+            waterBodyId = corpoHidricoId, currentCollectionId = atual.Id,
+            currentCollectedAt = atual.DataHora.ToUniversalTime().ToString("O"),
+            history = coletas.Where(c => c.DataHora < atual.DataHora).Select(AmostraDaColeta.Retrato),
+        });
+        return await ProcessarAsync(atual.Id, image, AmostraDaColeta.Montar(atual), cancellationToken, collectionContext, atual);
+    }
+
+    public Task<PredicaoIAEntity> CriarAsync(int coletaId, IFormFile image, string? data,
+        CancellationToken cancellationToken) => ProcessarAsync(coletaId, image, data, cancellationToken);
+
+    private async Task<PredicaoIAEntity> ProcessarAsync(int coletaId, IFormFile image, string? data,
+        CancellationToken cancellationToken, string? collectionContext = null, ColetaEntity? coletaSnapshot = null)
     {
         if (coletaId <= 0) throw new IaException(400, "Informe uma coleta válida.");
         if (image is null || image.Length == 0) throw new IaException(400, "Informe uma imagem.");
@@ -24,7 +50,9 @@ public class PredicaoIAService(WaterPathDbContext context, IaClient client)
             }
             catch (JsonException) { throw new IaException(422, "A amostra deve usar os campos, tipos e unidades do contrato da IA, com as quatro medições obrigatórias."); }
         }
-        var coleta = await context.Coletas.AsNoTracking().Where(c => c.Id == coletaId)
+        var coleta = coletaSnapshot is not null
+            ? new { coletaSnapshot.CorpoHidricoId, coletaSnapshot.DataHora }
+            : await context.Coletas.AsNoTracking().Where(c => c.Id == coletaId)
             .Select(c => new { c.CorpoHidricoId, c.DataHora }).SingleOrDefaultAsync(cancellationToken);
         if (coleta is null)
             throw new IaException(404, "Coleta não encontrada.");
@@ -42,7 +70,7 @@ public class PredicaoIAService(WaterPathDbContext context, IaClient client)
         if (string.IsNullOrWhiteSpace(name)) name = contentType == "image/png" ? "imagem.png" : "imagem.jpg";
         var history = data is null ? "[]"
             : await BuscarHistoricoAsync(coleta.CorpoHidricoId, coleta.DataHora, cancellationToken);
-        var analise = await client.AnalisarAsync(data, original, contentType, name, cancellationToken, history);
+        var analise = await client.AnalisarAsync(data, original, contentType, name, cancellationToken, history, collectionContext);
         var predicao = new PredicaoIAEntity
         {
             ColetaId = coletaId, CorpoHidricoId = coleta.CorpoHidricoId, DataColeta = coleta.DataHora.UtcDateTime, CriadaEm = DateTime.UtcNow,
@@ -52,7 +80,18 @@ public class PredicaoIAService(WaterPathDbContext context, IaClient client)
         };
         // Grava imagem e resultado juntos somente após a análise ter sucesso.
         context.PredicoesIA.Add(predicao);
-        await context.SaveChangesAsync(cancellationToken);
+        try { await context.SaveChangesAsync(cancellationToken); }
+        catch (DbUpdateException)
+        {
+            // Impede que uma gravação posterior no mesmo contexto tente salvar esta análise falha.
+            context.Entry(predicao).State = EntityState.Detached;
+            throw new IaException(500, "Não foi possível salvar a análise.");
+        }
+        catch (OperationCanceledException)
+        {
+            context.Entry(predicao).State = EntityState.Detached;
+            throw;
+        }
         return predicao;
     }
 
@@ -69,7 +108,7 @@ public class PredicaoIAService(WaterPathDbContext context, IaClient client)
             .OrderByDescending(p => p.CriadaEm).ThenByDescending(p => p.Id)
             .Select(p => new { p.Id, p.ColetaId, p.EntradaJson, p.ResultadoJson }).ToListAsync(cancellationToken);
         var history = new List<object>();
-        foreach (var id in coletas)
+        foreach (var id in coletas.AsEnumerable().Reverse())
         {
             var latest = predicoes.FirstOrDefault(p => p.ColetaId == id);
             if (latest is null) continue;

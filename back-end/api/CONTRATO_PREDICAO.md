@@ -4,6 +4,31 @@ A API de IA (`ia/app/DTOs/Amostra.py`, `services/Predict/schema.py`, manifesto `
 
 ## Origem e uso dos dados
 
+A rota `POST /api/ia/predicoes/corpo-hidrico/{id}` é a análise por lago: recebe somente `image` e obtém a coleta atual e medições do banco. A seleção, conversões, erros e execução estão em [IA_INTEGRACAO.md](IA_INTEGRACAO.md). A rota por coleta descrita abaixo mantém as observações enviadas pelo cliente.
+
+Na análise por lago, o campo multipart adicional `collectionContext` possui este formato (instantes ISO 8601 com fuso):
+
+```json
+{
+  "waterBodyId": 1,
+  "currentCollectionId": 12,
+  "currentCollectedAt": "2026-10-07T12:00:00.0000000+00:00",
+  "history": [
+    {
+      "waterBodyId": 1,
+      "collectionId": 7,
+      "collectedAt": "2026-10-06T12:00:00.0000000+00:00",
+      "measurements": [
+        {"code": "Ph", "value": 7, "unit": "pH", "censored": false, "limit": null}
+      ],
+      "metals": [{"name": "Pb", "value": 5, "unit": "µg/L"}]
+    }
+  ]
+}
+```
+
+`history` aceita `[]` e contém todas as observações anteriores, em ordem cronológica, sem a coleta atual. As medições históricas preservam os códigos de `Medicao`, os valores, as unidades, a censura e o limite salvos, inclusive quando incompletas. Não são convertidas em entradas de regressão nem em níveis de risco. O campo multipart `history` preexistente continua separado e contém somente os níveis base disponíveis na janela de cinco coletas. O resultado de `/analyze` inclui o mesmo `collectionContext`, que a API principal confere e persiste em `ResultadoJson`; `EntradaJson` continua sendo a amostra atual. Campos adicionais desconhecidos e duplicados são rejeitados pela IA.
+
 `POST /api/ia/predicoes` recebe `coletaId`, `image` e `data` como multipart. `data` é um objeto JSON textual com **observações da coleta**, enviado pelo cliente. Não é carregado automaticamente de `Medicoes`, `Qualidade` ou `QualidadeFutura`. A API .NET valida a amostra e a coleta, acrescenta o instante UTC da coleta ao campo `data` da amostra e envia a mesma entrada para `/analyze` da IA. Se o cliente informar esse instante, ele precisa coincidir com o da coleta. Coletas sem instante válido ou com instante futuro são rejeitadas nesta análise atual.
 
 O JSON e os valores que seguem para a IA são exatamente os salvos em `EntradaJson`. Não há conversão silenciosa de unidades, strings numéricas ou booleanos. Use as unidades abaixo. A origem desses valores continua sendo o cliente; o vínculo com a coleta não certifica uma medição de laboratório nem estabelece igualdade automática com a tabela `Medicoes`.

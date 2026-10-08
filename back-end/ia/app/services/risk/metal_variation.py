@@ -1,27 +1,46 @@
 """Variação temporal de observações, sem acrescentar limites ou regras de risco."""
 from datetime import datetime
 from decimal import Decimal
+from functools import lru_cache
+from pathlib import Path
 import math
-
+import joblib
 # Unidades de concentração já usadas pelo projeto. Não presume equivalência de ppm.
 UNIT_FACTORS = {"mg/l": Decimal("1"), "ug/l": Decimal("0.001")}
+
+
+@lru_cache(maxsize=1)
+def load_variation_model():
+    return joblib.load(Path(__file__).with_name("metal_variation_model.joblib"))
 
 
 def unit_factor(unit):
     return UNIT_FACTORS.get(unit.strip().lower().replace("µ", "u").replace("μ", "u")) if unit else None
 
+def predizerMetal(metal,sample):
+    if not sample or not sample.metais_pesados:
+        return None
+    for item in sample.metais_pesados:
+        if item.name == metal:
+            if item.value is None or item.unit is None:
+                return None
+            factor = unit_factor(item.unit)
+            if factor is None:
+                return None
+            return load_variation_model().predict([[item.value * float(factor)]])[0]
+    return None
 
 def instant(value):
     if not value:
         return None
     try:
         date = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        return date if date.utcoffset() is not None else None
+        return date if date.utcoffset() is not None else None   
     except ValueError:
         return None
 
 
-def analyze_metal_variation(sample):
+def analyze_metal_variation(sample, history=None):
     current = {item.name: item for item in sample.metais_pesados or []}
     reference = sample.referencia_metais_pesados
     previous = {item.name: item for item in reference.metais_pesados} if reference else {}

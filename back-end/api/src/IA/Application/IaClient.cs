@@ -46,7 +46,7 @@ public class IaClient(HttpClient client)
     }
 
     public async Task<(string ResultadoJson, byte[] Imagem)> AnalisarAsync(string? data, byte[] image, string contentType,
-        string name, CancellationToken cancellationToken, string history = "[]")
+        string name, CancellationToken cancellationToken, string history = "[]", string? collectionContext = null)
     {
         using var form = new MultipartFormDataContent();
         if (data is not null)
@@ -55,12 +55,15 @@ public class IaClient(HttpClient client)
             form.Add(new StringContent(history, Encoding.UTF8), "history");
         }
         form.Add(Arquivo(image, contentType), "image", name);
+        if (collectionContext is not null)
+            form.Add(new StringContent(collectionContext, Encoding.UTF8), "collectionContext");
         using var response = await EnviarAsync("analyze", form, cancellationToken);
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
         try
         {
             using var document = JsonDocument.Parse(json);
             var root = document.RootElement;
+            ValidarCamposUnicos(root);
             if (root.ValueKind != JsonValueKind.Object
                 || !root.TryGetProperty("detections", out var detections) || detections.ValueKind != JsonValueKind.Array
                 || !root.TryGetProperty("metalPredictions", out var metals) || metals.ValueKind != JsonValueKind.Array
@@ -72,6 +75,27 @@ public class IaClient(HttpClient client)
                 || !root.TryGetProperty("annotatedImage", out var annotated) || annotated.ValueKind != JsonValueKind.String)
                 throw new JsonException();
             if (data is not null && !ContratoRisco.Valido(data, json, history)) throw new JsonException();
+            if (collectionContext is not null)
+            {
+                if (!root.TryGetProperty("metalModelVersion", out var metalVersion)
+                    || metalVersion.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(metalVersion.GetString())
+                    || metals.GetArrayLength() != 8) throw new JsonException();
+                var names = new HashSet<string>();
+                foreach (var metal in metals.EnumerateArray())
+                {
+                    var symbol = metal.GetProperty("name").GetString();
+                    var value = metal.GetProperty("value").GetDouble();
+                    if (symbol is not ("Fe" or "Mn" or "Cr" or "Ni" or "Cu" or "Zn" or "Cd" or "Pb")
+                        || !names.Add(symbol) || !double.IsFinite(value) || value < 0
+                        || metal.GetProperty("unit").GetString() != (symbol is "Fe" or "Mn" ? "mg/L" : "µg/L"))
+                        throw new JsonException();
+                }
+                using var sent = JsonDocument.Parse(collectionContext);
+                if (!root.TryGetProperty("collectionContext", out var received)
+                    || !System.Text.Json.Nodes.JsonNode.DeepEquals(
+                        System.Text.Json.Nodes.JsonNode.Parse(sent.RootElement.GetRawText()),
+                        System.Text.Json.Nodes.JsonNode.Parse(received.GetRawText()))) throw new JsonException();
+            }
             var bytes = Convert.FromBase64String(annotated.GetString()!);
             if (DetectarContentType(bytes) != "image/jpeg") throw new JsonException();
             // A imagem fica no campo binário, sem duplicação no JSON salvo.
@@ -80,10 +104,26 @@ public class IaClient(HttpClient client)
                 .ToDictionary(p => p.Name, p => p.Value.Clone());
             return (JsonSerializer.Serialize(result), bytes);
         }
-        catch (Exception ex) when (ex is JsonException or FormatException or InvalidOperationException)
+        catch (Exception ex) when (ex is JsonException or FormatException or InvalidOperationException
+            or KeyNotFoundException or ArgumentException)
         {
             throw new IaException(502, "O serviço de IA retornou uma predição inválida.");
         }
+    }
+
+    private static void ValidarCamposUnicos(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            var names = new HashSet<string>();
+            foreach (var property in element.EnumerateObject())
+            {
+                if (!names.Add(property.Name)) throw new JsonException();
+                ValidarCamposUnicos(property.Value);
+            }
+        }
+        else if (element.ValueKind == JsonValueKind.Array)
+            foreach (var item in element.EnumerateArray()) ValidarCamposUnicos(item);
     }
 
     public static string? DetectarContentType(byte[] bytes)

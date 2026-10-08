@@ -92,6 +92,23 @@ class IntegrationTests(unittest.TestCase):
         values = [item["value"] for item in response.json()["metalPredictions"]]
         self.assertEqual(values, [0.0928, 0.01, 0.4463, 0.5, 0.5, 3.5088, 0.05, 0.4732])
 
+    def test_collection_context_round_trip_and_validation_before_inference(self):
+        sample = json.loads(self.sample)
+        sample["data"] = "2026-10-07T12:00:00Z"
+        context = {"waterBodyId": 1, "currentCollectionId": 2, "currentCollectedAt": sample["data"],
+                   "history": [{"waterBodyId": 1, "collectionId": 1, "collectedAt": "2026-10-06T12:00:00Z",
+                                "measurements": [], "metals": []}]}
+        def send():
+            return self.client.post("/analyze", data={"data": json.dumps(sample), "collectionContext": json.dumps(context)},
+                                    files={"image": ("rio.jpg", self.photo, "image/jpeg")})
+        response = send()
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["collectionContext"], context)
+        self.assertEqual(len(response.json()["metalPredictions"]), 8)
+        context["history"][0]["waterBodyId"] = 2
+        with patch.object(vision, "load_model", side_effect=AssertionError("Contexto inválido")):
+            self.assertEqual(send().status_code, 422)
+
     def test_real_pipeline_passes_domain_objects_to_report_and_risk(self):
         with patch("main.build_visual_report", wraps=build_visual_report) as report, \
              patch("main.classify_risk", wraps=classify_risk) as risk:
