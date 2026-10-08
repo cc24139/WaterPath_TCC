@@ -3,6 +3,8 @@ import json
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from services.risk.metal_variation import analyze_metal_variation
+
 RULE_VERSION = "waterpath-risk-v1"
 RISK_LABELS = {1: "baixo", 2: "moderado", 3: "alto"}
 
@@ -55,6 +57,7 @@ def classify_risk(images, sample, history):
         "oxigenio_dissolvido": sample.oxigenio_dissolvido,
         "visualClasses": visual_classes,
     }
+    result["metalVariation"] = analyze_metal_variation(sample)
     return result
     
     

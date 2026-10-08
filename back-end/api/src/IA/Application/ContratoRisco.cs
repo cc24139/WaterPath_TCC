@@ -14,6 +14,7 @@ public static class ContratoRisco
             using var document = JsonDocument.Parse(resultado);
             var root = document.RootElement;
             if (root.GetProperty("riskRuleVersion").GetString() != PredicaoIAService.VersaoRegraRisco) return false;
+            if (!ContratoMetais.RespostaValida(sample, root)) return false;
             var inputs = root.GetProperty("riskInputs");
             var ph = sample.GetProperty("ph").GetDouble();
             var oxygen = sample.GetProperty("oxigenio_dissolvido").GetDouble();

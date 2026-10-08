@@ -18,8 +18,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using back_end.src.IA.Application;
+using Infrastructure.Data.Seeding;
 
-Env.Load();
+// Variáveis explícitas do processo prevalecem sobre o .env local (inclusive na população).
+Env.NoClobber().Load();
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args
@@ -35,6 +37,14 @@ builder.Configuration
         reloadOnChange: false
     )
     .AddEnvironmentVariables();
+
+// Comando explícito: não inicia HTTP, JWT, e-mail ou inferência da IA.
+if (args.Contains("--seed-rivers") || args.Contains("--seed-rivers-check"))
+{
+    Environment.ExitCode = await RiverSeedCommand.RunAsync(builder.Configuration, builder.Environment,
+        checkOnly: args.Contains("--seed-rivers-check"));
+    return;
+}
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

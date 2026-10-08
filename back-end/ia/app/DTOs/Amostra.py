@@ -1,5 +1,6 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Optional
+from DTOs.MetaisPesados import MedicaoMetal, ReferenciaMetais, unique_metals
 from services.Predict.schema import FIELDS
 
 
@@ -23,6 +24,15 @@ class Amostra(BaseModel):
     solidos_suspensos_totais: Optional[float] = Field(default=None, ge=0)
     carbono_organico_total: Optional[float] = Field(default=None, ge=0)
     fosforo_total: Optional[float] = Field(default=None, ge=0, description="µg P/L")
+
+    # Concentrações observadas e referência anterior; não entram na regressão.
+    metais_pesados: list[MedicaoMetal] | None = Field(default=None, max_length=8)
+    referencia_metais_pesados: ReferenciaMetais | None = None
+
+    @field_validator("metais_pesados")
+    @classmethod
+    def validate_metals(cls, items):
+        return unique_metals(items) if items is not None else None
 
     def decode(self, columns=None):
         import math

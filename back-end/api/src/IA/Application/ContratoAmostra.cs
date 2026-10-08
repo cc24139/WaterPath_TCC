@@ -22,7 +22,9 @@ public static class ContratoAmostra
         foreach (var field in root.EnumerateObject())
         {
             if (!nomes.Add(field.Name)) throw new JsonException();
-            if (Numericos.Contains(field.Name))
+            if (field.Name == "metais_pesados") ContratoMetais.ValidarLista(field.Value);
+            else if (field.Name == "referencia_metais_pesados") ContratoMetais.ValidarReferencia(field.Value);
+            else if (Numericos.Contains(field.Name))
             {
                 if (field.Value.ValueKind == JsonValueKind.Null && !Obrigatorios.Contains(field.Name)) continue;
                 if (field.Value.ValueKind != JsonValueKind.Number || !field.Value.TryGetDouble(out var value)

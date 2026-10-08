@@ -353,6 +353,94 @@ public class PredicaoIATests : IAsyncLifetime
         Assert.Equal(1, handler.Calls);
     }
 
+    [Fact]
+    public async Task MetaisEReferenciaSeguemNoMultipartEPersistemNoRiscoAtual()
+    {
+        await using var host = await HttpHost(new IaClient(new HttpClient(new Handler(async request =>
+        {
+            var multipart = Assert.IsType<MultipartFormDataContent>(request.Content);
+            var data = await multipart.Single(p => p.Headers.ContentDisposition!.Name == "data").ReadAsStringAsync();
+            using var sent = JsonDocument.Parse(data);
+            Assert.Equal(10, sent.RootElement.GetProperty("metais_pesados")[0].GetProperty("value").GetDouble());
+            Assert.Equal("µg/L", sent.RootElement.GetProperty("metais_pesados")[0].GetProperty("unit").GetString());
+            Assert.Equal(5, sent.RootElement.GetProperty("referencia_metais_pesados")
+                .GetProperty("metais_pesados")[0].GetProperty("value").GetDouble());
+            Assert.Equal("[]", await multipart.Single(p => p.Headers.ContentDisposition!.Name == "history").ReadAsStringAsync());
+            var fields = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(RiskFixture.Result(sample: data))!;
+            fields["metalVariation"] = JsonSerializer.SerializeToElement(new
+            {
+                status = "completa", currentDate = sent.RootElement.GetProperty("data").GetString(),
+                referenceDate = "2026-01-01T12:00:00Z", message = "Variação determinada para todos os metais informados.",
+                metals = new[] { new { name = "Pb", currentValue = 10, currentUnit = "µg/L", previousValue = 5,
+                    previousUnit = "µg/L", variation = "aumento", delta = 5, unit = "µg/L", reason = (string?)null } },
+            });
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(fields)) };
+        })) { BaseAddress = new Uri("http://ia.test/") }));
+        var address = host.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
+        using var api = new HttpClient { BaseAddress = new Uri(address) };
+        using var form = new MultipartFormDataContent();
+        form.Add(new StringContent(coletaId.ToString()), "coletaId");
+        form.Add(new ByteArrayContent(Jpeg), "image", "rio.jpg");
+        var sample = Sample[..^1] + """
+            ,"metais_pesados":[{"name":"Pb","value":10,"unit":"µg/L"}],
+            "referencia_metais_pesados":{"data":"2026-01-01T12:00:00Z",
+              "metais_pesados":[{"name":"Pb","value":5,"unit":"µg/L"}]}}
+            """;
+        form.Add(new StringContent(sample), "data");
+        var response = await api.PostAsync("/api/ia/predicoes", form);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        using var created = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal("aumento", created.RootElement.GetProperty("resultado").GetProperty("metalVariation")
+            .GetProperty("metals")[0].GetProperty("variation").GetString());
+        var saved = await db.PredicoesIA.SingleAsync();
+        using var input = JsonDocument.Parse(saved.EntradaJson!);
+        Assert.Equal(10, input.RootElement.GetProperty("metais_pesados")[0].GetProperty("value").GetDouble());
+        api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TestJwt.Token());
+        var riverId = (await db.Coletas.SingleAsync()).CorpoHidricoId;
+        var riskResponse = await api.GetAsync($"/api/corpohidrico/{riverId}/risco-atual");
+        Assert.Equal(HttpStatusCode.OK, riskResponse.StatusCode);
+        using var risk = JsonDocument.Parse(await riskResponse.Content.ReadAsStringAsync());
+        Assert.Equal("aumento", risk.RootElement.GetProperty("variacaoMetais").GetProperty("metals")[0].GetProperty("variation").GetString());
+        Assert.Equal(2, risk.RootElement.GetProperty("nivelRisco").GetInt32());
+        Assert.Equal(1, await db.PredicoesIA.CountAsync());
+    }
+
+    [Theory]
+    [InlineData("[{\"name\":\"Pb\",\"value\":-1}]")]
+    [InlineData("[{\"name\":\"Pb\",\"value\":true}]")]
+    [InlineData("[{\"name\":\"Pb\",\"value\":\"1\"}]")]
+    [InlineData("[{\"name\":\"Pb\",\"value\":1e400}]")]
+    [InlineData("[{\"name\":\"Pb\"},{\"name\":\"Pb\"}]")]
+    [InlineData("[{\"name\":\"Pb\",\"value\":1,\"value\":2}]")]
+    [InlineData("[{\"name\":\"Pb\",\"unknown\":1}]")]
+    [InlineData("[{\"name\":\"unknown\"}]")]
+    [InlineData("[{\"name\":\"Pb\",\"unit\":\"\"}]")]
+    [InlineData("{}")]
+    public async Task MetaisInvalidosNaoChamamIa(string metals)
+    {
+        foreach (var extension in new[] { $",\"metais_pesados\":{metals}}}",
+            $",\"referencia_metais_pesados\":{{\"metais_pesados\":{metals}}}}}" })
+        {
+            var handler = new Handler(_ => throw new Exception("Não deve chamar IA"));
+            var error = await Assert.ThrowsAsync<IaException>(() => Service(handler)
+                .CriarAsync(coletaId, Upload(), Sample[..^1] + extension, default));
+            Assert.Equal(422, error.StatusCode);
+            Assert.Equal(0, handler.Calls);
+        }
+        Assert.Empty(await db.PredicoesIA.ToListAsync());
+    }
+
+    [Fact]
+    public async Task IaAntigaNaoPodeIgnorarMetaisEnviados()
+    {
+        var sample = Sample[..^1] + """, "metais_pesados":[{"name":"Pb","value":10,"unit":"µg/L"}]}""";
+        var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            { Content = new StringContent(ValidResponse()) }));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), sample, default));
+        Assert.Equal(502, error.StatusCode);
+        Assert.Empty(await db.PredicoesIA.ToListAsync());
+    }
+
     private async Task SavePrediction(int id, int level, DateTimeOffset created)
     {
         var collection = await db.Coletas.SingleAsync(c => c.Id == id);

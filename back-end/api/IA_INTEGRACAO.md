@@ -2,6 +2,8 @@
 
 A API principal usa ASP.NET Core 10, Entity Framework Core 9 e PostgreSQL. A IA usa FastAPI, ONNX Runtime para o YOLO de detecção e um modelo joblib de regressão de oito metais. O frontend existente usa Next.js/React e não foi alterado.
 
+O formato da comparação de metais, com exemplos para as duas APIs, está em [CONTRATO_RISCO_METAIS.md](../ia/CONTRATO_RISCO_METAIS.md). As observações e a referência anterior seguem no campo multipart `data`; o resultado é `resultado.metalVariation` na predição e `variacaoMetais` na consulta de risco atual. A comparação não altera o nível de risco nem usa estimativas como medições.
+
 O contrato atual e os detalhes de persistência estão em [CONTRATO_PREDICAO.md](CONTRATO_PREDICAO.md); ele usa a API de IA como referência.
 
 ## Fluxo

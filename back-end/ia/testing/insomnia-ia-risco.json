@@ -1,0 +1,600 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-10-08T00:00:00.000Z",
+  "__export_source": "waterpath-ia-risk",
+  "resources": [
+    {
+      "_id": "wrk_waterpath_ia_risco",
+      "_type": "workspace",
+      "name": "WaterPath IA — Risco e metais",
+      "scope": "collection",
+      "description": "Somente POST /analyze da IA. Body multipart preenchido. Configure base_url e image_path; não exige token nem banco. Os dados e IDs de histórico são sintéticos."
+    },
+    {
+      "_id": "env_waterpath_ia_risco",
+      "_type": "environment",
+      "parentId": "wrk_waterpath_ia_risco",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8000",
+        "image_path": ""
+      }
+    },
+    {
+      "_id": "fld_ia_risco_measurements",
+      "_type": "request_group",
+      "parentId": "wrk_waterpath_ia_risco",
+      "name": "01 — Risco por medições e histórico",
+      "environment": {},
+      "metaSortKey": 0
+    },
+    {
+      "_id": "req_ia_risco_normal",
+      "_type": "request",
+      "parentId": "fld_ia_risco_measurements",
+      "name": "01 Sem alerta nas medições (imagem pode elevar o risco)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "Selecione image como File (JPEG/PNG até 10 MB) ou configure image_path com caminho absoluto. data e history são campos Text contendo JSON; não envie o body como application/json. Dados sintéticos.",
+      "metaSortKey": 0,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_normal_image",
+            "name": "image",
+            "type": "file",
+            "fileName": "{{ _.image_path }}",
+            "value": "",
+            "disabled": false
+          },
+          {
+            "id": "pair_normal_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 7,\n  \"condutividade_eletrica\": 100,\n  \"oxigenio_dissolvido\": 6,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_normal_history",
+            "name": "history",
+            "type": "text",
+            "value": "[]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 200', () => insomnia.expect(insomnia.response.status).to.eql(200));\nif (insomnia.response.status === 200) {\n  const b = insomnia.response.json();\n  \n  const input = {\"estacao\":\"[SINTETICO] Estação de teste Insomnia\",\"latitude\":\"-23.5505\",\"longitude\":\"-46.6333\",\"data\":\"2026-10-08T12:00:00Z\",\"profundidade\":1.2,\"estacao_ano\":\"primavera\",\"temperatura\":22,\"ph\":7,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6,\"solidos_suspensos_totais\":12,\"carbono_organico_total\":2.4,\"fosforo_total\":40};\n  const sentHistory = [];\n  const visual = b.riskInputs.visualClasses.length > 0;\n  const measurements = input.ph < 6 || input.ph > 9 || input.oxigenio_dissolvido < 5;\n  const basis = 1 + Number(visual) + Number(measurements);\n  const alerts = sentHistory.filter(x => x.baseRiskLevel >= 2).length;\n  const level = Math.min(3, basis + Number(alerts >= 3));\n  insomnia.test('Versão de risco', () => insomnia.expect(b.riskRuleVersion).to.eql('waterpath-risk-v1'));\n  insomnia.test('Nível base calculado', () => insomnia.expect(b.baseRiskLevel).to.eql(basis));\n  insomnia.test('Nível final com histórico', () => insomnia.expect(b.riskLevel).to.eql(level));\n  insomnia.test('Rótulo correspondente', () => insomnia.expect(b.riskLabel).to.eql({1:'baixo',2:'moderado',3:'alto'}[level]));\n  insomnia.test('Medições efetivamente usadas', () => insomnia.expect(b.riskInputs.ph === input.ph && b.riskInputs.oxigenio_dissolvido === input.oxigenio_dissolvido).to.eql(true));\n  insomnia.test('Histórico recebido', () => insomnia.expect(b.history.evaluatedCollections === sentHistory.length && b.history.alertCollections === alerts && b.history.adjustment === level - basis).to.eql(true));\n  insomnia.test('Motivos e imagem anotada', () => insomnia.expect(Array.isArray(b.riskReasons) && b.riskReasons.length > 0 && typeof b.annotatedImage === 'string' && b.annotatedImage.length > 0 && b.annotatedImageContentType === 'image/jpeg').to.eql(true));\n  insomnia.test('Predições separadas das observações', () => insomnia.expect(Array.isArray(b.metalPredictions) && typeof b.metalVariation === 'object').to.eql(true));\n  \n  \n}",
+      "settingFollowRedirects": "off"
+    },
+    {
+      "_id": "req_ia_risco_alerts",
+      "_type": "request",
+      "parentId": "fld_ia_risco_measurements",
+      "name": "02 pH e OD em alerta",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "Selecione image como File (JPEG/PNG até 10 MB) ou configure image_path com caminho absoluto. data e history são campos Text contendo JSON; não envie o body como application/json. Dados sintéticos.",
+      "metaSortKey": 100,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_alerts_image",
+            "name": "image",
+            "type": "file",
+            "fileName": "{{ _.image_path }}",
+            "value": "",
+            "disabled": false
+          },
+          {
+            "id": "pair_alerts_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 5.5,\n  \"condutividade_eletrica\": 100,\n  \"oxigenio_dissolvido\": 3.2,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_alerts_history",
+            "name": "history",
+            "type": "text",
+            "value": "[]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 200', () => insomnia.expect(insomnia.response.status).to.eql(200));\nif (insomnia.response.status === 200) {\n  const b = insomnia.response.json();\n  \n  const input = {\"estacao\":\"[SINTETICO] Estação de teste Insomnia\",\"latitude\":\"-23.5505\",\"longitude\":\"-46.6333\",\"data\":\"2026-10-08T12:00:00Z\",\"profundidade\":1.2,\"estacao_ano\":\"primavera\",\"temperatura\":22,\"ph\":5.5,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":3.2,\"solidos_suspensos_totais\":12,\"carbono_organico_total\":2.4,\"fosforo_total\":40};\n  const sentHistory = [];\n  const visual = b.riskInputs.visualClasses.length > 0;\n  const measurements = input.ph < 6 || input.ph > 9 || input.oxigenio_dissolvido < 5;\n  const basis = 1 + Number(visual) + Number(measurements);\n  const alerts = sentHistory.filter(x => x.baseRiskLevel >= 2).length;\n  const level = Math.min(3, basis + Number(alerts >= 3));\n  insomnia.test('Versão de risco', () => insomnia.expect(b.riskRuleVersion).to.eql('waterpath-risk-v1'));\n  insomnia.test('Nível base calculado', () => insomnia.expect(b.baseRiskLevel).to.eql(basis));\n  insomnia.test('Nível final com histórico', () => insomnia.expect(b.riskLevel).to.eql(level));\n  insomnia.test('Rótulo correspondente', () => insomnia.expect(b.riskLabel).to.eql({1:'baixo',2:'moderado',3:'alto'}[level]));\n  insomnia.test('Medições efetivamente usadas', () => insomnia.expect(b.riskInputs.ph === input.ph && b.riskInputs.oxigenio_dissolvido === input.oxigenio_dissolvido).to.eql(true));\n  insomnia.test('Histórico recebido', () => insomnia.expect(b.history.evaluatedCollections === sentHistory.length && b.history.alertCollections === alerts && b.history.adjustment === level - basis).to.eql(true));\n  insomnia.test('Motivos e imagem anotada', () => insomnia.expect(Array.isArray(b.riskReasons) && b.riskReasons.length > 0 && typeof b.annotatedImage === 'string' && b.annotatedImage.length > 0 && b.annotatedImageContentType === 'image/jpeg').to.eql(true));\n  insomnia.test('Predições separadas das observações', () => insomnia.expect(Array.isArray(b.metalPredictions) && typeof b.metalVariation === 'object').to.eql(true));\n  \n  \n}",
+      "settingFollowRedirects": "off"
+    },
+    {
+      "_id": "req_ia_risco_boundary",
+      "_type": "request",
+      "parentId": "fld_ia_risco_measurements",
+      "name": "03 Limites sem alerta: pH 9 e OD 5",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "Selecione image como File (JPEG/PNG até 10 MB) ou configure image_path com caminho absoluto. data e history são campos Text contendo JSON; não envie o body como application/json. Dados sintéticos.",
+      "metaSortKey": 200,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_boundary_image",
+            "name": "image",
+            "type": "file",
+            "fileName": "{{ _.image_path }}",
+            "value": "",
+            "disabled": false
+          },
+          {
+            "id": "pair_boundary_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 9,\n  \"condutividade_eletrica\": 100,\n  \"oxigenio_dissolvido\": 5,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_boundary_history",
+            "name": "history",
+            "type": "text",
+            "value": "[]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 200', () => insomnia.expect(insomnia.response.status).to.eql(200));\nif (insomnia.response.status === 200) {\n  const b = insomnia.response.json();\n  \n  const input = {\"estacao\":\"[SINTETICO] Estação de teste Insomnia\",\"latitude\":\"-23.5505\",\"longitude\":\"-46.6333\",\"data\":\"2026-10-08T12:00:00Z\",\"profundidade\":1.2,\"estacao_ano\":\"primavera\",\"temperatura\":22,\"ph\":9,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":5,\"solidos_suspensos_totais\":12,\"carbono_organico_total\":2.4,\"fosforo_total\":40};\n  const sentHistory = [];\n  const visual = b.riskInputs.visualClasses.length > 0;\n  const measurements = input.ph < 6 || input.ph > 9 || input.oxigenio_dissolvido < 5;\n  const basis = 1 + Number(visual) + Number(measurements);\n  const alerts = sentHistory.filter(x => x.baseRiskLevel >= 2).length;\n  const level = Math.min(3, basis + Number(alerts >= 3));\n  insomnia.test('Versão de risco', () => insomnia.expect(b.riskRuleVersion).to.eql('waterpath-risk-v1'));\n  insomnia.test('Nível base calculado', () => insomnia.expect(b.baseRiskLevel).to.eql(basis));\n  insomnia.test('Nível final com histórico', () => insomnia.expect(b.riskLevel).to.eql(level));\n  insomnia.test('Rótulo correspondente', () => insomnia.expect(b.riskLabel).to.eql({1:'baixo',2:'moderado',3:'alto'}[level]));\n  insomnia.test('Medições efetivamente usadas', () => insomnia.expect(b.riskInputs.ph === input.ph && b.riskInputs.oxigenio_dissolvido === input.oxigenio_dissolvido).to.eql(true));\n  insomnia.test('Histórico recebido', () => insomnia.expect(b.history.evaluatedCollections === sentHistory.length && b.history.alertCollections === alerts && b.history.adjustment === level - basis).to.eql(true));\n  insomnia.test('Motivos e imagem anotada', () => insomnia.expect(Array.isArray(b.riskReasons) && b.riskReasons.length > 0 && typeof b.annotatedImage === 'string' && b.annotatedImage.length > 0 && b.annotatedImageContentType === 'image/jpeg').to.eql(true));\n  insomnia.test('Predições separadas das observações', () => insomnia.expect(Array.isArray(b.metalPredictions) && typeof b.metalVariation === 'object').to.eql(true));\n  \n  \n}",
+      "settingFollowRedirects": "off"
+    },
+    {
+      "_id": "req_ia_risco_recurrence",
+      "_type": "request",
+      "parentId": "fld_ia_risco_measurements",
+      "name": "04 Alerta atual + três anteriores: risco alto",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "IDs 101–103 e 201–203 são fictícios. A IA aceita o histórico fornecido pelo cliente, sem consultar um banco. Com medições em alerta e três níveis base >=2, o risco final é 3 independentemente do sinal visual.",
+      "metaSortKey": 300,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_recurrence_image",
+            "name": "image",
+            "type": "file",
+            "fileName": "{{ _.image_path }}",
+            "value": "",
+            "disabled": false
+          },
+          {
+            "id": "pair_recurrence_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 5.5,\n  \"condutividade_eletrica\": 100,\n  \"oxigenio_dissolvido\": 3.2,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_recurrence_history",
+            "name": "history",
+            "type": "text",
+            "value": "[\n  {\n    \"predictionId\": 101,\n    \"coletaId\": 201,\n    \"baseRiskLevel\": 2\n  },\n  {\n    \"predictionId\": 102,\n    \"coletaId\": 202,\n    \"baseRiskLevel\": 3\n  },\n  {\n    \"predictionId\": 103,\n    \"coletaId\": 203,\n    \"baseRiskLevel\": 2\n  }\n]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 200', () => insomnia.expect(insomnia.response.status).to.eql(200));\nif (insomnia.response.status === 200) {\n  const b = insomnia.response.json();\n  \n  const input = {\"estacao\":\"[SINTETICO] Estação de teste Insomnia\",\"latitude\":\"-23.5505\",\"longitude\":\"-46.6333\",\"data\":\"2026-10-08T12:00:00Z\",\"profundidade\":1.2,\"estacao_ano\":\"primavera\",\"temperatura\":22,\"ph\":5.5,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":3.2,\"solidos_suspensos_totais\":12,\"carbono_organico_total\":2.4,\"fosforo_total\":40};\n  const sentHistory = [{\"predictionId\":101,\"coletaId\":201,\"baseRiskLevel\":2},{\"predictionId\":102,\"coletaId\":202,\"baseRiskLevel\":3},{\"predictionId\":103,\"coletaId\":203,\"baseRiskLevel\":2}];\n  const visual = b.riskInputs.visualClasses.length > 0;\n  const measurements = input.ph < 6 || input.ph > 9 || input.oxigenio_dissolvido < 5;\n  const basis = 1 + Number(visual) + Number(measurements);\n  const alerts = sentHistory.filter(x => x.baseRiskLevel >= 2).length;\n  const level = Math.min(3, basis + Number(alerts >= 3));\n  insomnia.test('Versão de risco', () => insomnia.expect(b.riskRuleVersion).to.eql('waterpath-risk-v1'));\n  insomnia.test('Nível base calculado', () => insomnia.expect(b.baseRiskLevel).to.eql(basis));\n  insomnia.test('Nível final com histórico', () => insomnia.expect(b.riskLevel).to.eql(level));\n  insomnia.test('Rótulo correspondente', () => insomnia.expect(b.riskLabel).to.eql({1:'baixo',2:'moderado',3:'alto'}[level]));\n  insomnia.test('Medições efetivamente usadas', () => insomnia.expect(b.riskInputs.ph === input.ph && b.riskInputs.oxigenio_dissolvido === input.oxigenio_dissolvido).to.eql(true));\n  insomnia.test('Histórico recebido', () => insomnia.expect(b.history.evaluatedCollections === sentHistory.length && b.history.alertCollections === alerts && b.history.adjustment === level - basis).to.eql(true));\n  insomnia.test('Motivos e imagem anotada', () => insomnia.expect(Array.isArray(b.riskReasons) && b.riskReasons.length > 0 && typeof b.annotatedImage === 'string' && b.annotatedImage.length > 0 && b.annotatedImageContentType === 'image/jpeg').to.eql(true));\n  insomnia.test('Predições separadas das observações', () => insomnia.expect(Array.isArray(b.metalPredictions) && typeof b.metalVariation === 'object').to.eql(true));\n  insomnia.test('Recorrência leva ao nível alto', () => insomnia.expect(b.riskLevel).to.eql(3));\n  \n}",
+      "settingFollowRedirects": "off"
+    },
+    {
+      "_id": "fld_ia_risco_metals",
+      "_type": "request_group",
+      "parentId": "wrk_waterpath_ia_risco",
+      "name": "02 — Variação dos metais observados",
+      "environment": {},
+      "metaSortKey": 1000
+    },
+    {
+      "_id": "req_ia_risco_metals_complete",
+      "_type": "request",
+      "parentId": "fld_ia_risco_metals",
+      "name": "01 Pb aumenta, Cd reduz e Fe permanece estável",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "Selecione image como File (JPEG/PNG até 10 MB) ou configure image_path com caminho absoluto. data e history são campos Text contendo JSON; não envie o body como application/json. Dados sintéticos.",
+      "metaSortKey": 0,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_metals_complete_image",
+            "name": "image",
+            "type": "file",
+            "fileName": "{{ _.image_path }}",
+            "value": "",
+            "disabled": false
+          },
+          {
+            "id": "pair_metals_complete_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 7,\n  \"condutividade_eletrica\": 100,\n  \"oxigenio_dissolvido\": 6,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40,\n  \"metais_pesados\": [\n    {\n      \"name\": \"Pb\",\n      \"value\": 10,\n      \"unit\": \"µg/L\"\n    },\n    {\n      \"name\": \"Cd\",\n      \"value\": 1,\n      \"unit\": \"µg/L\"\n    },\n    {\n      \"name\": \"Fe\",\n      \"value\": 0.1,\n      \"unit\": \"mg/L\"\n    }\n  ],\n  \"referencia_metais_pesados\": {\n    \"data\": \"2026-10-07T12:00:00Z\",\n    \"metais_pesados\": [\n      {\n        \"name\": \"Pb\",\n        \"value\": 5,\n        \"unit\": \"µg/L\"\n      },\n      {\n        \"name\": \"Cd\",\n        \"value\": 2,\n        \"unit\": \"µg/L\"\n      },\n      {\n        \"name\": \"Fe\",\n        \"value\": 100,\n        \"unit\": \"µg/L\"\n      }\n    ]\n  }\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_metals_complete_history",
+            "name": "history",
+            "type": "text",
+            "value": "[]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 200', () => insomnia.expect(insomnia.response.status).to.eql(200));\nif (insomnia.response.status === 200) {\n  const b = insomnia.response.json();\n  \n  const input = {\"estacao\":\"[SINTETICO] Estação de teste Insomnia\",\"latitude\":\"-23.5505\",\"longitude\":\"-46.6333\",\"data\":\"2026-10-08T12:00:00Z\",\"profundidade\":1.2,\"estacao_ano\":\"primavera\",\"temperatura\":22,\"ph\":7,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6,\"solidos_suspensos_totais\":12,\"carbono_organico_total\":2.4,\"fosforo_total\":40,\"metais_pesados\":[{\"name\":\"Pb\",\"value\":10,\"unit\":\"µg/L\"},{\"name\":\"Cd\",\"value\":1,\"unit\":\"µg/L\"},{\"name\":\"Fe\",\"value\":0.1,\"unit\":\"mg/L\"}],\"referencia_metais_pesados\":{\"data\":\"2026-10-07T12:00:00Z\",\"metais_pesados\":[{\"name\":\"Pb\",\"value\":5,\"unit\":\"µg/L\"},{\"name\":\"Cd\",\"value\":2,\"unit\":\"µg/L\"},{\"name\":\"Fe\",\"value\":100,\"unit\":\"µg/L\"}]}};\n  const sentHistory = [];\n  const visual = b.riskInputs.visualClasses.length > 0;\n  const measurements = input.ph < 6 || input.ph > 9 || input.oxigenio_dissolvido < 5;\n  const basis = 1 + Number(visual) + Number(measurements);\n  const alerts = sentHistory.filter(x => x.baseRiskLevel >= 2).length;\n  const level = Math.min(3, basis + Number(alerts >= 3));\n  insomnia.test('Versão de risco', () => insomnia.expect(b.riskRuleVersion).to.eql('waterpath-risk-v1'));\n  insomnia.test('Nível base calculado', () => insomnia.expect(b.baseRiskLevel).to.eql(basis));\n  insomnia.test('Nível final com histórico', () => insomnia.expect(b.riskLevel).to.eql(level));\n  insomnia.test('Rótulo correspondente', () => insomnia.expect(b.riskLabel).to.eql({1:'baixo',2:'moderado',3:'alto'}[level]));\n  insomnia.test('Medições efetivamente usadas', () => insomnia.expect(b.riskInputs.ph === input.ph && b.riskInputs.oxigenio_dissolvido === input.oxigenio_dissolvido).to.eql(true));\n  insomnia.test('Histórico recebido', () => insomnia.expect(b.history.evaluatedCollections === sentHistory.length && b.history.alertCollections === alerts && b.history.adjustment === level - basis).to.eql(true));\n  insomnia.test('Motivos e imagem anotada', () => insomnia.expect(Array.isArray(b.riskReasons) && b.riskReasons.length > 0 && typeof b.annotatedImage === 'string' && b.annotatedImage.length > 0 && b.annotatedImageContentType === 'image/jpeg').to.eql(true));\n  insomnia.test('Predições separadas das observações', () => insomnia.expect(Array.isArray(b.metalPredictions) && typeof b.metalVariation === 'object').to.eql(true));\n  \n  insomnia.test('Comparação completa', () => insomnia.expect(b.metalVariation.status).to.eql('completa'));\n  for (const [name, variation, delta] of [['Pb','aumento',5],['Cd','reducao',-1],['Fe','estabilidade',0]]) {\n    const metal = b.metalVariation.metals.find(x => x.name === name);\n    insomnia.test('Variação de ' + name, () => insomnia.expect(!!metal && metal.variation === variation && metal.delta === delta).to.eql(true));\n  }\n  \n}",
+      "settingFollowRedirects": "off"
+    },
+    {
+      "_id": "req_ia_risco_metals_partial",
+      "_type": "request",
+      "parentId": "fld_ia_risco_metals",
+      "name": "02 Comparação parcial: metal ausente e unidade incompatível",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "Selecione image como File (JPEG/PNG até 10 MB) ou configure image_path com caminho absoluto. data e history são campos Text contendo JSON; não envie o body como application/json. Dados sintéticos.",
+      "metaSortKey": 100,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_metals_partial_image",
+            "name": "image",
+            "type": "file",
+            "fileName": "{{ _.image_path }}",
+            "value": "",
+            "disabled": false
+          },
+          {
+            "id": "pair_metals_partial_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 7,\n  \"condutividade_eletrica\": 100,\n  \"oxigenio_dissolvido\": 6,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40,\n  \"metais_pesados\": [\n    {\n      \"name\": \"Pb\",\n      \"value\": 10,\n      \"unit\": \"µg/L\"\n    },\n    {\n      \"name\": \"Cd\",\n      \"value\": 1,\n      \"unit\": \"µg/L\"\n    },\n    {\n      \"name\": \"Fe\",\n      \"value\": 0.1,\n      \"unit\": \"mg/L\"\n    },\n    {\n      \"name\": \"Cu\",\n      \"value\": 10,\n      \"unit\": \"µg/L\"\n    },\n    {\n      \"name\": \"Zn\",\n      \"value\": 4,\n      \"unit\": \"mg/kg\"\n    }\n  ],\n  \"referencia_metais_pesados\": {\n    \"data\": \"2026-10-07T12:00:00Z\",\n    \"metais_pesados\": [\n      {\n        \"name\": \"Pb\",\n        \"value\": 5,\n        \"unit\": \"µg/L\"\n      },\n      {\n        \"name\": \"Cd\",\n        \"value\": 2,\n        \"unit\": \"µg/L\"\n      },\n      {\n        \"name\": \"Fe\",\n        \"value\": 100,\n        \"unit\": \"µg/L\"\n      },\n      {\n        \"name\": \"Zn\",\n        \"value\": 5,\n        \"unit\": \"µg/L\"\n      }\n    ]\n  }\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_metals_partial_history",
+            "name": "history",
+            "type": "text",
+            "value": "[]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 200', () => insomnia.expect(insomnia.response.status).to.eql(200));\nif (insomnia.response.status === 200) {\n  const b = insomnia.response.json();\n  \n  const input = {\"estacao\":\"[SINTETICO] Estação de teste Insomnia\",\"latitude\":\"-23.5505\",\"longitude\":\"-46.6333\",\"data\":\"2026-10-08T12:00:00Z\",\"profundidade\":1.2,\"estacao_ano\":\"primavera\",\"temperatura\":22,\"ph\":7,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6,\"solidos_suspensos_totais\":12,\"carbono_organico_total\":2.4,\"fosforo_total\":40,\"metais_pesados\":[{\"name\":\"Pb\",\"value\":10,\"unit\":\"µg/L\"},{\"name\":\"Cd\",\"value\":1,\"unit\":\"µg/L\"},{\"name\":\"Fe\",\"value\":0.1,\"unit\":\"mg/L\"},{\"name\":\"Cu\",\"value\":10,\"unit\":\"µg/L\"},{\"name\":\"Zn\",\"value\":4,\"unit\":\"mg/kg\"}],\"referencia_metais_pesados\":{\"data\":\"2026-10-07T12:00:00Z\",\"metais_pesados\":[{\"name\":\"Pb\",\"value\":5,\"unit\":\"µg/L\"},{\"name\":\"Cd\",\"value\":2,\"unit\":\"µg/L\"},{\"name\":\"Fe\",\"value\":100,\"unit\":\"µg/L\"},{\"name\":\"Zn\",\"value\":5,\"unit\":\"µg/L\"}]}};\n  const sentHistory = [];\n  const visual = b.riskInputs.visualClasses.length > 0;\n  const measurements = input.ph < 6 || input.ph > 9 || input.oxigenio_dissolvido < 5;\n  const basis = 1 + Number(visual) + Number(measurements);\n  const alerts = sentHistory.filter(x => x.baseRiskLevel >= 2).length;\n  const level = Math.min(3, basis + Number(alerts >= 3));\n  insomnia.test('Versão de risco', () => insomnia.expect(b.riskRuleVersion).to.eql('waterpath-risk-v1'));\n  insomnia.test('Nível base calculado', () => insomnia.expect(b.baseRiskLevel).to.eql(basis));\n  insomnia.test('Nível final com histórico', () => insomnia.expect(b.riskLevel).to.eql(level));\n  insomnia.test('Rótulo correspondente', () => insomnia.expect(b.riskLabel).to.eql({1:'baixo',2:'moderado',3:'alto'}[level]));\n  insomnia.test('Medições efetivamente usadas', () => insomnia.expect(b.riskInputs.ph === input.ph && b.riskInputs.oxigenio_dissolvido === input.oxigenio_dissolvido).to.eql(true));\n  insomnia.test('Histórico recebido', () => insomnia.expect(b.history.evaluatedCollections === sentHistory.length && b.history.alertCollections === alerts && b.history.adjustment === level - basis).to.eql(true));\n  insomnia.test('Motivos e imagem anotada', () => insomnia.expect(Array.isArray(b.riskReasons) && b.riskReasons.length > 0 && typeof b.annotatedImage === 'string' && b.annotatedImage.length > 0 && b.annotatedImageContentType === 'image/jpeg').to.eql(true));\n  insomnia.test('Predições separadas das observações', () => insomnia.expect(Array.isArray(b.metalPredictions) && typeof b.metalVariation === 'object').to.eql(true));\n  \n  insomnia.test('Comparação parcial', () => insomnia.expect(b.metalVariation.status).to.eql('parcial'));\n  for (const [name, reason] of [['Cu','dados_ausentes'],['Zn','unidades_incompativeis']]) {\n    const metal = b.metalVariation.metals.find(x => x.name === name);\n    insomnia.test('Impedimento de ' + name, () => insomnia.expect(!!metal && metal.variation === 'indeterminada' && metal.delta === null && metal.reason === reason).to.eql(true));\n  }\n  \n}",
+      "settingFollowRedirects": "off"
+    },
+    {
+      "_id": "req_ia_risco_metals_no_reference",
+      "_type": "request",
+      "parentId": "fld_ia_risco_metals",
+      "name": "03 Sem referência anterior: variação indeterminada",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "Selecione image como File (JPEG/PNG até 10 MB) ou configure image_path com caminho absoluto. data e history são campos Text contendo JSON; não envie o body como application/json. Dados sintéticos.",
+      "metaSortKey": 200,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_metals_no_reference_image",
+            "name": "image",
+            "type": "file",
+            "fileName": "{{ _.image_path }}",
+            "value": "",
+            "disabled": false
+          },
+          {
+            "id": "pair_metals_no_reference_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 7,\n  \"condutividade_eletrica\": 100,\n  \"oxigenio_dissolvido\": 6,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40,\n  \"metais_pesados\": [\n    {\n      \"name\": \"Pb\",\n      \"value\": 10,\n      \"unit\": \"µg/L\"\n    },\n    {\n      \"name\": \"Cd\",\n      \"value\": 1,\n      \"unit\": \"µg/L\"\n    },\n    {\n      \"name\": \"Fe\",\n      \"value\": 0.1,\n      \"unit\": \"mg/L\"\n    }\n  ]\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_metals_no_reference_history",
+            "name": "history",
+            "type": "text",
+            "value": "[]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 200', () => insomnia.expect(insomnia.response.status).to.eql(200));\nif (insomnia.response.status === 200) {\n  const b = insomnia.response.json();\n  \n  const input = {\"estacao\":\"[SINTETICO] Estação de teste Insomnia\",\"latitude\":\"-23.5505\",\"longitude\":\"-46.6333\",\"data\":\"2026-10-08T12:00:00Z\",\"profundidade\":1.2,\"estacao_ano\":\"primavera\",\"temperatura\":22,\"ph\":7,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6,\"solidos_suspensos_totais\":12,\"carbono_organico_total\":2.4,\"fosforo_total\":40,\"metais_pesados\":[{\"name\":\"Pb\",\"value\":10,\"unit\":\"µg/L\"},{\"name\":\"Cd\",\"value\":1,\"unit\":\"µg/L\"},{\"name\":\"Fe\",\"value\":0.1,\"unit\":\"mg/L\"}]};\n  const sentHistory = [];\n  const visual = b.riskInputs.visualClasses.length > 0;\n  const measurements = input.ph < 6 || input.ph > 9 || input.oxigenio_dissolvido < 5;\n  const basis = 1 + Number(visual) + Number(measurements);\n  const alerts = sentHistory.filter(x => x.baseRiskLevel >= 2).length;\n  const level = Math.min(3, basis + Number(alerts >= 3));\n  insomnia.test('Versão de risco', () => insomnia.expect(b.riskRuleVersion).to.eql('waterpath-risk-v1'));\n  insomnia.test('Nível base calculado', () => insomnia.expect(b.baseRiskLevel).to.eql(basis));\n  insomnia.test('Nível final com histórico', () => insomnia.expect(b.riskLevel).to.eql(level));\n  insomnia.test('Rótulo correspondente', () => insomnia.expect(b.riskLabel).to.eql({1:'baixo',2:'moderado',3:'alto'}[level]));\n  insomnia.test('Medições efetivamente usadas', () => insomnia.expect(b.riskInputs.ph === input.ph && b.riskInputs.oxigenio_dissolvido === input.oxigenio_dissolvido).to.eql(true));\n  insomnia.test('Histórico recebido', () => insomnia.expect(b.history.evaluatedCollections === sentHistory.length && b.history.alertCollections === alerts && b.history.adjustment === level - basis).to.eql(true));\n  insomnia.test('Motivos e imagem anotada', () => insomnia.expect(Array.isArray(b.riskReasons) && b.riskReasons.length > 0 && typeof b.annotatedImage === 'string' && b.annotatedImage.length > 0 && b.annotatedImageContentType === 'image/jpeg').to.eql(true));\n  insomnia.test('Predições separadas das observações', () => insomnia.expect(Array.isArray(b.metalPredictions) && typeof b.metalVariation === 'object').to.eql(true));\n  insomnia.test('Sem referência não implica estabilidade', () => insomnia.expect(b.metalVariation.status === 'indeterminada' && b.metalVariation.metals.every(x => x.variation === 'indeterminada' && x.delta === null)).to.eql(true));\n  \n}",
+      "settingFollowRedirects": "off"
+    },
+    {
+      "_id": "req_ia_risco_metals_no_data",
+      "_type": "request",
+      "parentId": "fld_ia_risco_metals",
+      "name": "04 Sem observações de metais: variação indeterminada",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "Selecione image como File (JPEG/PNG até 10 MB) ou configure image_path com caminho absoluto. data e history são campos Text contendo JSON; não envie o body como application/json. Dados sintéticos.",
+      "metaSortKey": 300,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_metals_no_data_image",
+            "name": "image",
+            "type": "file",
+            "fileName": "{{ _.image_path }}",
+            "value": "",
+            "disabled": false
+          },
+          {
+            "id": "pair_metals_no_data_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 7,\n  \"condutividade_eletrica\": 100,\n  \"oxigenio_dissolvido\": 6,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_metals_no_data_history",
+            "name": "history",
+            "type": "text",
+            "value": "[]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 200', () => insomnia.expect(insomnia.response.status).to.eql(200));\nif (insomnia.response.status === 200) {\n  const b = insomnia.response.json();\n  \n  const input = {\"estacao\":\"[SINTETICO] Estação de teste Insomnia\",\"latitude\":\"-23.5505\",\"longitude\":\"-46.6333\",\"data\":\"2026-10-08T12:00:00Z\",\"profundidade\":1.2,\"estacao_ano\":\"primavera\",\"temperatura\":22,\"ph\":7,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6,\"solidos_suspensos_totais\":12,\"carbono_organico_total\":2.4,\"fosforo_total\":40};\n  const sentHistory = [];\n  const visual = b.riskInputs.visualClasses.length > 0;\n  const measurements = input.ph < 6 || input.ph > 9 || input.oxigenio_dissolvido < 5;\n  const basis = 1 + Number(visual) + Number(measurements);\n  const alerts = sentHistory.filter(x => x.baseRiskLevel >= 2).length;\n  const level = Math.min(3, basis + Number(alerts >= 3));\n  insomnia.test('Versão de risco', () => insomnia.expect(b.riskRuleVersion).to.eql('waterpath-risk-v1'));\n  insomnia.test('Nível base calculado', () => insomnia.expect(b.baseRiskLevel).to.eql(basis));\n  insomnia.test('Nível final com histórico', () => insomnia.expect(b.riskLevel).to.eql(level));\n  insomnia.test('Rótulo correspondente', () => insomnia.expect(b.riskLabel).to.eql({1:'baixo',2:'moderado',3:'alto'}[level]));\n  insomnia.test('Medições efetivamente usadas', () => insomnia.expect(b.riskInputs.ph === input.ph && b.riskInputs.oxigenio_dissolvido === input.oxigenio_dissolvido).to.eql(true));\n  insomnia.test('Histórico recebido', () => insomnia.expect(b.history.evaluatedCollections === sentHistory.length && b.history.alertCollections === alerts && b.history.adjustment === level - basis).to.eql(true));\n  insomnia.test('Motivos e imagem anotada', () => insomnia.expect(Array.isArray(b.riskReasons) && b.riskReasons.length > 0 && typeof b.annotatedImage === 'string' && b.annotatedImage.length > 0 && b.annotatedImageContentType === 'image/jpeg').to.eql(true));\n  insomnia.test('Predições separadas das observações', () => insomnia.expect(Array.isArray(b.metalPredictions) && typeof b.metalVariation === 'object').to.eql(true));\n  insomnia.test('Sem metais observados', () => insomnia.expect(b.metalVariation.status === 'indeterminada' && b.metalVariation.metals.length === 0).to.eql(true));\n  \n}",
+      "settingFollowRedirects": "off"
+    },
+    {
+      "_id": "fld_ia_risco_validation",
+      "_type": "request_group",
+      "parentId": "wrk_waterpath_ia_risco",
+      "name": "03 — Validação de entradas",
+      "environment": {},
+      "metaSortKey": 2000
+    },
+    {
+      "_id": "req_ia_risco_missing_oxygen",
+      "_type": "request",
+      "parentId": "fld_ia_risco_validation",
+      "name": "01 OD obrigatório ausente: 422",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "Selecione image como File (JPEG/PNG até 10 MB) ou configure image_path com caminho absoluto. data e history são campos Text contendo JSON; não envie o body como application/json. Dados sintéticos.",
+      "metaSortKey": 0,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_missing_oxygen_image",
+            "name": "image",
+            "type": "file",
+            "fileName": "{{ _.image_path }}",
+            "value": "",
+            "disabled": false
+          },
+          {
+            "id": "pair_missing_oxygen_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 7,\n  \"condutividade_eletrica\": 100,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_missing_oxygen_history",
+            "name": "history",
+            "type": "text",
+            "value": "[]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 422', () => insomnia.expect(insomnia.response.status).to.eql(422));\nif (insomnia.response.status === 422) {\n  const b = insomnia.response.json();\n  insomnia.test('Detalhe de validação', () => insomnia.expect(b.detail !== undefined).to.eql(true));\n}",
+      "settingFollowRedirects": "off"
+    },
+    {
+      "_id": "req_ia_risco_invalid_ph",
+      "_type": "request",
+      "parentId": "fld_ia_risco_validation",
+      "name": "02 pH fora de 0–14: 422",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "Selecione image como File (JPEG/PNG até 10 MB) ou configure image_path com caminho absoluto. data e history são campos Text contendo JSON; não envie o body como application/json. Dados sintéticos.",
+      "metaSortKey": 100,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_invalid_ph_image",
+            "name": "image",
+            "type": "file",
+            "fileName": "{{ _.image_path }}",
+            "value": "",
+            "disabled": false
+          },
+          {
+            "id": "pair_invalid_ph_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 15,\n  \"condutividade_eletrica\": 100,\n  \"oxigenio_dissolvido\": 6,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_invalid_ph_history",
+            "name": "history",
+            "type": "text",
+            "value": "[]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 422', () => insomnia.expect(insomnia.response.status).to.eql(422));\nif (insomnia.response.status === 422) {\n  const b = insomnia.response.json();\n  insomnia.test('Detalhe de validação', () => insomnia.expect(b.detail !== undefined).to.eql(true));\n}",
+      "settingFollowRedirects": "off"
+    },
+    {
+      "_id": "req_ia_risco_invalid_metal",
+      "_type": "request",
+      "parentId": "fld_ia_risco_validation",
+      "name": "03 Concentração negativa: 422",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "Selecione image como File (JPEG/PNG até 10 MB) ou configure image_path com caminho absoluto. data e history são campos Text contendo JSON; não envie o body como application/json. Dados sintéticos.",
+      "metaSortKey": 200,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_invalid_metal_image",
+            "name": "image",
+            "type": "file",
+            "fileName": "{{ _.image_path }}",
+            "value": "",
+            "disabled": false
+          },
+          {
+            "id": "pair_invalid_metal_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 7,\n  \"condutividade_eletrica\": 100,\n  \"oxigenio_dissolvido\": 6,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40,\n  \"metais_pesados\": [\n    {\n      \"name\": \"Pb\",\n      \"value\": -1,\n      \"unit\": \"µg/L\"\n    }\n  ]\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_invalid_metal_history",
+            "name": "history",
+            "type": "text",
+            "value": "[]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 422', () => insomnia.expect(insomnia.response.status).to.eql(422));\nif (insomnia.response.status === 422) {\n  const b = insomnia.response.json();\n  insomnia.test('Detalhe de validação', () => insomnia.expect(b.detail !== undefined).to.eql(true));\n}",
+      "settingFollowRedirects": "off"
+    },
+    {
+      "_id": "req_ia_risco_duplicate_history",
+      "_type": "request",
+      "parentId": "fld_ia_risco_validation",
+      "name": "04 Coleta repetida no histórico: 422",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "Selecione image como File (JPEG/PNG até 10 MB) ou configure image_path com caminho absoluto. data e history são campos Text contendo JSON; não envie o body como application/json. Dados sintéticos.",
+      "metaSortKey": 300,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_duplicate_history_image",
+            "name": "image",
+            "type": "file",
+            "fileName": "{{ _.image_path }}",
+            "value": "",
+            "disabled": false
+          },
+          {
+            "id": "pair_duplicate_history_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 7,\n  \"condutividade_eletrica\": 100,\n  \"oxigenio_dissolvido\": 6,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_duplicate_history_history",
+            "name": "history",
+            "type": "text",
+            "value": "[\n  {\n    \"predictionId\": 101,\n    \"coletaId\": 201,\n    \"baseRiskLevel\": 2\n  },\n  {\n    \"predictionId\": 104,\n    \"coletaId\": 201,\n    \"baseRiskLevel\": 2\n  }\n]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 422', () => insomnia.expect(insomnia.response.status).to.eql(422));\nif (insomnia.response.status === 422) {\n  const b = insomnia.response.json();\n  insomnia.test('Detalhe de validação', () => insomnia.expect(b.detail !== undefined).to.eql(true));\n}",
+      "settingFollowRedirects": "off"
+    },
+    {
+      "_id": "req_ia_risco_missing_image",
+      "_type": "request",
+      "parentId": "fld_ia_risco_validation",
+      "name": "05 Imagem obrigatória ausente: 422",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analyze",
+      "description": "Selecione image como File (JPEG/PNG até 10 MB) ou configure image_path com caminho absoluto. data e history são campos Text contendo JSON; não envie o body como application/json. Dados sintéticos.",
+      "metaSortKey": 400,
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_missing_image_data",
+            "name": "data",
+            "type": "text",
+            "value": "{\n  \"estacao\": \"[SINTETICO] Estação de teste Insomnia\",\n  \"latitude\": \"-23.5505\",\n  \"longitude\": \"-46.6333\",\n  \"data\": \"2026-10-08T12:00:00Z\",\n  \"profundidade\": 1.2,\n  \"estacao_ano\": \"primavera\",\n  \"temperatura\": 22,\n  \"ph\": 7,\n  \"condutividade_eletrica\": 100,\n  \"oxigenio_dissolvido\": 6,\n  \"solidos_suspensos_totais\": 12,\n  \"carbono_organico_total\": 2.4,\n  \"fosforo_total\": 40\n}",
+            "disabled": false
+          },
+          {
+            "id": "pair_missing_image_history",
+            "name": "history",
+            "type": "text",
+            "value": "[]",
+            "disabled": false
+          }
+        ]
+      },
+      "preRequestScript": "",
+      "afterResponseScript": "insomnia.test('HTTP 422', () => insomnia.expect(insomnia.response.status).to.eql(422));\nif (insomnia.response.status === 422) {\n  const b = insomnia.response.json();\n  insomnia.test('Detalhe de validação', () => insomnia.expect(b.detail !== undefined).to.eql(true));\n}",
+      "settingFollowRedirects": "off"
+    }
+  ]
+}

@@ -37,6 +37,14 @@ A IA retorna `riskInputs: {ph, oxigenio_dissolvido, visualClasses}` com os valor
 
 `metalPredictions` mantém estimativas de concentração: Fe/Mn em mg/L; Cr/Ni/Cu/Zn/Cd/Pb em µg/L. Não são observações medidas nem previsões para uma data futura. O modelo atual não possui horizonte temporal. `QualidadeFutura` não é consultada neste fluxo.
 
+## Variação temporal de metais
+
+O JSON de `data` também aceita `metais_pesados` (observações atuais) e `referencia_metais_pesados` (objeto com `data` anterior e lista `metais_pesados`). Cada observação usa `{"name":"Pb", "value":10, "unit":"µg/L"}`, seguindo os símbolos e o formato de `metalPredictions`. Esses campos não alimentam a regressão nem alteram a regra de nível de risco.
+
+A API principal valida e encaminha os objetos no mesmo multipart `data`, preservando valores, unidades e ausências em `EntradaJson`. A referência é fornecida pelo cliente; o histórico de níveis não contém concentrações medidas. A IA compara por metal apenas com instante anterior e unidades compatíveis, retornando `metalVariation` no resultado. Ausência/incompatibilidade resulta em variação indeterminada, sem concluir que não houve aumento. Aumento não equivale a ultrapassagem de limite.
+
+O [contrato compartilhado da IA e da API principal](../ia/CONTRATO_RISCO_METAIS.md) documenta campos, validações, unidades, motivos e exemplos completos de requisição/resposta para ambas as rotas. `GET /api/corpohidrico/{id}/risco-atual` também expõe o objeto em `variacaoMetais`. Entradas antigas sem metais e respostas legadas continuam compatíveis; resultados legados sem a análise retornam `variacaoMetais: null`. Não há migração adicional para essa extensão.
+
 ## Persistência e consulta
 
 | Campo em `waterPath.PredicoesIA` | Conteúdo |

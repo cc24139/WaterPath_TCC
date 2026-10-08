@@ -59,6 +59,33 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(image.format, "JPEG")
             image.verify()
 
+    def test_http_metal_variation_preserves_existing_inference(self):
+        baseline = self.upload(data=self.sample).json()
+        sample = json.loads(self.sample)
+        sample.update({
+            "data": "2026-10-07T12:00:00Z",
+            "metais_pesados": [{"name": "Pb", "value": 10, "unit": "µg/L"}],
+            "referencia_metais_pesados": {"data": "2026-10-06T12:00:00Z",
+                                         "metais_pesados": [{"name": "Pb", "value": 5, "unit": "µg/L"}]},
+        })
+        response = self.upload(data=json.dumps(sample))
+        self.assertEqual(response.status_code, 200, response.text)
+        result = response.json()
+        self.assertEqual(result["metalVariation"]["metals"][0]["variation"], "aumento")
+        self.assertEqual(result["metalVariation"]["metals"][0]["delta"], 5)
+        for key in ("metalPredictions", "riskInputs", "riskLevel", "baseRiskLevel", "riskReasons"):
+            self.assertEqual(result[key], baseline[key])
+
+    def test_http_invalid_metal_payload_rejected_before_inference(self):
+        with patch.object(vision, "load_model", side_effect=AssertionError("Entrada inválida")):
+            for field in ("metais_pesados", "referencia_metais_pesados"):
+                sample = json.loads(self.sample)
+                measurements = [{"name": "Pb", "value": -1, "unit": "µg/L"}]
+                sample[field] = measurements if field == "metais_pesados" else {"metais_pesados": measurements}
+                self.assertEqual(self.upload(data=json.dumps(sample)).status_code, 422)
+            duplicate = self.sample.rstrip()[:-1] + ', "metais_pesados": [{"name":"Pb","value":1,"value":2}]}'
+            self.assertEqual(self.upload(data=duplicate).status_code, 422)
+
     def test_existing_metals_predictions_preserved(self):
         response = self.upload("/predict", data=self.sample)
         self.assertEqual(response.status_code, 200, response.text)

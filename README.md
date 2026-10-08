@@ -26,6 +26,8 @@ O Projeto propôe-se cria
 
 ## ⚙️ Como Executar o Projeto
 
+Para popular rios sintéticos de forma idempotente e testar a API com uma coleção do Insomnia, consulte [população e testes de rios](back-end/api/testing/README.md). Os [resultados de verificação](back-end/api/testing/VERIFICACAO.md) distinguem testes locais das etapas pendentes no PostgreSQL configurado.
+
 ### Pré-requisitos
 
 ### Instalação

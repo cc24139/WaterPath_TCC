@@ -54,7 +54,8 @@ public class ObterRiscoAtualHandler(ICorpoHidricoRepository repository)
             var label = root.TryGetProperty("riskLabel", out var savedLabel)
                 && savedLabel.ValueKind == JsonValueKind.String ? savedLabel.GetString() : null;
             return new RiscoAtualDTO(corpoHidricoId, level, label, motivos,
-                result.ColetaId, result.DataColeta, result.PredicaoId, result.DataPredicao, version.GetString()!);
+                result.ColetaId, result.DataColeta, result.PredicaoId, result.DataPredicao, version.GetString()!,
+                root.TryGetProperty("metalVariation", out var variation) ? variation.Clone() : null);
         }
         catch (JsonException) { return null; }
     }
