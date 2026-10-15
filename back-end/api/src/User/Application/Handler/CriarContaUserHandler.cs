@@ -20,22 +20,20 @@ public class CriarContaUserHandler : IRequestHandler<CommandCriarConta, CriarCon
         CancellationToken cancellationToken
     )
     {
-        var existingUser = await userRepository.ObterUsuarioPorEmail(request.Email);
+        var existingUser = await userRepository.ObterUsuarioPorEmail(request.Email, cancellationToken);
         if (existingUser != null)
         {
             throw new System.ArgumentException("Email já cadastrado");
         }
 
         var user = new UserEntity(request.Nome, request.Senha, request.Email);
-        userRepository.Cadastrar(user);
+        await userRepository.Cadastrar(user, cancellationToken);
 
-        return await Task.FromResult(
-            new CriarContaResponse
-            {
-                UsuarioId = user.Id,
-                Email = user.Email,
-                Mensagem = "Conta criada com sucesso",
-            }
-        );
+        return new CriarContaResponse
+        {
+            UsuarioId = user.Id,
+            Email = user.Email,
+            Mensagem = "Conta criada com sucesso",
+        };
     }
 }

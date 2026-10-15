@@ -7,19 +7,19 @@ namespace back_end.src.Domain.CorpoHidrico
 {
     public interface ICorpoHidricoRepository
     {
-        void Cadastrar(CorpoHidricoEntity corpoHidrico);
-        void Atualizar(CorpoHidricoEntity corpoHidrico);
-        void Deletar(int id);
-        CorpoHidricoEntity? ObterCorpoHidricoPorId(int id);
-        List<CorpoHidricoEntity> ObterTodos();
+        Task Cadastrar(CorpoHidricoEntity corpoHidrico, CancellationToken cancellationToken = default);
+        Task Atualizar(CorpoHidricoEntity corpoHidrico, CancellationToken cancellationToken = default);
+        Task Deletar(int id, CancellationToken cancellationToken = default);
+        Task<CorpoHidricoEntity?> ObterCorpoHidricoPorId(int id, CancellationToken cancellationToken = default);
+        Task<List<CorpoHidricoEntity>> ObterTodos(CancellationToken cancellationToken = default);
     
-        CorpoHidricoEntity? ObterCorpoHidricoPorNome(string nome);
-        List<CorpoHidricoEntity> ObterCorposHidricosPorUsuario(int userId);
-        List<int> ObterUsuariosDoCorpoHidrico(int corpoHidricoId);
-        List<int> ObterColetasDoCorpoHidrico(int corpoHidricoId);
+        Task<CorpoHidricoEntity?> ObterCorpoHidricoPorNome(string nome, CancellationToken cancellationToken = default);
+        Task<List<CorpoHidricoEntity>> ObterCorposHidricosPorUsuario(int userId, CancellationToken cancellationToken = default);
+        Task<List<int>> ObterUsuariosDoCorpoHidrico(int corpoHidricoId, CancellationToken cancellationToken = default);
+        Task<List<int>> ObterColetasDoCorpoHidrico(int corpoHidricoId, CancellationToken cancellationToken = default);
         IAsyncEnumerable<ResultadoRiscoPersistido> ObterResultadosRisco(int corpoHidricoId);
 
-        void AdicionarUsuario(int corpoHidricoId, int userId);
-        void DeletarUsuario(int corpoHidricoId, int userId);
+        Task AdicionarUsuario(int corpoHidricoId, int userId, CancellationToken cancellationToken = default);
+        Task DeletarUsuario(int corpoHidricoId, int userId, CancellationToken cancellationToken = default);
     }
 }

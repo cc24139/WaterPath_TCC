@@ -14,7 +14,7 @@ public class ObterRiscoAtualHandler(ICorpoHidricoRepository repository)
     {
         if (request.Id <= 0) throw new ArgumentException("Informe um ID de corpo hídrico válido.");
         cancellationToken.ThrowIfCancellationRequested();
-        if (repository.ObterCorpoHidricoPorId(request.Id) is null)
+        if (await repository.ObterCorpoHidricoPorId(request.Id, cancellationToken) is null)
             throw new KeyNotFoundException("Corpo hídrico não encontrado");
 
         await foreach (var result in repository.ObterResultadosRisco(request.Id).WithCancellation(cancellationToken))

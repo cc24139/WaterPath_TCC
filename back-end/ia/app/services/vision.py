@@ -13,7 +13,7 @@ from fastapi import HTTPException, UploadFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
-DEFAULT_MODEL_PATH = Path(__file__).parent / "ComputerVision/best.onnx"
+DEFAULT_MODEL_PATH = Path(__file__).parents[1] / "models/vision/best.onnx"
 
 
 def model_path():

@@ -25,14 +25,14 @@ namespace back_end.src.Application.Handler.User
             CancellationToken cancellationToken
         )
         {
-            var user = await userRepository.ObterUsuarioPorEmail(query.email);
+            var user = await userRepository.ObterUsuarioPorEmail(query.email, cancellationToken);
             if (user == null || !new HashServices().VerifyHash(query.senha, user.Senha))
             {
                 throw new ArgumentException("Email ou senha inválidos");
             }
             var token = new JWTService().GenerateToken(user.Nome, user.Id, user.Email);
             var response = new UserLoginResponse { Id = user.Id, email = user.Email, nome = user.Nome, token = token };
-            return await Task.FromResult(response);
+            return response;
         }
     }
 }

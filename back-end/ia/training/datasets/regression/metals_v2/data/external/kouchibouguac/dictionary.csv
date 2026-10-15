@@ -1,0 +1,65 @@
+NOM DE LA STATION,STATION NAME,Nom de la station ,Station name
+NUMÉRO ENVIRODAT,ENVIRODAT NUMBER,Numéro ENVIRODAT de la station enregistré par Environnement et Changement climatique Canada,ENVIRODAT station number registered by Environment and Climate Change Canada
+DATE,DATE,Date de l'échantillonnage (jj/mm/aaaa),Date of sampling (dd/mm/yyyy)
+HEURE,TIME ,Heure de l'échantillonnage (24h00 heures),Time of sampling (24:00 hours)
+TEMPÉRATURE DE L'AIR (oC),AIR TEMPERATURE (oC),Température de l'air en degrés Celsius à l'heure d'échantillonnage,Air temperature in degrees Celcius at time of sampling
+TEMPÉRATURE DE L'EAU (oC),WATER TEMPERATURE (oC),Température de l'eau en degrés Celsius ,Water temperature in degrees Celcius
+OXYGÈNE DISSOUT (MG/L),DISSOLVED OXYGEN (MG/L),Oxygène dissout mesuré dans la colonne d'eau en miligramme par litre,Dissolved oxygen concentration measured in the water column in miligrams per liter
+OXYGÈNE DISSOUT (%),DISSOLVED OXYGEN (%),Pourcentage d'oxygène dissout mesuré dans la colonne d'eau,Percentage of dissolved oxygen measured in the water column
+OXYGÈNE DISSOUT (PPM),DISSOLVED OXYGEN (PPM),Concentration d'oxygène dissout mesuré dans la colonne d'eau en parties par million ,Dissolved oxygen concentration measured in the water column in parts per million
+CONDUCTIVITÉ SPÉCIFIQUE (µS/CM),SPECIFIC CONDUCTIVITY (µS/CM),Conductivité spécifique mesurée dans la colonne d'eau en microsiemens par centimètre,Specific conductivity measured in the water column in microsiemens per centimeter
+CONDUCTIVITÉ (µS/CM),CONDUCTIVITY (µS/CM),Conductivité mesurée dans la colonne d'eau en microsiemens par centimètre,Conductivity measured in the water column in microsiemens per centimeter
+SALINITÉ (PPM),SALINITY (PPM),Salinité mesurée dans la colonne d'eau en parties par million ,Salinity measured in the water column in parts per million
+PH,PH,Potentiel d'hydrogène mesuré dans la colonne d'eau sur une échelle d'acidité de 0 (acide) à 14 (alcalin),Potential of hydrogen measured in the water column on a scale of acidity from 0 (acidic) to 14 (alkaline)
+LARGEUR (M),WIDTH (M),Largeur de la rivière ou ruisseau au site d'échantillonnage en mètres,River or creek width at sampling site in meters
+PROFONDEUR MOYENNE (CM),MEAN DEPTH (CM),Profondeur de l'eau moyenne au site d'échantillonnage en centimètres,Mean water depth at sampling site in centimeters
+VITESSE SUPERFICIELLE (M/S),SUPERFICIAL VELOCITY (M/S),Vitesse superficielle moyenne au site d'échantillonnage en mètres par seconde,Mean superficial velocity at sampling site in meters per second
+DÉBIT (M³/S),FLOW RATE (M³/S),Débit de l'eau au site d'échantillonnage en mètres cube par seconde,Wate flow rate at sampling site in meters cube per second
+ALKALINITÉ TOTALE (MG/L),TOTAL ALKALINITY (MG/L),Alkalinité total en miligramme par litre,Total alkalinity in miligrams per liter
+ALKALINITÉ GRAN (MG/L),GRAN ALKALINITY (MG/L),Alkalinité gran en miligramme par litre,Gran alkalinity in miligrams per liter
+MATIÈRES DISSOUTES TOTALES (MG/L),TOTAL DISSOLVED SOLIDS (MG/L),Matières dissoutes totales en miligrammes par litre,Total dissolved solids in miligrams per liter
+MATIÈRES EN SUSPENSION TOTALES (MG/L),TOTAL SUSPENDED SOLIDS (MG/L),Matières en suspension totales en miligrammes par litre,Total suspended solids in miligrams per liter
+TURBIDITÉ (UTN),TURBIDITY (NTU),Turbidité en Unité de Turbidité Néphélométrique,Turbidity in Nephelometric Turbidity Unit
+COULEUR (TCU),COLOUR (TCU),Couleur en Unité de Couleur Vraie,Colour in True Color Units
+CARBONE ORGANIQUE TOTAL (MG/L),TOTAL ORGANIC CARBON (MG/L),Carbone organique total en miligramme par litre,Total organic carbon in miligrams per liter
+CARBONE INORGANIQUE TOTAL (MG/L),TOTAL INORGANIC CARBON (MG/L),Carbone inorganique total en miligramme par litre,Total inorganic carbon in miligrams per liter
+CHLORE DISSOUT (MG/L),DISSOLVED CHLORIDE (MG/L),Concentration de chlore dissout en miligramme par litre,Dissolved chloride in miligrams per liter
+BROMIDE (MG/L),BROMIDE (MG/L),Concentration de bromide en miligramme par litre,Bromide concentration in miligrams per liter
+FLUORIDE (MG/L),FLUORIDE (MG/L),Concentration de fluoride en miligramme par litre,Fluoride concentration in miligrams per liter
+AZOTE TOTAL (MG/L),TOTAL NITROGEN (MG/L),Azote total en miligramme par litre,Total nitrogen in miligrams per liter
+PHOSPHORE TOTAL (MG/L),TOTAL PHOSPHORUS (MG/L),Phosphore total en miligramme par litre,Total phosphorus in miligrams per liter
+NITRATE (MG/L),NITRATE (MG/L),Concentration de nitrate en miligramme par litre,Nitrate concentration in miligrams per liter
+SULFATE (MG/L),SULFATE (MG/L),Concentration de sulfate en miligramme par litre,Sulfate concentration in miligrams per liter
+AG - ARGENT (UG/L),AG - SILVER (UG/L),Concentration d'argent en microgramme par litre,Silver concentration in micrograms per liter
+AL - ALUMINIUM (UG/L),AL - ALUMINUM (UG/L),Concentration d'aluminium en microgramme par litre,Aluminum concentration in micrograms per liter
+AS - ARSENIC (UG/L),AS - ARSENIC (UG/L),Concentration d'arsenic en microgramme par litre,Arsenic concentration in micrograms per liter
+B - BORE (UG/L),B - BORON (UG/L),Concentration de bore en microgramme par litre,Boron concentration in micrograms per liter
+BA - BARYUM (UG/L),BA - BARIUM (UG/L),Concentration de baryum en microgramme par litre,Barium concentration in micrograms per liter
+BE - BÉRYLLIUM (UG/L),BE - BERYLLIUM (UG/L),Concentration de béryllium en microgramme par litre,Beryllium concentration in micrograms per liter
+BI - BISMUTH (UG/L),BI - BISMUTH (UG/L),Concentration de bismuth en microgramme par litre,Bismuth concentration in micrograms per liter
+CA - CALCIUM (MG/L),CA - CALCIUM (MG/L),Concentration de calcium en miligramme par litre,Calcium concentration in miligrams per liter
+CD - CADMIUM (UG/L),CD - CADMIUM (UG/L),Concentration de cadmium en microgramme par litre,Cadmium concentration in micrograms per liter
+CO - COBALT (UG/L),CO - COBALT (UG/L),Concentration de cobalt en microgramme par litre,Cobalt concentration in micrograms per liter
+CR - CHROME (UG/L),CR - CHROMIUM (UG/L),Concentration de chrome en microgramme par litre,Chromium concentration in micrograms per liter
+CU - CUIVRE (UG/L),CU - COPPER (UG/L),Concentration de cuivre en microgramme par litre,Cupper concentration in micrograms per liter
+FE - FER (UG/L),FE - IRON (UG/L),Concentration de fer en microgramme par litre,Iron concentration in micrograms per liter
+GA - GALLIUM (UG/L),GA - GALLIUM (UG/L),Concentration de gallium en microgramme par litre,Gallium concentration in micrograms per liter
+K - POTASSIUM (MG/L),K - POTASSIUM (MG/L),Concentration de potassium en miligramme par litre,Potassium concentration in miligrams per liter
+LA - LANTHANE (UG/L),LA - LANTHANUM (UG/L),Concentration de lanthane en microgramme par litre,Lanthanium concentration in micrograms per liter
+LI - LITHIUM (UG/L),LI - LITHIUM (UG/L),Concentration de lithium en microgramme par litre,Lithium concentration in micrograms per liter
+MG - MAGNÉSIUM (MG/L),MG - MAGNESIUM (MG/L),Concentration de magnésium en miligramme par litre,Magnésium concentration in miligrams per liter
+MN - MANGANÈSE (UG/L),MN - MANGANESE (UG/L),Concentration de manganèse en microgramme par litre,Manganese concentration in micrograms per liter
+MO - MOLYBDÈNE (UG/L),MO - MOLYBDENUM (UG/L),Concentration de molybdène en microgramme par litre,Molybdenum concentration in micrograms per liter
+NA - SODIUM (MG/L),NA - SODIUM (MG/L),Concentration de sodium en miligramme par litre,Sodium concentration in miligrams per liter
+NI - NICKEL (UG/L),NI - NICKEL (UG/L),Concentration de nickel en microgramme par litre,Nickel concentration in micrograms per liter
+PB - PLOMB (UG/L),PB - LEAD (UG/L),Concentration de plomb en microgramme par litre,Lead concentration in micrograms per liter
+RB - RUBIDIUM (UG/L),RB - RUBIDIUM (UG/L),Concentration de rubidium en microgramme par litre,Rubidium concentration in micrograms per liter
+SB - ANTIMOINE (UG/L),SB - ANTIMONY (UG/L),Concentration de antimoine en microgramme par litre,Antimony concentration in micrograms per liter
+SE - SÉLÉNIUM (UG/L),SE - SELENIUM (UG/L),Concentration de sélénium en microgramme par litre,Selenium concentration in micrograms per liter
+SN - ÉTAIN (UG/L),SN - TIN (UG/L),Concentration d'étain en microgramme par litre,Tin concentration in micrograms per liter
+SR - STRONTIUM (UG/L),SR - STRONTIUM (UG/L),Concentration de strontium en microgramme par litre,Strontium concentration in micrograms per liter
+TI - TITANE (UG/L),TI - TITANIUM (UG/L),Concentration de titane en microgramme par litre,Titanium concentration in micrograms per liter
+TL - THALLIUM (UG/L),TL - THALLIUM (UG/L),Concentration de thallium en microgramme par litre,Thallium concentration in micrograms per liter
+U - URANIUM (UG/L),U - URANIUM (UG/L),Concentration d'uranium en microgramme par litre,Uranium concentration in micrograms per liter
+V - VANADIUM (UG/L),V - VANADIUM (UG/L),Concentration de vanadium en microgramme par litre,Vanadium concentration in micrograms per liter
+ZN - ZINC (UG/L),ZN - ZINC (UG/L),Concentration de zinc en microgramme par litre,Zinc concentration in micrograms per liter

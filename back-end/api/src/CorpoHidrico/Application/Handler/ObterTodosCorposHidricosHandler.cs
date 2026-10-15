@@ -19,7 +19,6 @@ public class ObterTodosCorposHidricosHandler
         CancellationToken cancellationToken
     )
     {
-        var corposHidricos = corpoHidricoRepository.ObterTodos();
-        return Task.FromResult(corposHidricos);
+        return corpoHidricoRepository.ObterTodos(cancellationToken);
     }
 }

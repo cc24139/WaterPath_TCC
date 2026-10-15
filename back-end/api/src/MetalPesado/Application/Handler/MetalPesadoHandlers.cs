@@ -14,13 +14,13 @@ public class CadastrarMetalPesadoHandler : IRequestHandler<CommandCadastrarMetal
         this.metalPesadoRepository = metalPesadoRepository;
     }
 
-    public Task<Unit> Handle(
+    public async Task<Unit> Handle(
         CommandCadastrarMetalPesado request,
         CancellationToken cancellationToken
     )
     {
-        metalPesadoRepository.Cadastrar(request.MetalPesado);
-        return Task.FromResult(Unit.Value);
+        await metalPesadoRepository.Cadastrar(request.MetalPesado, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -33,13 +33,13 @@ public class AtualizarMetalPesadoHandler : IRequestHandler<CommandAtualizarMetal
         this.metalPesadoRepository = metalPesadoRepository;
     }
 
-    public Task<Unit> Handle(
+    public async Task<Unit> Handle(
         CommandAtualizarMetalPesado request,
         CancellationToken cancellationToken
     )
     {
-        metalPesadoRepository.Atualizar(request.MetalPesado);
-        return Task.FromResult(Unit.Value);
+        await metalPesadoRepository.Atualizar(request.MetalPesado, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -52,10 +52,10 @@ public class DeletarMetalPesadoHandler : IRequestHandler<CommandDeletarMetalPesa
         this.metalPesadoRepository = metalPesadoRepository;
     }
 
-    public Task<Unit> Handle(CommandDeletarMetalPesado request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CommandDeletarMetalPesado request, CancellationToken cancellationToken)
     {
-        metalPesadoRepository.Deletar(request.Id);
-        return Task.FromResult(Unit.Value);
+        await metalPesadoRepository.Deletar(request.Id, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -74,8 +74,7 @@ public class ObterMetalPesadoPorIdHandler
         CancellationToken cancellationToken
     )
     {
-        var metalPesado = metalPesadoRepository.ObterPorId(request.Id);
-        return Task.FromResult(metalPesado);
+        return metalPesadoRepository.ObterPorId(request.Id, cancellationToken);
     }
 }
 
@@ -94,7 +93,6 @@ public class ObterTodosMetaisPesadosHandler
         CancellationToken cancellationToken
     )
     {
-        var metaisPesados = metalPesadoRepository.ObterTodos();
-        return Task.FromResult(metaisPesados);
+        return metalPesadoRepository.ObterTodos(cancellationToken);
     }
 }

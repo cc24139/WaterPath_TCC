@@ -20,9 +20,7 @@ COPY services/metals.py ./services/metals.py
 COPY services/Infos ./services/Infos
 COPY services/risk ./services/risk
 COPY services/Predict/schema.py ./services/Predict/schema.py
-COPY services/Predict/model/metals_v2/quality_model.joblib ./services/Predict/model/metals_v2/quality_model.joblib
-COPY services/Predict/model/metals_v2/manifest.json ./services/Predict/model/metals_v2/manifest.json
-COPY services/ComputerVision/best.onnx ./services/ComputerVision/best.onnx
+COPY models ./models
 
 EXPOSE 10000
 

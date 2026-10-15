@@ -4,13 +4,13 @@ namespace back_end.src.Domain.Imagem
 {
     public interface IImagemRepository
     {
-        void Cadastrar(ImagemEntity imagem);
-        void Atualizar(ImagemEntity imagem);
-        void Deletar(int id);
-        ImagemEntity ObterPorId(int id);
-        List<ImagemEntity> ObterTodos();
-        List<ImagemEntity> ObterImagensPorCorpoHidrico(int corpoHidricoId);
-        List<ImagemEntity> ObterImagensPorColeta(int coletaId);
-        List<ImagemEntity>ObterImagensPorPeriodo(int corpoHidricoId, string dataInicio, string dataFim);
+        Task Cadastrar(ImagemEntity imagem, CancellationToken cancellationToken = default);
+        Task Atualizar(ImagemEntity imagem, CancellationToken cancellationToken = default);
+        Task Deletar(int id, CancellationToken cancellationToken = default);
+        Task<ImagemEntity?> ObterPorId(int id, CancellationToken cancellationToken = default);
+        Task<List<ImagemEntity>> ObterTodos(CancellationToken cancellationToken = default);
+        Task<List<ImagemEntity>> ObterImagensPorCorpoHidrico(int corpoHidricoId, CancellationToken cancellationToken = default);
+        Task<List<ImagemEntity>> ObterImagensPorColeta(int coletaId, CancellationToken cancellationToken = default);
+        Task<List<ImagemEntity>> ObterImagensPorPeriodo(int corpoHidricoId, string dataInicio, string dataFim, CancellationToken cancellationToken = default);
     }
 }

@@ -26,18 +26,18 @@ namespace back_end.src.Controllers.Imagem
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> Cadastrar([FromForm] CadastrarImagemDTO imagem)
+        public async Task<IActionResult> Cadastrar([FromForm] CadastrarImagemDTO imagem, CancellationToken cancellationToken)
         {
             try
             {
                 var dataUpload = DateTime.UtcNow;
-                var corpoHidrico = await mediator.Send(new QueryObterCorpoHidricoPorId { Id = imagem.IdCorpoHidrico });
+                var corpoHidrico = await mediator.Send(new QueryObterCorpoHidricoPorId { Id = imagem.IdCorpoHidrico }, cancellationToken);
                 if (corpoHidrico == null)
                     return NotFound("Corpo Hídrico não encontrado");
                 ColetaEntity? coleta = null;
                 if (imagem.idColeta.HasValue)
                 {
-                    coleta = await mediator.Send(new QueryObterColetaPorId { Id = imagem.idColeta.Value });
+                    coleta = await mediator.Send(new QueryObterColetaPorId { Id = imagem.idColeta.Value }, cancellationToken);
                     if (coleta == null)
                         return NotFound("Coleta não encontrada");
                 }
@@ -68,7 +68,7 @@ namespace back_end.src.Controllers.Imagem
                     Coleta = coleta,
                 };
 
-                await mediator.Send(new CommandCadastrarImagem { Imagem = imagemEntity });
+                await mediator.Send(new CommandCadastrarImagem { Imagem = imagemEntity }, cancellationToken);
                 return Ok("Imagem cadastrada com sucesso");
             }
             catch (ArgumentException ex)
@@ -81,11 +81,11 @@ namespace back_end.src.Controllers.Imagem
 
         
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var imagem = await mediator.Send(new QueryObterImagemPorId { Id = id });
+                var imagem = await mediator.Send(new QueryObterImagemPorId { Id = id }, cancellationToken);
                 if (imagem == null)
                     return NotFound("Imagem não encontrada");
                 var streamFile = new FileStream(imagem.Url, FileMode.Open);
@@ -100,11 +100,11 @@ namespace back_end.src.Controllers.Imagem
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObterTodos()
+        public async Task<IActionResult> ObterTodos(CancellationToken cancellationToken)
         {
             try
             {
-                var imagens = await mediator.Send(new QueryObterTodasImagens());
+                var imagens = await mediator.Send(new QueryObterTodasImagens(), cancellationToken);
                 return Ok(imagens);
             }
             catch (ArgumentException ex)
@@ -114,11 +114,11 @@ namespace back_end.src.Controllers.Imagem
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Atualizar(int id, [FromBody] ImagemEntity imagem)
+        public async Task<IActionResult> Atualizar(int id, [FromBody] ImagemEntity imagem, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandAtualizarImagem { Imagem = imagem });
+                await mediator.Send(new CommandAtualizarImagem { Imagem = imagem }, cancellationToken);
                 return Ok("Imagem atualizada com sucesso");
             }
             catch (ArgumentException ex)
@@ -128,11 +128,11 @@ namespace back_end.src.Controllers.Imagem
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Deletar(int id)
+        public async Task<IActionResult> Deletar(int id, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandDeletarImagem { Id = id });
+                await mediator.Send(new CommandDeletarImagem { Id = id }, cancellationToken);
                 return Ok("Imagem deletada com sucesso");
             }
             catch (ArgumentException ex)

@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Application.Handler.CorpoHidrico;
@@ -284,6 +285,7 @@ public class RiscoAtualTests : IAsyncLifetime
 
 internal static class TestJwt
 {
+    internal const int UserId = 1;
     private static readonly SymmetricSecurityKey Key = new(Encoding.ASCII.GetBytes("waterpath-chave-apenas-para-testes-jwt-123456789"));
 
     internal static void Configure(IServiceCollection services)
@@ -296,6 +298,13 @@ internal static class TestJwt
             });
     }
 
-    internal static string Token() => new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(
-        expires: DateTime.UtcNow.AddMinutes(5), signingCredentials: new SigningCredentials(Key, SecurityAlgorithms.HmacSha256)));
+    internal static ClaimsPrincipal Principal(int userId = UserId) => new(new ClaimsIdentity(
+    [
+        new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+        new Claim(ClaimTypes.Name, "Usuário de teste"),
+    ], JwtBearerDefaults.AuthenticationScheme));
+
+    internal static string Token(int userId = UserId) => new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(
+        claims: Principal(userId).Claims, expires: DateTime.UtcNow.AddMinutes(5),
+        signingCredentials: new SigningCredentials(Key, SecurityAlgorithms.HmacSha256)));
 }

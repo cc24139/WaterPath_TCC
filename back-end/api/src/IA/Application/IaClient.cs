@@ -1,40 +1,90 @@
 using System.Net.Http.Headers;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace back_end.src.IA.Application;
 
-public class IaException(int statusCode, string message) : Exception(message)
+public static class IaErrorCodes
 {
-    public int StatusCode { get; } = statusCode;
+    public const string InvalidInput = "IA_INVALID_INPUT";
+    public const string Unauthorized = "IA_UNAUTHORIZED";
+    public const string Forbidden = "IA_FORBIDDEN";
+    public const string RateLimited = "IA_RATE_LIMITED";
+    public const string Unavailable = "IA_UNAVAILABLE";
+    public const string Timeout = "IA_TIMEOUT";
+    public const string InvalidResponse = "IA_INVALID_RESPONSE";
+    public const string Persistence = "IA_PERSISTENCE_ERROR";
 }
 
-public class IaClient(HttpClient client)
+public class IaException(int statusCode, string code, string message) : Exception(message)
 {
+    public int StatusCode { get; } = statusCode;
+    public string Code { get; } = code;
+
+    public IaException(int statusCode, string message)
+        : this(statusCode, IaErrorCodes.InvalidInput, message) { }
+}
+
+public class IaClient
+{
+    private readonly HttpClient client;
+    private readonly ILogger<IaClient> logger;
+
+    public IaClient(HttpClient client) : this(client, NullLogger<IaClient>.Instance) { }
+
+    public IaClient(HttpClient client, ILogger<IaClient> logger)
+    {
+        this.client = client;
+        this.logger = logger;
+    }
+
     private async Task<HttpResponseMessage> EnviarAsync(string route, MultipartFormDataContent form,
         CancellationToken cancellationToken)
     {
+        var elapsed = Stopwatch.StartNew();
         try
         {
             var response = await client.PostAsync(route, form, cancellationToken);
-            if (response.IsSuccessStatusCode) return response;
+            if (response.IsSuccessStatusCode)
+            {
+                logger.LogInformation("Serviço de IA respondeu. Operacao={Operation} Status={StatusCode} DuracaoMs={ElapsedMs}",
+                    route, (int)response.StatusCode, elapsed.ElapsedMilliseconds);
+                return response;
+            }
             using (response)
             {
-                // Erros de entrada da IA são preservados; falhas do serviço viram 502.
                 var status = (int)response.StatusCode;
-                throw new IaException(status is 400 or 413 or 422 ? status : 502,
-                    status is 400 or 413 or 422
-                        ? "A IA rejeitou a imagem ou os dados da amostra."
-                        : "O serviço de IA não conseguiu realizar a análise.");
+                logger.LogWarning("Serviço de IA rejeitou a operação. Operacao={Operation} Status={StatusCode} DuracaoMs={ElapsedMs}",
+                    route, status, elapsed.ElapsedMilliseconds);
+                if (status is 400 or 413 or 422)
+                    throw new IaException(status, IaErrorCodes.InvalidInput,
+                        "A imagem ou os dados da amostra foram rejeitados.");
+                if (status == 429)
+                    throw new IaException(503, IaErrorCodes.RateLimited,
+                        "O serviço de IA atingiu o limite de solicitações. Tente novamente mais tarde.");
+                if (status >= 500)
+                    throw new IaException(503, IaErrorCodes.Unavailable,
+                        "O serviço de IA está temporariamente indisponível.");
+                throw new IaException(502, IaErrorCodes.Unavailable,
+                    "O serviço de IA não conseguiu realizar a análise.");
             }
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException error)
         {
-            throw new IaException(502, "Não foi possível acessar o serviço de IA.");
+            logger.LogWarning(error,
+                "Falha de conexão com o serviço de IA. Operacao={Operation} DuracaoMs={ElapsedMs}",
+                route, elapsed.ElapsedMilliseconds);
+            throw new IaException(503, IaErrorCodes.Unavailable,
+                "O serviço de IA está temporariamente indisponível.");
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new IaException(504, "O serviço de IA excedeu o tempo de resposta.");
+            logger.LogWarning("Timeout no serviço de IA. Operacao={Operation} DuracaoMs={ElapsedMs}",
+                route, elapsed.ElapsedMilliseconds);
+            throw new IaException(504, IaErrorCodes.Timeout,
+                "O serviço de IA excedeu o tempo de resposta.");
         }
     }
 
@@ -107,7 +157,21 @@ public class IaClient(HttpClient client)
         catch (Exception ex) when (ex is JsonException or FormatException or InvalidOperationException
             or KeyNotFoundException or ArgumentException)
         {
-            throw new IaException(502, "O serviço de IA retornou uma predição inválida.");
+            logger.LogWarning(ex, "Resposta inválida do serviço de IA. Operacao=analyze");
+            throw new IaException(502, IaErrorCodes.InvalidResponse,
+                "O serviço de IA retornou uma predição inválida.");
+        }
+        catch (HttpRequestException error)
+        {
+            logger.LogWarning(error, "Falha ao ler a resposta do serviço de IA. Operacao=analyze");
+            throw new IaException(503, IaErrorCodes.Unavailable,
+                "O serviço de IA está temporariamente indisponível.");
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning("Timeout ao ler a resposta do serviço de IA. Operacao=analyze");
+            throw new IaException(504, IaErrorCodes.Timeout,
+                "O serviço de IA excedeu o tempo de resposta.");
         }
     }
 

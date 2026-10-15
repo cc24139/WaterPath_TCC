@@ -16,11 +16,11 @@
 !services/risk/*.py
 !services/Predict/
 !services/Predict/schema.py
-!services/Predict/model/
-!services/Predict/model/metals_v2/
-!services/Predict/model/metals_v2/quality_model.joblib
-!services/Predict/model/metals_v2/manifest.json
-!services/ComputerVision/
-!services/ComputerVision/best.onnx
+!models/
+!models/vision/
+!models/vision/best.onnx
+!models/metals_v2/
+!models/metals_v2/quality_model.joblib
+!models/metals_v2/manifest.json
 **/__pycache__/
 **/*.pyc

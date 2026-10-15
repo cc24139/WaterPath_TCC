@@ -11,7 +11,7 @@ import pandas as pd
 from services.Predict.schema import FEATURES, FIELDS, REQUIRED_FIELDS, TARGETS
 from services.Infos.metais import create_metals
 
-DEFAULT_MODEL_PATH = Path(__file__).parent / "Predict/model/metals_v2/quality_model.joblib"
+DEFAULT_MODEL_PATH = Path(__file__).parents[1] / "models/metals_v2/quality_model.joblib"
 
 
 def model_path():

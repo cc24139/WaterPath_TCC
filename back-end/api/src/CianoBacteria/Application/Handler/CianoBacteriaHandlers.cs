@@ -14,13 +14,13 @@ public class CadastrarCianoBacteriaHandler : IRequestHandler<CommandCadastrarCia
         this.cianoBacteriaRepository = cianoBacteriaRepository;
     }
 
-    public Task<Unit> Handle(
+    public async Task<Unit> Handle(
         CommandCadastrarCianoBacteria request,
         CancellationToken cancellationToken
     )
     {
-        cianoBacteriaRepository.Cadastrar(request.CianoBacteria);
-        return Task.FromResult(Unit.Value);
+        await cianoBacteriaRepository.Cadastrar(request.CianoBacteria, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -33,13 +33,13 @@ public class AtualizarCianoBacteriaHandler : IRequestHandler<CommandAtualizarCia
         this.cianoBacteriaRepository = cianoBacteriaRepository;
     }
 
-    public Task<Unit> Handle(
+    public async Task<Unit> Handle(
         CommandAtualizarCianoBacteria request,
         CancellationToken cancellationToken
     )
     {
-        cianoBacteriaRepository.Atualizar(request.CianoBacteria);
-        return Task.FromResult(Unit.Value);
+        await cianoBacteriaRepository.Atualizar(request.CianoBacteria, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -52,13 +52,13 @@ public class DeletarCianoBacteriaHandler : IRequestHandler<CommandDeletarCianoBa
         this.cianoBacteriaRepository = cianoBacteriaRepository;
     }
 
-    public Task<Unit> Handle(
+    public async Task<Unit> Handle(
         CommandDeletarCianoBacteria request,
         CancellationToken cancellationToken
     )
     {
-        cianoBacteriaRepository.Deletar(request.Id);
-        return Task.FromResult(Unit.Value);
+        await cianoBacteriaRepository.Deletar(request.Id, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -77,8 +77,7 @@ public class ObterCianoBacteriaPorIdHandler
         CancellationToken cancellationToken
     )
     {
-        var cianoBacteria = cianoBacteriaRepository.ObterPorId(request.Id);
-        return Task.FromResult(cianoBacteria);
+        return cianoBacteriaRepository.ObterPorId(request.Id, cancellationToken);
     }
 }
 
@@ -97,7 +96,6 @@ public class ObterTodasCianoBacteriasHandler
         CancellationToken cancellationToken
     )
     {
-        var cianoBacterias = cianoBacteriaRepository.ObterTodos();
-        return Task.FromResult(cianoBacterias);
+        return cianoBacteriaRepository.ObterTodos(cancellationToken);
     }
 }

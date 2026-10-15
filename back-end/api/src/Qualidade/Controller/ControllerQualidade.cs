@@ -19,11 +19,11 @@ namespace back_end.src.Controllers.Qualidade
         }
 
         [HttpPost]
-        public async Task<IActionResult> Cadastrar([FromBody] QualidadeEntity qualidade)
+        public async Task<IActionResult> Cadastrar([FromBody] QualidadeEntity qualidade, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandCadastrarQualidade { Qualidade = qualidade });
+                await mediator.Send(new CommandCadastrarQualidade { Qualidade = qualidade }, cancellationToken);
                 return Created($"api/qualidade/{qualidade.Id}", qualidade);
             }
             catch (ArgumentException ex)
@@ -33,11 +33,11 @@ namespace back_end.src.Controllers.Qualidade
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var qualidade = await mediator.Send(new QueryObterQualidadePorId { Id = id });
+                var qualidade = await mediator.Send(new QueryObterQualidadePorId { Id = id }, cancellationToken);
                 if (qualidade == null)
                     return NotFound("Qualidade não encontrada");
                 return Ok(qualidade);
@@ -49,11 +49,11 @@ namespace back_end.src.Controllers.Qualidade
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObterTodos()
+        public async Task<IActionResult> ObterTodos(CancellationToken cancellationToken)
         {
             try
             {
-                var qualidades = await mediator.Send(new QueryObterTodasQualidades());
+                var qualidades = await mediator.Send(new QueryObterTodasQualidades(), cancellationToken);
                 return Ok(qualidades.Select(q => new
                 {
                     q.Id,
@@ -69,11 +69,11 @@ namespace back_end.src.Controllers.Qualidade
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Atualizar(int id, [FromBody] QualidadeEntity qualidade)
+        public async Task<IActionResult> Atualizar(int id, [FromBody] QualidadeEntity qualidade, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandAtualizarQualidade { Qualidade = qualidade });
+                await mediator.Send(new CommandAtualizarQualidade { Qualidade = qualidade }, cancellationToken);
                 return Ok("Qualidade atualizada com sucesso");
             }
             catch (ArgumentException ex)
@@ -83,11 +83,11 @@ namespace back_end.src.Controllers.Qualidade
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Deletar(int id)
+        public async Task<IActionResult> Deletar(int id, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandDeletarQualidade { Id = id });
+                await mediator.Send(new CommandDeletarQualidade { Id = id }, cancellationToken);
                 return Ok("Qualidade deletada com sucesso");
             }
             catch (ArgumentException ex)

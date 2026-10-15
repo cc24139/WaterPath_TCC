@@ -15,13 +15,13 @@ namespace back_end.src.Application.Handler.CorpoHidrico
             this.corpoHidricoRepository = corpoHidricoRepository;
         }
 
-        public Task<Unit> Handle(
+        public async Task<Unit> Handle(
             CommandAdicionarUsuario request,
             CancellationToken cancellationToken
         )
         {
-            corpoHidricoRepository.AdicionarUsuario(request.CorpoHidricoId, request.UserId);
-            return Task.FromResult(Unit.Value);
+            await corpoHidricoRepository.AdicionarUsuario(request.CorpoHidricoId, request.UserId, cancellationToken);
+            return Unit.Value;
         }
     }
 }

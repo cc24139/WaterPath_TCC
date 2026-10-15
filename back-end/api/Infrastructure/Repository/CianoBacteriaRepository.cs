@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using back_end.src.Domain.CianoBacteria;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace back_end.src.Infrastructure.Repository
 {
@@ -15,9 +16,9 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
-        public void Atualizar(CianoBacteriaEntity cianoBacteria)
+        public async Task Atualizar(CianoBacteriaEntity cianoBacteria, CancellationToken cancellationToken = default)
         {
-            var entityToUpdate = context.CianoBacterias.Find(cianoBacteria.Id);
+            var entityToUpdate = await context.CianoBacterias.FindAsync([cianoBacteria.Id], cancellationToken);
             if (entityToUpdate == null)
             {
                 throw new ArgumentException("Cianobactéria não encontrada");
@@ -29,34 +30,34 @@ namespace back_end.src.Infrastructure.Repository
                 cianoBacteria.Coleta
             );
             context.CianoBacterias.Update(entityToUpdate);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Cadastrar(CianoBacteriaEntity cianoBacteria)
+        public async Task Cadastrar(CianoBacteriaEntity cianoBacteria, CancellationToken cancellationToken = default)
         {
-            context.CianoBacterias.Add(cianoBacteria);
-            context.SaveChanges();
+            await context.CianoBacterias.AddAsync(cianoBacteria, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Deletar(int id)
+        public async Task Deletar(int id, CancellationToken cancellationToken = default)
         {
-            var entityToDelete = context.CianoBacterias.Find(id);
+            var entityToDelete = await context.CianoBacterias.FindAsync([id], cancellationToken);
             if (entityToDelete == null)
             {
                 throw new ArgumentException("Cianobactéria não encontrada");
             }
             context.CianoBacterias.Remove(entityToDelete);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public List<CianoBacteriaEntity> ObterTodos()
+        public Task<List<CianoBacteriaEntity>> ObterTodos(CancellationToken cancellationToken = default)
         {
-            return context.CianoBacterias.ToList();
+            return context.CianoBacterias.ToListAsync(cancellationToken);
         }
 
-        public CianoBacteriaEntity ObterPorId(int id)
+        public Task<CianoBacteriaEntity?> ObterPorId(int id, CancellationToken cancellationToken = default)
         {
-            return context.CianoBacterias.FirstOrDefault(c => c.Id == id);
+            return context.CianoBacterias.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         }
     }
 }

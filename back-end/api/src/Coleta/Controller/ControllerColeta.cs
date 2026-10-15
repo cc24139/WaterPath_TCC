@@ -22,7 +22,7 @@ namespace back_end.src.Controllers.Coleta
         }
 
         [HttpPost]
-        public async Task<IActionResult> Cadastrar([FromBody] ColetaCadastroInput input)
+        public async Task<IActionResult> Cadastrar([FromBody] ColetaCadastroInput input, CancellationToken cancellationToken)
         {
             try
             {
@@ -41,7 +41,8 @@ namespace back_end.src.Controllers.Coleta
                     {
                         Coleta = coleta,
                         CorpoHidricoId = coleta.CorpoHidricoId,
-                    }
+                    },
+                    cancellationToken
                 );
                 return Created($"api/coleta/{coleta.Id}", coleta);
             }
@@ -56,11 +57,11 @@ namespace back_end.src.Controllers.Coleta
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var coleta = await mediator.Send(new QueryObterColetaPorId { Id = id });
+                var coleta = await mediator.Send(new QueryObterColetaPorId { Id = id }, cancellationToken);
                 if (coleta == null)
                     return NotFound("Coleta não encontrada");
                 return Ok(coleta);
@@ -76,11 +77,11 @@ namespace back_end.src.Controllers.Coleta
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObterTodos()
+        public async Task<IActionResult> ObterTodos(CancellationToken cancellationToken)
         {
             try
             {
-                var coletas = await mediator.Send(new QueryObterTodasColetas());
+                var coletas = await mediator.Send(new QueryObterTodasColetas(), cancellationToken);
                 // Project the relation to its ID: entity graphs can contain cycles.
                 return Ok(coletas.Select(c => new
                 {
@@ -104,11 +105,11 @@ namespace back_end.src.Controllers.Coleta
         }
 
         [HttpGet("corpo-hidrico/{idCorpoHidrico}")]
-        public async Task<IActionResult> ObterPorCorpoHidrico(int idCorpoHidrico)
+        public async Task<IActionResult> ObterPorCorpoHidrico(int idCorpoHidrico, CancellationToken cancellationToken)
         {
             try
             {
-                var coletas = await mediator.Send(new QueryObterColetasPorCorpoHidrico { CorpoHidricoId = idCorpoHidrico });
+                var coletas = await mediator.Send(new QueryObterColetasPorCorpoHidrico { CorpoHidricoId = idCorpoHidrico }, cancellationToken);
                 return Ok(coletas);
             }
             catch (InvalidOperationException ex)
@@ -123,11 +124,11 @@ namespace back_end.src.Controllers.Coleta
 
         [Authorize]
         [HttpGet("periodo/{corpoHidricoId}")]
-        public async Task<IActionResult> ObterPorPeriodo(int corpoHidricoId, [FromQuery] DateTime dataInicio, [FromQuery] DateTime dataFim)
+        public async Task<IActionResult> ObterPorPeriodo(int corpoHidricoId, [FromQuery] DateTime dataInicio, [FromQuery] DateTime dataFim, CancellationToken cancellationToken)
         {
             try
             {
-                var coletas = await mediator.Send(new QueryObterColetasPorPeriodo { CorpoHidricoId = corpoHidricoId, DataInicio = dataInicio, DataFim = dataFim });
+                var coletas = await mediator.Send(new QueryObterColetasPorPeriodo { CorpoHidricoId = corpoHidricoId, DataInicio = dataInicio, DataFim = dataFim }, cancellationToken);
                 return Ok(coletas);
             }
             catch (InvalidOperationException ex)
@@ -142,12 +143,12 @@ namespace back_end.src.Controllers.Coleta
 
         [Authorize]
         [HttpGet("data/{data}")]
-        public async Task<IActionResult> ObterPorData(DateTime data)
+        public async Task<IActionResult> ObterPorData(DateTime data, CancellationToken cancellationToken)
         {
             try
             {
                 var idCorpoHidrico = User.Claims.FirstOrDefault(c => c.Type == "corpoHidricoId")?.Value;
-                var coletas = await mediator.Send(new QueryObterColetasPorData { Data = data });
+                var coletas = await mediator.Send(new QueryObterColetasPorData { Data = data }, cancellationToken);
                 return Ok(coletas);
             }
             catch (InvalidOperationException ex)
@@ -161,11 +162,11 @@ namespace back_end.src.Controllers.Coleta
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Atualizar(int id, [FromBody] ColetaInput input)
+        public async Task<IActionResult> Atualizar(int id, [FromBody] ColetaInput input, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandAtualizarColeta { Coleta = input.ToEntity(), ColetaId = id });
+                await mediator.Send(new CommandAtualizarColeta { Coleta = input.ToEntity(), ColetaId = id }, cancellationToken);
                 return Ok("Coleta atualizada com sucesso");
             }
             catch (InvalidOperationException ex)
@@ -179,11 +180,11 @@ namespace back_end.src.Controllers.Coleta
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Deletar(int id)
+        public async Task<IActionResult> Deletar(int id, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandDeletarColeta { Id = id });
+                await mediator.Send(new CommandDeletarColeta { Id = id }, cancellationToken);
                 return Ok("Coleta deletada com sucesso");
             }
             catch (InvalidOperationException ex)

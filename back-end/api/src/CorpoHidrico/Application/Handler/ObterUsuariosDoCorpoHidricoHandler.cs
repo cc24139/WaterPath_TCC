@@ -19,9 +19,9 @@ public class ObterUsuariosDoCorpoHidricoHandler
         CancellationToken cancellationToken
     )
     {
-        var usuariosIds = corpoHidricoRepository.ObterUsuariosDoCorpoHidrico(
-            request.CorpoHidricoId
+        return corpoHidricoRepository.ObterUsuariosDoCorpoHidrico(
+            request.CorpoHidricoId,
+            cancellationToken
         );
-        return Task.FromResult(usuariosIds);
     }
 }

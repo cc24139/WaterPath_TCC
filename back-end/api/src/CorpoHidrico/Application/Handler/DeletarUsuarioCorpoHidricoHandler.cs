@@ -14,10 +14,10 @@ namespace back_end.src.Application.Handler.CorpoHidrico
             this.corpoHidricoRepository = corpoHidricoRepository;
         }
 
-        public Task<Unit> Handle(CommandDeletarUsuario request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(CommandDeletarUsuario request, CancellationToken cancellationToken)
         {
-            corpoHidricoRepository.DeletarUsuario(request.CorpoHidricoId, request.UserId);
-            return Task.FromResult(Unit.Value);
+            await corpoHidricoRepository.DeletarUsuario(request.CorpoHidricoId, request.UserId, cancellationToken);
+            return Unit.Value;
         }
     }
 }

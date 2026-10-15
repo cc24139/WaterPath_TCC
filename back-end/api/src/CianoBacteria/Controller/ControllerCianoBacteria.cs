@@ -18,12 +18,13 @@ namespace back_end.src.Controllers.CianoBacteria
         }
 
         [HttpPost]
-        public async Task<IActionResult> Cadastrar([FromBody] CianoBacteriaEntity cianoBacteria)
+        public async Task<IActionResult> Cadastrar([FromBody] CianoBacteriaEntity cianoBacteria, CancellationToken cancellationToken)
         {
             try
             {
                 await mediator.Send(
-                    new CommandCadastrarCianoBacteria { CianoBacteria = cianoBacteria }
+                    new CommandCadastrarCianoBacteria { CianoBacteria = cianoBacteria },
+                    cancellationToken
                 );
                 return Created($"api/cianobacteria/{cianoBacteria.Id}", cianoBacteria);
             }
@@ -34,12 +35,13 @@ namespace back_end.src.Controllers.CianoBacteria
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id, CancellationToken cancellationToken)
         {
             try
             {
                 var cianoBacteria = await mediator.Send(
-                    new QueryObterCianoBacteriaPorId { Id = id }
+                    new QueryObterCianoBacteriaPorId { Id = id },
+                    cancellationToken
                 );
                 if (cianoBacteria == null)
                     return NotFound("Cianobactéria não encontrada");
@@ -52,11 +54,11 @@ namespace back_end.src.Controllers.CianoBacteria
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObterTodos()
+        public async Task<IActionResult> ObterTodos(CancellationToken cancellationToken)
         {
             try
             {
-                var cianoBacterias = await mediator.Send(new QueryObterTodasCianoBacterias());
+                var cianoBacterias = await mediator.Send(new QueryObterTodasCianoBacterias(), cancellationToken);
                 return Ok(cianoBacterias);
             }
             catch (ArgumentException ex)
@@ -68,13 +70,15 @@ namespace back_end.src.Controllers.CianoBacteria
         [HttpPut("{id}")]
         public async Task<IActionResult> Atualizar(
             int id,
-            [FromBody] CianoBacteriaEntity cianoBacteria
+            [FromBody] CianoBacteriaEntity cianoBacteria,
+            CancellationToken cancellationToken
         )
         {
             try
             {
                 await mediator.Send(
-                    new CommandAtualizarCianoBacteria { CianoBacteria = cianoBacteria }
+                    new CommandAtualizarCianoBacteria { CianoBacteria = cianoBacteria },
+                    cancellationToken
                 );
                 return Ok("Cianobactéria atualizada com sucesso");
             }
@@ -85,11 +89,11 @@ namespace back_end.src.Controllers.CianoBacteria
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Deletar(int id)
+        public async Task<IActionResult> Deletar(int id, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandDeletarCianoBacteria { Id = id });
+                await mediator.Send(new CommandDeletarCianoBacteria { Id = id }, cancellationToken);
                 return Ok("Cianobactéria deletada com sucesso");
             }
             catch (ArgumentException ex)

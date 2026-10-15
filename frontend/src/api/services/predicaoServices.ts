@@ -7,7 +7,8 @@ export const predicaoServices = {
     const body = new FormData();
     body.append("coletaId", String(coletaId));
     body.append("image", image);
-    body.append("data", JSON.stringify(sample));
+    // Contrato de domínio da API principal; o cliente não conhece o multipart do serviço interno de IA.
+    body.append("amostra", JSON.stringify(sample));
     return apiFetch(routes.predicoes, { method: "POST", body }, { redirectOnUnauthorized: false });
   },
 };

@@ -46,14 +46,19 @@ export function validateImage(file: Pick<File, "size" | "type">): string | undef
 
 export function buildAnalysisPayload(form: AddAnalysisFormState): { collection: ColetaCadastroDTO; sample: AmostraDTO } {
   if (Object.keys(validateAnalysis(form)).length) throw new Error("Revise os campos antes de salvar.");
-  const sample: AmostraDTO = {};
+  const sample: AmostraDTO = {
+    temperatura: parseDecimal(form.temperatura)!,
+    ph: parseDecimal(form.ph)!,
+    condutividade_eletrica: parseDecimal(form.condutividade_eletrica)!,
+    oxigenio_dissolvido: parseDecimal(form.oxigenio_dissolvido)!,
+  };
   const collection: ColetaCadastroDTO = {
     corpoHidricoId: Number(form.waterBody), dataHora: new Date(form.analysisDate).toISOString(), medicoes: [],
   };
   for (const field of indicatorFields) {
     const value = parseDecimal(form[field.name]);
     if (value === null) continue;
-    sample[field.name] = value;
+    if (!field.required) sample[field.name] = value;
     collection.medicoes.push({ codigoMedicao: field.measurementCode, valor: value, unidade: field.unit });
   }
   const metals = metalOptions.flatMap((metal) => {

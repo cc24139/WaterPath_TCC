@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Security.Claims;
 using back_end.src.Domain.Coleta;
 using back_end.src.Domain.CorpoHidrico;
 using back_end.src.IA;
@@ -37,6 +38,7 @@ public class PredicaoIATests : IAsyncLifetime
         db.CorposHidricos.Add(river);
         await db.SaveChangesAsync();
         var collection = new ColetaEntity { CorpoHidricoId = river.Id, DataHora = DateTimeOffset.UtcNow };
+        collection.RegistrarResponsavel(TestJwt.UserId, "Usuário de teste");
         db.Coletas.Add(collection);
         await db.SaveChangesAsync();
         coletaId = collection.Id;
@@ -58,6 +60,70 @@ public class PredicaoIATests : IAsyncLifetime
 
     private PredicaoIAService Service(Handler handler) => new(db,
         new IaClient(new HttpClient(handler) { BaseAddress = new Uri("http://ia.test/") }));
+
+    private ControllerIA Controller(Handler handler)
+    {
+        var controller = new ControllerIA(db, Service(handler), new PredicaoIAAuthorizationService(db));
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = TestJwt.Principal() },
+        };
+        return controller;
+    }
+
+    [Fact]
+    public async Task RotasDeIaExigemJwtEPermissaoSobreAColeta()
+    {
+        var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            { Content = new StringContent(ValidResponse()) }));
+        await using var app = await HttpHost(new IaClient(new HttpClient(handler)
+            { BaseAddress = new Uri("http://ia.test/") }));
+        var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
+        using var api = new HttpClient { BaseAddress = new Uri(address) };
+
+        static MultipartFormDataContent Form(int collectionId)
+        {
+            var form = new MultipartFormDataContent();
+            form.Add(new StringContent(collectionId.ToString()), "coletaId");
+            form.Add(new StringContent(Sample), "amostra");
+            form.Add(new ByteArrayContent(Jpeg), "image", "rio.jpg");
+            return form;
+        }
+
+        using (var unauthenticated = Form(coletaId))
+            Assert.Equal(HttpStatusCode.Unauthorized,
+                (await api.PostAsync("/api/ia/predicoes", unauthenticated)).StatusCode);
+
+        api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
+            "Bearer", TestJwt.Token(999));
+        using (var forbidden = Form(coletaId))
+            Assert.Equal(HttpStatusCode.Forbidden,
+                (await api.PostAsync("/api/ia/predicoes", forbidden)).StatusCode);
+
+        Assert.Equal(0, handler.Calls);
+    }
+
+    [Fact]
+    public void ContratoPublicoNaoExpoeEntradaContextoOuVersoesDosModelos()
+    {
+        var prediction = new back_end.src.IA.Domain.PredicaoIAEntity
+        {
+            Id = 7, ColetaId = coletaId, CorpoHidricoId = 3, DataColeta = DateTime.UtcNow,
+            CriadaEm = DateTime.UtcNow, Tipo = "integrada", ResultadoJson = ValidResponse(),
+        };
+        var json = JsonSerializer.SerializeToElement(PredicaoIAPublicContract.Criar(prediction),
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        var result = json.GetProperty("resultado");
+
+        Assert.True(result.TryGetProperty("riskLevel", out _));
+        Assert.True(result.TryGetProperty("metalPredictions", out _));
+        Assert.False(result.TryGetProperty("visionModelVersion", out _));
+        Assert.False(result.TryGetProperty("metalModelVersion", out _));
+        Assert.False(result.TryGetProperty("riskInputs", out _));
+        Assert.False(result.TryGetProperty("history", out _));
+        Assert.False(result.TryGetProperty("collectionContext", out _));
+        Assert.False(json.TryGetProperty("entrada", out _));
+    }
 
     [Theory]
     [InlineData("{}")]
@@ -157,7 +223,7 @@ public class PredicaoIATests : IAsyncLifetime
             Assert.Equal("[]", await parts.Single(p => p.Headers.ContentDisposition!.Name == "history").ReadAsStringAsync());
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(ValidResponse()) };
         });
-        var controller = new ControllerIA(db, Service(handler));
+        var controller = Controller(handler);
         var response = Assert.IsType<CreatedAtActionResult>(await controller.Predizer(
             new PredicaoIAInput { ColetaId = coletaId, Image = Upload(), Data = Sample }, default));
         Assert.Equal(201, response.StatusCode);
@@ -194,7 +260,8 @@ public class PredicaoIATests : IAsyncLifetime
     [InlineData(400, 400)]
     [InlineData(413, 413)]
     [InlineData(422, 422)]
-    [InlineData(503, 502)]
+    [InlineData(503, 503)]
+    [InlineData(429, 503)]
     public async Task FalhaDaIaNaoDeixaRegistroParcial(int upstream, int expected)
     {
         var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage((HttpStatusCode)upstream)));
@@ -204,7 +271,7 @@ public class PredicaoIATests : IAsyncLifetime
     }
 
     [Theory]
-    [InlineData(false, 502)]
+    [InlineData(false, 503)]
     [InlineData(true, 504)]
     public async Task ConexaoOuTimeoutNaoGravam(bool timeout, int expected)
     {
@@ -256,6 +323,7 @@ public class PredicaoIATests : IAsyncLifetime
         await using var app = await HttpHost(ia);
         var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
         using var api = new HttpClient { BaseAddress = new Uri(address) };
+        api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TestJwt.Token());
         using var form = new MultipartFormDataContent();
         form.Add(new StringContent(coletaId.ToString()), "coletaId");
         form.Add(new StringContent(Sample), "data");
@@ -302,11 +370,14 @@ public class PredicaoIATests : IAsyncLifetime
         builder.Services.AddSingleton(db);
         builder.Services.AddSingleton(ia);
         builder.Services.AddScoped<PredicaoIAService>();
+        builder.Services.AddScoped<PredicaoIAAuthorizationService>();
         builder.Services.AddScoped<back_end.src.Domain.CorpoHidrico.ICorpoHidricoRepository, back_end.src.Infrastructure.Repository.CorpoHidricoRepository>();
         builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ControllerIA).Assembly));
         TestJwt.Configure(builder.Services);
         builder.Services.AddControllers().AddApplicationPart(typeof(ControllerIA).Assembly);
         var app = builder.Build();
+        app.UseAuthentication();
+        app.UseAuthorization();
         app.MapControllers();
         await app.StartAsync();
         return app;
@@ -378,6 +449,7 @@ public class PredicaoIATests : IAsyncLifetime
         })) { BaseAddress = new Uri("http://ia.test/") }));
         var address = host.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
         using var api = new HttpClient { BaseAddress = new Uri(address) };
+        api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TestJwt.Token());
         using var form = new MultipartFormDataContent();
         form.Add(new StringContent(coletaId.ToString()), "coletaId");
         form.Add(new ByteArrayContent(Jpeg), "image", "rio.jpg");
@@ -503,6 +575,7 @@ public class PredicaoIATests : IAsyncLifetime
         await using var app = await HttpHost(new IaClient(new HttpClient(handler) { BaseAddress = new Uri("http://ia.test/") }));
         var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
         using var api = new HttpClient { BaseAddress = new Uri(address) };
+        api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TestJwt.Token());
         using var form = new MultipartFormDataContent();
         form.Add(new ByteArrayContent(Jpeg), "image", "lago.jpg");
         var response = await api.PostAsync($"/api/ia/predicoes/corpo-hidrico/{current.CorpoHidricoId}", form);
@@ -554,7 +627,7 @@ public class PredicaoIATests : IAsyncLifetime
     [InlineData("contexto-alterado", 502)]
     [InlineData("metais-invalidos", 502)]
     [InlineData("invalida", 502)]
-    [InlineData("indisponivel", 502)]
+    [InlineData("indisponivel", 503)]
     [InlineData("timeout", 504)]
     [InlineData("salvar", 500)]
     public async Task AnaliseLagoHistoricoVazioEFalhasSemConclusaoParcial(string situation, int status)
@@ -579,17 +652,20 @@ public class PredicaoIATests : IAsyncLifetime
             }
             return response;
         });
-        var controller = new ControllerIA(db, Service(handler));
-        var response = await controller.AnalisarLago(current.CorpoHidricoId, new() { Image = Upload() }, default);
-        Assert.Equal(status, Assert.IsAssignableFrom<ObjectResult>(response).StatusCode);
+        var controller = Controller(handler);
         if (situation == "sucesso")
         {
+            var response = await controller.AnalisarLago(current.CorpoHidricoId, new() { Image = Upload() }, default);
+            Assert.Equal(status, Assert.IsAssignableFrom<ObjectResult>(response).StatusCode);
             var saved = await db.PredicoesIA.SingleAsync();
             var result = JsonSerializer.Deserialize<JsonElement>(saved.ResultadoJson!);
             Assert.Empty(result.GetProperty("collectionContext").GetProperty("history").EnumerateArray());
         }
         else
         {
+            var error = await Assert.ThrowsAsync<IaException>(() =>
+                controller.AnalisarLago(current.CorpoHidricoId, new() { Image = Upload() }, default));
+            Assert.Equal(status, error.StatusCode);
             Assert.Empty(await db.PredicoesIA.ToListAsync());
             Assert.DoesNotContain(db.ChangeTracker.Entries<back_end.src.IA.Domain.PredicaoIAEntity>(), e => e.State == EntityState.Added);
             await db.SaveChangesAsync();
@@ -610,6 +686,7 @@ public class PredicaoIATests : IAsyncLifetime
         await using var app = await HttpHost(new IaClient(http));
         var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
         using var api = new HttpClient { BaseAddress = new Uri(address) };
+        api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TestJwt.Token());
         using var form = new MultipartFormDataContent();
         form.Add(new ByteArrayContent(bytes), "image", "lago.jpg");
         var response = await api.PostAsync($"/api/ia/predicoes/corpo-hidrico/{current.CorpoHidricoId}", form);

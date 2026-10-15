@@ -19,11 +19,11 @@ namespace back_end.src.Controllers.MetalPesado
         }
 
         [HttpPost]
-        public async Task<IActionResult> Cadastrar([FromBody] MetalPesadoEntity metalPesado)
+        public async Task<IActionResult> Cadastrar([FromBody] MetalPesadoEntity metalPesado, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandCadastrarMetalPesado { MetalPesado = metalPesado });
+                await mediator.Send(new CommandCadastrarMetalPesado { MetalPesado = metalPesado }, cancellationToken);
                 return Created($"api/metalpesado/{metalPesado.Id}", metalPesado);
             }
             catch (ArgumentException ex)
@@ -33,11 +33,11 @@ namespace back_end.src.Controllers.MetalPesado
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var metalPesado = await mediator.Send(new QueryObterMetalPesadoPorId { Id = id });
+                var metalPesado = await mediator.Send(new QueryObterMetalPesadoPorId { Id = id }, cancellationToken);
                 if (metalPesado == null)
                     return NotFound("Metal pesado não encontrado");
                 return Ok(metalPesado);
@@ -49,11 +49,11 @@ namespace back_end.src.Controllers.MetalPesado
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObterTodos()
+        public async Task<IActionResult> ObterTodos(CancellationToken cancellationToken)
         {
             try
             {
-                var metaisPesados = await mediator.Send(new QueryObterTodosMetaisPesados());
+                var metaisPesados = await mediator.Send(new QueryObterTodosMetaisPesados(), cancellationToken);
                 return Ok(metaisPesados);
             }
             catch (ArgumentException ex)
@@ -63,11 +63,11 @@ namespace back_end.src.Controllers.MetalPesado
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Atualizar(int id, [FromBody] MetalPesadoEntity metalPesado)
+        public async Task<IActionResult> Atualizar(int id, [FromBody] MetalPesadoEntity metalPesado, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandAtualizarMetalPesado { MetalPesado = metalPesado });
+                await mediator.Send(new CommandAtualizarMetalPesado { MetalPesado = metalPesado }, cancellationToken);
                 return Ok("Metal pesado atualizado com sucesso");
             }
             catch (ArgumentException ex)
@@ -77,11 +77,11 @@ namespace back_end.src.Controllers.MetalPesado
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Deletar(int id)
+        public async Task<IActionResult> Deletar(int id, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandDeletarMetalPesado { Id = id });
+                await mediator.Send(new CommandDeletarMetalPesado { Id = id }, cancellationToken);
                 return Ok("Metal pesado deletado com sucesso");
             }
             catch (ArgumentException ex)

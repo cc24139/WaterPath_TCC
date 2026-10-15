@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using back_end.src.Domain.Imagem;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace back_end.src.Infrastructure.Repository
 {
@@ -15,58 +16,59 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
-        public void Atualizar(ImagemEntity imagem)
+        public async Task Atualizar(ImagemEntity imagem, CancellationToken cancellationToken = default)
         {
-            var entityToUpdate = context.Imagens.Find(imagem.Id);
+            var entityToUpdate = await context.Imagens.FindAsync([imagem.Id], cancellationToken);
             if (entityToUpdate == null)
             {
                 throw new ArgumentException("Imagem não encontrada");
             }
             context.Imagens.Update(entityToUpdate);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Cadastrar(ImagemEntity imagem)
+        public async Task Cadastrar(ImagemEntity imagem, CancellationToken cancellationToken = default)
         {
-            context.Imagens.Add(imagem);
-            context.SaveChanges();
+            await context.Imagens.AddAsync(imagem, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Deletar(int id)
+        public async Task Deletar(int id, CancellationToken cancellationToken = default)
         {
-            var entityToDelete = context.Imagens.Find(id);
+            var entityToDelete = await context.Imagens.FindAsync([id], cancellationToken);
             if (entityToDelete == null)
             {
                 throw new ArgumentException("Imagem não encontrada");
             }
             context.Imagens.Remove(entityToDelete);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public List<ImagemEntity> ObterTodos()
+        public Task<List<ImagemEntity>> ObterTodos(CancellationToken cancellationToken = default)
         {
-            return context.Imagens.ToList();
+            return context.Imagens.ToListAsync(cancellationToken);
         }
 
-        public ImagemEntity ObterPorId(int id)
+        public async Task<ImagemEntity?> ObterPorId(int id, CancellationToken cancellationToken = default)
         {
-            return context.Imagens.Find(id);
+            return await context.Imagens.FindAsync([id], cancellationToken);
         }
 
-        public virtual List<ImagemEntity> ObterImagensPorCorpoHidrico(int corpoHidricoId)
+        public virtual Task<List<ImagemEntity>> ObterImagensPorCorpoHidrico(int corpoHidricoId, CancellationToken cancellationToken = default)
         {
-            return context.Imagens.Where(i => i.CorpoHidrico.Id == corpoHidricoId).ToList();
+            return context.Imagens.Where(i => i.CorpoHidrico.Id == corpoHidricoId).ToListAsync(cancellationToken);
         }
 
-        public virtual List<ImagemEntity> ObterImagensPorColeta(int coletaId)
+        public virtual Task<List<ImagemEntity>> ObterImagensPorColeta(int coletaId, CancellationToken cancellationToken = default)
         {
-            return context.Imagens.Where(i => i.Coleta.Id == coletaId).ToList();
+            return context.Imagens.Where(i => i.Coleta.Id == coletaId).ToListAsync(cancellationToken);
         }
 
-        public virtual List<ImagemEntity> ObterImagensPorPeriodo(
+        public virtual Task<List<ImagemEntity>> ObterImagensPorPeriodo(
             int corpoHidricoId,
             string dataInicio,
-            string dataFim
+            string dataFim,
+            CancellationToken cancellationToken = default
         )
         {
             return context
@@ -75,7 +77,7 @@ namespace back_end.src.Infrastructure.Repository
                     && i.DataUpload >= DateTime.Parse(dataInicio)
                     && i.DataUpload <= DateTime.Parse(dataFim)
                 )
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using back_end.src.Domain.MetalPesado;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace back_end.src.Infrastructure.Repository
 {
@@ -15,9 +16,9 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
-        public void Atualizar(MetalPesadoEntity metalPesado)
+        public async Task Atualizar(MetalPesadoEntity metalPesado, CancellationToken cancellationToken = default)
         {
-            var entityToUpdate = context.MetaisPesados.Find(metalPesado.Id);
+            var entityToUpdate = await context.MetaisPesados.FindAsync([metalPesado.Id], cancellationToken);
             if (entityToUpdate == null)
             {
                 throw new ArgumentException("Metal pesado não encontrado");
@@ -29,34 +30,34 @@ namespace back_end.src.Infrastructure.Repository
                 metalPesado.Coleta
             );
             context.MetaisPesados.Update(entityToUpdate);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Cadastrar(MetalPesadoEntity metalPesado)
+        public async Task Cadastrar(MetalPesadoEntity metalPesado, CancellationToken cancellationToken = default)
         {
-            context.MetaisPesados.Add(metalPesado);
-            context.SaveChanges();
+            await context.MetaisPesados.AddAsync(metalPesado, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Deletar(int id)
+        public async Task Deletar(int id, CancellationToken cancellationToken = default)
         {
-            var entityToDelete = context.MetaisPesados.Find(id);
+            var entityToDelete = await context.MetaisPesados.FindAsync([id], cancellationToken);
             if (entityToDelete == null)
             {
                 throw new ArgumentException("Metal pesado não encontrado");
             }
             context.MetaisPesados.Remove(entityToDelete);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public List<MetalPesadoEntity> ObterTodos()
+        public Task<List<MetalPesadoEntity>> ObterTodos(CancellationToken cancellationToken = default)
         {
-            return context.MetaisPesados.ToList();
+            return context.MetaisPesados.ToListAsync(cancellationToken);
         }
 
-        public MetalPesadoEntity ObterPorId(int id)
+        public async Task<MetalPesadoEntity?> ObterPorId(int id, CancellationToken cancellationToken = default)
         {
-            return context.MetaisPesados.Find(id);
+            return await context.MetaisPesados.FindAsync([id], cancellationToken);
         }
     }
 }

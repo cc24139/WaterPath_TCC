@@ -16,45 +16,45 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
-        public void Atualizar(QualidadeEntity qualidade)
+        public async Task Atualizar(QualidadeEntity qualidade, CancellationToken cancellationToken = default)
         {
-            var entityToUpdate = context.Qualidades.Find(qualidade.Id);
+            var entityToUpdate = await context.Qualidades.FindAsync([qualidade.Id], cancellationToken);
             if (entityToUpdate == null)
             {
                 throw new ArgumentException("Qualidade não encontrada");
             }
             context.Qualidades.Update(entityToUpdate);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Cadastrar(QualidadeEntity qualidade)
+        public async Task Cadastrar(QualidadeEntity qualidade, CancellationToken cancellationToken = default)
         {
-            context.Qualidades.Add(qualidade);
-            context.SaveChanges();
+            await context.Qualidades.AddAsync(qualidade, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Deletar(int id)
+        public async Task Deletar(int id, CancellationToken cancellationToken = default)
         {
-            var entityToDelete = context.Qualidades.Find(id);
+            var entityToDelete = await context.Qualidades.FindAsync([id], cancellationToken);
             if (entityToDelete == null)
             {
                 throw new ArgumentException("Qualidade não encontrada");
             }
             context.Qualidades.Remove(entityToDelete);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public List<QualidadeEntity> ObterTodos()
+        public Task<List<QualidadeEntity>> ObterTodos(CancellationToken cancellationToken = default)
         {
             return context.Qualidades.AsNoTracking()
                 .Include(q => q.CorpoHidrico)
                 .Include(q => q.QualidadeFutura)
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
 
-        public QualidadeEntity ObterPorId(int id)
+        public Task<QualidadeEntity?> ObterPorId(int id, CancellationToken cancellationToken = default)
         {
-            return context.Qualidades.FirstOrDefault(q => q.Id == id);
+            return context.Qualidades.FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
         }
     }
 }

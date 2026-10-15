@@ -18,7 +18,7 @@ namespace back_end.src.Application.Handler.CorpoHidrico
             this.corpoHidricoRepository = corpoHidricoRepository;
         }
 
-        public Task<Unit> Handle(
+        public async Task<Unit> Handle(
             CommandAtualizarCorpoHidrico request,
             CancellationToken cancellationToken
         )
@@ -30,8 +30,8 @@ namespace back_end.src.Application.Handler.CorpoHidrico
                 request.EhPrivado
             );
 
-            corpoHidricoRepository.Atualizar(corpoHidrico);
-            return Task.FromResult(Unit.Value);
+            await corpoHidricoRepository.Atualizar(corpoHidrico, cancellationToken);
+            return Unit.Value;
         }
     }
 }

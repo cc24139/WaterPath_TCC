@@ -16,14 +16,15 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
-        public virtual void Atualizar(ColetaEntity coleta, int idColeta)
+        public virtual async Task Atualizar(ColetaEntity coleta, int idColeta, CancellationToken cancellationToken = default)
         {
-            var entityToUpdate = context.Coletas.Include(c => c.Medicoes).SingleOrDefault(c => c.Id == idColeta);
+            var entityToUpdate = await context.Coletas.Include(c => c.Medicoes)
+                .SingleOrDefaultAsync(c => c.Id == idColeta, cancellationToken);
             if (entityToUpdate == null)
             {
                 throw new ArgumentException("Coleta não encontrada");
             }
-            ValidarCorpoHidrico(coleta.CorpoHidricoId);
+            await ValidarCorpoHidrico(coleta.CorpoHidricoId, cancellationToken);
             entityToUpdate.CorpoHidricoId = coleta.CorpoHidricoId;
             entityToUpdate.DataHora = coleta.DataHora.ToUniversalTime();
             entityToUpdate.Latitude = coleta.Latitude;
@@ -39,51 +40,51 @@ namespace back_end.src.Infrastructure.Repository
                     existente.Atualizar(medicao.codigoMedicao, medicao.valor, medicao.unidade,
                         medicao.censurado, medicao.limite);
             }
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Cadastrar(ColetaEntity coleta, int idCorpoHidrico)
+        public async Task Cadastrar(ColetaEntity coleta, int idCorpoHidrico, CancellationToken cancellationToken = default)
         {
-            ValidarCorpoHidrico(idCorpoHidrico);
+            await ValidarCorpoHidrico(idCorpoHidrico, cancellationToken);
             coleta.CorpoHidricoId = idCorpoHidrico;
             coleta.DataHora = coleta.DataHora.ToUniversalTime();
-            context.Coletas.Add(coleta);
-            context.SaveChanges();
+            await context.Coletas.AddAsync(coleta, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void CadastrarListaColetas(List<ColetaEntity> coletas)
+        public async Task CadastrarListaColetas(List<ColetaEntity> coletas, CancellationToken cancellationToken = default)
         {
             foreach (var coleta in coletas)
             {
-                ValidarCorpoHidrico(coleta.CorpoHidricoId);
+                await ValidarCorpoHidrico(coleta.CorpoHidricoId, cancellationToken);
                 coleta.DataHora = coleta.DataHora.ToUniversalTime();
             }
-            context.Coletas.AddRange(coletas);
-            context.SaveChanges();
+            await context.Coletas.AddRangeAsync(coletas, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Deletar(int id)
+        public async Task Deletar(int id, CancellationToken cancellationToken = default)
         {
-            var entityToDelete = context.Coletas.Find(id);
+            var entityToDelete = await context.Coletas.FindAsync([id], cancellationToken);
             if (entityToDelete == null)
             {
                 throw new ArgumentException("Coleta não encontrada");
             }
             context.Coletas.Remove(entityToDelete);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public List<ColetaEntity> ObterPorCorpoHidrico(int corpoHidricoId)
+        public Task<List<ColetaEntity>> ObterPorCorpoHidrico(int corpoHidricoId, CancellationToken cancellationToken = default)
         {
-            return Consultar().Where(c => c.CorpoHidricoId == corpoHidricoId).ToList();
+            return Consultar().Where(c => c.CorpoHidricoId == corpoHidricoId).ToListAsync(cancellationToken);
         }
 
-        public ColetaEntity? ObterPorId(int id)
+        public Task<ColetaEntity?> ObterPorId(int id, CancellationToken cancellationToken = default)
         {
-            return Consultar().SingleOrDefault(c => c.Id == id);
+            return Consultar().SingleOrDefaultAsync(c => c.Id == id, cancellationToken);
         }
 
-        public List<ColetaEntity> ObterPorCorpoHidricoEPeriodo(int corpoHidricoId, string dataInicio, string dataFim)
+        public Task<List<ColetaEntity>> ObterPorCorpoHidricoEPeriodo(int corpoHidricoId, string dataInicio, string dataFim, CancellationToken cancellationToken = default)
         {
             return Consultar()
                 .Where(c =>
@@ -91,22 +92,23 @@ namespace back_end.src.Infrastructure.Repository
                     && c.DataHora >= DateTimeOffset.Parse(dataInicio).ToUniversalTime()
                     && c.DataHora <= DateTimeOffset.Parse(dataFim).ToUniversalTime()
                 )
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
 
-        public List<ColetaEntity> ObterPorData(DateTime data)
+        public Task<List<ColetaEntity>> ObterPorData(DateTime data, CancellationToken cancellationToken = default)
         {
             var dataInicio = new DateTimeOffset(data.Date, TimeSpan.Zero);
             var dataFim = new DateTimeOffset(data.Date.AddDays(1).AddTicks(-1), TimeSpan.Zero);
             return Consultar()
                 .Where(c => c.DataHora >= dataInicio && c.DataHora <= dataFim)
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
         
-        public List<ColetaEntity> ObterPorPeriodo(
+        public Task<List<ColetaEntity>> ObterPorPeriodo(
             int corpoHidricoId,
             string dataInicio,
-            string dataFim
+            string dataFim,
+            CancellationToken cancellationToken = default
         )
         {
             return Consultar()
@@ -115,7 +117,7 @@ namespace back_end.src.Infrastructure.Repository
                     && c.DataHora >= DateTimeOffset.Parse(dataInicio).ToUniversalTime()
                     && c.DataHora<= DateTimeOffset.Parse(dataFim).ToUniversalTime()
                 )
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
 
         private IQueryable<ColetaEntity> Consultar() => context.Coletas
@@ -124,15 +126,15 @@ namespace back_end.src.Infrastructure.Repository
             .Include(c => c.MetaisPesados)
             .AsSplitQuery();
 
-        private void ValidarCorpoHidrico(int id)
+        private async Task ValidarCorpoHidrico(int id, CancellationToken cancellationToken)
         {
-            if (id <= 0 || !context.CorposHidricos.Any(c => c.Id == id))
+            if (id <= 0 || !await context.CorposHidricos.AnyAsync(c => c.Id == id, cancellationToken))
                 throw new ArgumentException("Corpo Hídrico não encontrado");
         }
 
-        public List<ColetaEntity> ObterTodos()
+        public Task<List<ColetaEntity>> ObterTodos(CancellationToken cancellationToken = default)
         {
-            return Consultar().ToList();
+            return Consultar().ToListAsync(cancellationToken);
         }
     }
 }

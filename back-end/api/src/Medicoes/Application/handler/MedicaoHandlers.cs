@@ -13,13 +13,13 @@ public class CreateMedicaoHandler : IRequestHandler<CreateMedicaoCommand, Unit>
         this.medicoesRepository = medicoesRepository;
     }
 
-    public Task<Unit> Handle(CreateMedicaoCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CreateMedicaoCommand request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         MedicaoHandlerSupport.ValidarIds(request.ColetaId);
         var medicao = MedicaoHandlerSupport.CriarMedicao(request.medicao);
-        medicoesRepository.Cadastrar(medicao, request.ColetaId);
-        return Task.FromResult(Unit.Value);
+        await medicoesRepository.Cadastrar(medicao, request.ColetaId, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -32,13 +32,13 @@ public class UpdateMedicaoHandler : IRequestHandler<UpdateMedicaoCommand, Unit>
         this.medicoesRepository = medicoesRepository;
     }
 
-    public Task<Unit> Handle(UpdateMedicaoCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(UpdateMedicaoCommand request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         MedicaoHandlerSupport.ValidarIds(request.ColetaId, request.MedicaoId);
         var medicao = MedicaoHandlerSupport.CriarMedicao(request.Medicao);
-        medicoesRepository.Atualizar(medicao, request.ColetaId, request.MedicaoId);
-        return Task.FromResult(Unit.Value);
+        await medicoesRepository.Atualizar(medicao, request.ColetaId, request.MedicaoId, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -51,12 +51,12 @@ public class DeleteMedicaoHandler : IRequestHandler<DeleteMedicaoCommand, Unit>
         this.medicoesRepository = medicoesRepository;
     }
 
-    public Task<Unit> Handle(DeleteMedicaoCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(DeleteMedicaoCommand request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         MedicaoHandlerSupport.ValidarIds(request.ColetaId, request.MedicaoId);
-        medicoesRepository.Deletar(request.ColetaId, request.MedicaoId);
-        return Task.FromResult(Unit.Value);
+        await medicoesRepository.Deletar(request.ColetaId, request.MedicaoId, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -73,7 +73,7 @@ public class ObterMedicaoPorIdHandler : IRequestHandler<QueryObterMedicaoPorId, 
     {
         cancellationToken.ThrowIfCancellationRequested();
         MedicaoHandlerSupport.ValidarIds(request.ColetaId, request.MedicaoId);
-        return Task.FromResult(medicoesRepository.ObterPorId(request.ColetaId, request.MedicaoId));
+        return medicoesRepository.ObterPorId(request.ColetaId, request.MedicaoId, cancellationToken);
     }
 }
 
@@ -90,7 +90,7 @@ public class ObterMedicoesPorColetaHandler : IRequestHandler<QueryObterMedicoesP
     {
         cancellationToken.ThrowIfCancellationRequested();
         MedicaoHandlerSupport.ValidarIds(request.ColetaId);
-        return Task.FromResult(medicoesRepository.ObterPorColeta(request.ColetaId));
+        return medicoesRepository.ObterPorColeta(request.ColetaId, cancellationToken);
     }
 }
 
@@ -106,7 +106,7 @@ public class ObterTodasMedicoesHandler : IRequestHandler<QueryObterTodasMedicoes
     public Task<List<MedicoesEntity>> Handle(QueryObterTodasMedicoes request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(medicoesRepository.ObterTodos());
+        return medicoesRepository.ObterTodos(cancellationToken);
     }
 }
 

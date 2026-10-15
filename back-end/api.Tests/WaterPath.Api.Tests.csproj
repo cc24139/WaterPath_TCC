@@ -14,4 +14,8 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" PrivateAssets="all" />
     <ProjectReference Include="../api/back-end.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="../contracts/ia/v1/openapi.json" Link="Contracts/ia/v1/openapi.json"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

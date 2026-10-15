@@ -19,7 +19,6 @@ public class ObterColetasDoCorpoHidricoHandler
         CancellationToken cancellationToken
     )
     {
-        var coletasIds = corpoHidricoRepository.ObterColetasDoCorpoHidrico(request.CorpoHidricoId);
-        return Task.FromResult(coletasIds);
+        return corpoHidricoRepository.ObterColetasDoCorpoHidrico(request.CorpoHidricoId, cancellationToken);
     }
 }

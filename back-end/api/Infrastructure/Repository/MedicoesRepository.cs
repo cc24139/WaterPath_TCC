@@ -14,75 +14,75 @@ public class MedicoesRepository : IMedicoesRepository
         this.context = context;
     }
 
-    public void Cadastrar(MedicoesEntity medicao, int coletaId)
+    public async Task Cadastrar(MedicoesEntity medicao, int coletaId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(medicao);
-        if (!context.Coletas.Any(c => c.Id == coletaId))
+        if (!await context.Coletas.AnyAsync(c => c.Id == coletaId, cancellationToken))
             throw new KeyNotFoundException("Coleta não encontrada.");
-        ValidarDuplicidade(coletaId, medicao.codigoMedicao);
+        await ValidarDuplicidade(coletaId, medicao.codigoMedicao, cancellationToken: cancellationToken);
         medicao.VincularColeta(coletaId);
-        context.Medicoes.Add(medicao);
-        Salvar();
+        await context.Medicoes.AddAsync(medicao, cancellationToken);
+        await Salvar(cancellationToken);
     }
 
-    public void Atualizar(MedicoesEntity medicao, int coletaId, int medicaoId)
+    public async Task Atualizar(MedicoesEntity medicao, int coletaId, int medicaoId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(medicao);
-        var existente = Encontrar(coletaId, medicaoId);
-        ValidarDuplicidade(coletaId, medicao.codigoMedicao, medicaoId);
+        var existente = await Encontrar(coletaId, medicaoId, cancellationToken);
+        await ValidarDuplicidade(coletaId, medicao.codigoMedicao, medicaoId, cancellationToken);
         existente.Atualizar(medicao.codigoMedicao, medicao.valor, medicao.unidade,
             medicao.censurado, medicao.limite);
-        Salvar();
+        await Salvar(cancellationToken);
     }
 
-    public void Deletar(int coletaId, int medicaoId)
+    public async Task Deletar(int coletaId, int medicaoId, CancellationToken cancellationToken = default)
     {
-        context.Medicoes.Remove(Encontrar(coletaId, medicaoId));
-        context.SaveChanges();
+        context.Medicoes.Remove(await Encontrar(coletaId, medicaoId, cancellationToken));
+        await context.SaveChangesAsync(cancellationToken);
     }
 
-    public MedicoesEntity? ObterPorId(int coletaId, int medicaoId) =>
-        context.Medicoes.AsNoTracking().SingleOrDefault(m => m.ColetaId == coletaId && m.Id == medicaoId);
+    public Task<MedicoesEntity?> ObterPorId(int coletaId, int medicaoId, CancellationToken cancellationToken = default) =>
+        context.Medicoes.AsNoTracking().SingleOrDefaultAsync(m => m.ColetaId == coletaId && m.Id == medicaoId, cancellationToken);
 
-    public List<MedicoesEntity> ObterPorColeta(int coletaId) =>
-        context.Medicoes.AsNoTracking().Where(m => m.ColetaId == coletaId).OrderBy(m => m.Id).ToList();
+    public Task<List<MedicoesEntity>> ObterPorColeta(int coletaId, CancellationToken cancellationToken = default) =>
+        context.Medicoes.AsNoTracking().Where(m => m.ColetaId == coletaId).OrderBy(m => m.Id).ToListAsync(cancellationToken);
 
-    public List<MedicoesEntity> ObterTodos() =>
-        context.Medicoes.AsNoTracking().OrderBy(m => m.Id).ToList();
+    public Task<List<MedicoesEntity>> ObterTodos(CancellationToken cancellationToken = default) =>
+        context.Medicoes.AsNoTracking().OrderBy(m => m.Id).ToListAsync(cancellationToken);
     
-    public List<MedicoesEntity> ObterPorCodigo(int coletaId, Medicao codigo) =>
-        context.Medicoes.AsNoTracking().Where(m => m.ColetaId == coletaId && m.codigoMedicao == codigo).ToList();
+    public Task<List<MedicoesEntity>> ObterPorCodigo(int coletaId, Medicao codigo, CancellationToken cancellationToken = default) =>
+        context.Medicoes.AsNoTracking().Where(m => m.ColetaId == coletaId && m.codigoMedicao == codigo).ToListAsync(cancellationToken);
     
-    public List<MedicoesEntity> ObterPorPeriodo(int coletaId, DateTime dataInicio, DateTime dataFim) =>
+    public Task<List<MedicoesEntity>> ObterPorPeriodo(int coletaId, DateTime dataInicio, DateTime dataFim, CancellationToken cancellationToken = default) =>
         context.Medicoes.AsNoTracking()
             .Where(m => m.ColetaId == coletaId && m.Coleta.DataHora >= dataInicio && m.Coleta.DataHora <= dataFim)
             .OrderBy(m => m.Coleta.DataHora)
-            .ToList();
+            .ToListAsync(cancellationToken);
     
-    public List<MedicoesEntity> ObterPorCodigoEPeriodo(int coletaId, Medicao codigo, DateTime dataInicio, DateTime dataFim) =>
+    public Task<List<MedicoesEntity>> ObterPorCodigoEPeriodo(int coletaId, Medicao codigo, DateTime dataInicio, DateTime dataFim, CancellationToken cancellationToken = default) =>
         context.Medicoes.AsNoTracking()
             .Where(m => m.ColetaId == coletaId && m.codigoMedicao == codigo && m.Coleta.DataHora >= dataInicio && m.Coleta.DataHora <= dataFim)
             .OrderBy(m => m.Coleta.DataHora)
-            .ToList();
+            .ToListAsync(cancellationToken);
     
     
 
-    private MedicoesEntity Encontrar(int coletaId, int medicaoId) =>
-        context.Medicoes.SingleOrDefault(m => m.ColetaId == coletaId && m.Id == medicaoId)
+    private async Task<MedicoesEntity> Encontrar(int coletaId, int medicaoId, CancellationToken cancellationToken) =>
+        await context.Medicoes.SingleOrDefaultAsync(m => m.ColetaId == coletaId && m.Id == medicaoId, cancellationToken)
         ?? throw new KeyNotFoundException("Medição não encontrada para essa coleta.");
 
-    private void ValidarDuplicidade(int coletaId, Medicao codigo, int? medicaoId = null)
+    private async Task ValidarDuplicidade(int coletaId, Medicao codigo, int? medicaoId = null, CancellationToken cancellationToken = default)
     {
-        if (context.Medicoes.Any(m => m.ColetaId == coletaId && m.codigoMedicao == codigo
-            && (!medicaoId.HasValue || m.Id != medicaoId.Value)))
+        if (await context.Medicoes.AnyAsync(m => m.ColetaId == coletaId && m.codigoMedicao == codigo
+            && (!medicaoId.HasValue || m.Id != medicaoId.Value), cancellationToken))
             throw new InvalidOperationException("Já existe uma medição desse tipo na coleta.");
     }
 
-    private void Salvar()
+    private async Task Salvar(CancellationToken cancellationToken)
     {
         try
         {
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException
         {

@@ -14,10 +14,10 @@ public class CadastrarColetaHandler : IRequestHandler<CommandCadastrarColeta, Un
         this.coletaRepository = coletaRepository;
     }
 
-    public Task<Unit> Handle(CommandCadastrarColeta request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CommandCadastrarColeta request, CancellationToken cancellationToken)
     {
-        coletaRepository.Cadastrar(request.Coleta, request.CorpoHidricoId);
-        return Task.FromResult(Unit.Value);
+        await coletaRepository.Cadastrar(request.Coleta, request.CorpoHidricoId, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -30,10 +30,10 @@ public class AtualizarColetaHandler : IRequestHandler<CommandAtualizarColeta, Un
         this.coletaRepository = coletaRepository;
     }
 
-    public Task<Unit> Handle(CommandAtualizarColeta request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CommandAtualizarColeta request, CancellationToken cancellationToken)
     {
-        coletaRepository.Atualizar(request.Coleta, request.ColetaId);
-        return Task.FromResult(Unit.Value);
+        await coletaRepository.Atualizar(request.Coleta, request.ColetaId, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -46,10 +46,10 @@ public class DeletarColetaHandler : IRequestHandler<CommandDeletarColeta, Unit>
         this.coletaRepository = coletaRepository;
     }
 
-    public Task<Unit> Handle(CommandDeletarColeta request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CommandDeletarColeta request, CancellationToken cancellationToken)
     {
-        coletaRepository.Deletar(request.Id);
-        return Task.FromResult(Unit.Value);
+        await coletaRepository.Deletar(request.Id, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -67,8 +67,7 @@ public class ObterColetaPorIdHandler : IRequestHandler<QueryObterColetaPorId, Co
         CancellationToken cancellationToken
     )
     {
-        var coleta = coletaRepository.ObterPorId(request.Id);
-        return Task.FromResult(coleta);
+        return coletaRepository.ObterPorId(request.Id, cancellationToken);
     }
 }
 
@@ -86,8 +85,7 @@ public class ObterTodasColetasHandler : IRequestHandler<QueryObterTodasColetas, 
         CancellationToken cancellationToken
     )
     {
-        var coletas = coletaRepository.ObterTodos();
-        return Task.FromResult(coletas);
+        return coletaRepository.ObterTodos(cancellationToken);
     }
 }
 
@@ -105,8 +103,7 @@ public class ObterColetasPorCorpoHidricoHandler : IRequestHandler<QueryObterCole
         CancellationToken cancellationToken
     )
     {
-        var coletas = coletaRepository.ObterPorCorpoHidrico(request.CorpoHidricoId);
-        return Task.FromResult(coletas);
+        return coletaRepository.ObterPorCorpoHidrico(request.CorpoHidricoId, cancellationToken);
     }
 }
 
@@ -124,7 +121,6 @@ public class ObterColetasPorDataHandler : IRequestHandler<QueryObterColetasPorDa
         CancellationToken cancellationToken
     )
     {
-        var coletas = coletaRepository.ObterPorData(request.Data);
-        return Task.FromResult(coletas);
+        return coletaRepository.ObterPorData(request.Data, cancellationToken);
     }
 }

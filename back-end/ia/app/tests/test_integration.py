@@ -19,8 +19,9 @@ from services.integration import build_visual_report
 from services.risk.classification import classify_risk
 
 APP_DIR = Path(__file__).resolve().parents[1]
-PHOTO = APP_DIR / "services/ComputerVision/dataset/train/images/000058_jpg.rf.zumct7JlQ1EznlPftdka.jpg"
-SAMPLE_FILE = APP_DIR / "services/Predict/model/metals_v2/example_request.json"
+TRAINING_DIR = APP_DIR.parent / "training"
+PHOTO = TRAINING_DIR / "datasets/computer_vision/object_detection/train/images/000058_jpg.rf.zumct7JlQ1EznlPftdka.jpg"
+SAMPLE_FILE = TRAINING_DIR / "experiment_outputs/regression/metals_v2/example_request.json"
 
 
 class IntegrationTests(unittest.TestCase):

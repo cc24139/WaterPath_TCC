@@ -21,11 +21,11 @@ namespace back_end.src.Controllers.User
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] QueryLoginUser query)
+        public async Task<IActionResult> Login([FromBody] QueryLoginUser query, CancellationToken cancellationToken)
         {
             try
             {
-                var result = await mediator.Send(query);
+                var result = await mediator.Send(query, cancellationToken);
                 //var existeCodigoPendente = await mediator.Send(new QueryCodigoPendente(result.email));
                 /*if (existeCodigoPendente)
                 {
@@ -40,7 +40,7 @@ namespace back_end.src.Controllers.User
         }
 
         [HttpPost("cadastro")]
-        public async Task<IActionResult> Cadastro([FromBody] CommandCriarConta command)
+        public async Task<IActionResult> Cadastro([FromBody] CommandCriarConta command, CancellationToken cancellationToken)
         {
             try
             {
@@ -51,7 +51,7 @@ namespace back_end.src.Controllers.User
                 }**/
                 var hash = new HashServices();
                 command.Senha = hash.ComputeHash(command.Senha);
-                var result = await mediator.Send(command);
+                var result = await mediator.Send(command, cancellationToken);
                /* var codResult = await mediator.Send(new CommandGerarCodigo { UsuarioEmail = result.Email });
                 await emailServices.EnviarCodigoCadastro(command.Email, codResult.ToString());*/
                 return Ok(new { id = result.UsuarioId, email = result.Email, mensagem = result.Mensagem });

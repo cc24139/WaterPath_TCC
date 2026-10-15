@@ -14,10 +14,10 @@ public class CadastrarImagemHandler : IRequestHandler<CommandCadastrarImagem, Un
         this.imagemRepository = imagemRepository;
     }
 
-    public Task<Unit> Handle(CommandCadastrarImagem request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CommandCadastrarImagem request, CancellationToken cancellationToken)
     {
-        imagemRepository.Cadastrar(request.Imagem);
-        return Task.FromResult(Unit.Value);
+        await imagemRepository.Cadastrar(request.Imagem, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -30,10 +30,10 @@ public class AtualizarImagemHandler : IRequestHandler<CommandAtualizarImagem, Un
         this.imagemRepository = imagemRepository;
     }
 
-    public Task<Unit> Handle(CommandAtualizarImagem request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CommandAtualizarImagem request, CancellationToken cancellationToken)
     {
-        imagemRepository.Atualizar(request.Imagem);
-        return Task.FromResult(Unit.Value);
+        await imagemRepository.Atualizar(request.Imagem, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -46,10 +46,10 @@ public class DeletarImagemHandler : IRequestHandler<CommandDeletarImagem, Unit>
         this.imagemRepository = imagemRepository;
     }
 
-    public Task<Unit> Handle(CommandDeletarImagem request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CommandDeletarImagem request, CancellationToken cancellationToken)
     {
-        imagemRepository.Deletar(request.Id);
-        return Task.FromResult(Unit.Value);
+        await imagemRepository.Deletar(request.Id, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -67,8 +67,7 @@ public class ObterImagemPorIdHandler : IRequestHandler<QueryObterImagemPorId, Im
         CancellationToken cancellationToken
     )
     {
-        var imagem = imagemRepository.ObterPorId(request.Id);
-        return Task.FromResult(imagem);
+        return imagemRepository.ObterPorId(request.Id, cancellationToken);
     }
 }
 
@@ -86,7 +85,6 @@ public class ObterTodasImagensHandler : IRequestHandler<QueryObterTodasImagens, 
         CancellationToken cancellationToken
     )
     {
-        var imagens = imagemRepository.ObterTodos();
-        return Task.FromResult(imagens);
+        return imagemRepository.ObterTodos(cancellationToken);
     }
 }

@@ -99,10 +99,12 @@ public class CadastroAnaliseTests : IAsyncLifetime
         };
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([
             new Claim(ClaimTypes.NameIdentifier, "17"), new Claim(ClaimTypes.Name, "Pessoa de teste")], "Test"));
-        var response = Assert.IsType<CreatedResult>(await controller.Cadastrar(Input([new("Fe", 0.123456789012, "mg/L"), new("Pb", 0, "µg/L")])));
+        var response = Assert.IsType<CreatedResult>(await controller.Cadastrar(
+            Input([new("Fe", 0.123456789012, "mg/L"), new("Pb", 0, "µg/L")]),
+            CancellationToken.None));
         var created = Assert.IsType<ColetaEntity>(response.Value);
         db.ChangeTracker.Clear();
-        var saved = new ColetaRepository(db).ObterPorId(created.Id)!;
+        var saved = (await new ColetaRepository(db).ObterPorId(created.Id))!;
         Assert.Equal(17, saved.ResponsavelId);
         Assert.Equal("Pessoa de teste", saved.ResponsavelNome);
         Assert.Equal(4, saved.Medicoes.Count);
@@ -116,7 +118,7 @@ public class CadastroAnaliseTests : IAsyncLifetime
     {
         await db.Database.ExecuteSqlRawAsync("CREATE TRIGGER fail_metal BEFORE INSERT ON MetaisPesados BEGIN SELECT RAISE(ABORT, 'test failure'); END;");
         var collection = Input([new("Fe", 1, "mg/L")]).ToEntity();
-        Assert.Throws<DbUpdateException>(() => new ColetaRepository(db).Cadastrar(collection, riverId));
+        await Assert.ThrowsAsync<DbUpdateException>(() => new ColetaRepository(db).Cadastrar(collection, riverId));
         db.ChangeTracker.Clear();
         Assert.Empty(await db.Coletas.ToListAsync());
         Assert.Empty(await db.Medicoes.ToListAsync());

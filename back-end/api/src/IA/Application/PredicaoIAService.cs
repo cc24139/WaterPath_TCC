@@ -3,11 +3,24 @@ using back_end.src.Domain.Coleta;
 using back_end.src.IA.Domain;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace back_end.src.IA.Application;
 
-public class PredicaoIAService(WaterPathDbContext context, IaClient client)
+public class PredicaoIAService
 {
+    private readonly WaterPathDbContext context;
+    private readonly IaClient client;
+    private readonly ILogger<PredicaoIAService> logger;
+
+    public PredicaoIAService(WaterPathDbContext context, IaClient client,
+        ILogger<PredicaoIAService>? logger = null)
+    {
+        this.context = context;
+        this.client = client;
+        this.logger = logger ?? NullLogger<PredicaoIAService>.Instance;
+    }
+
     public const long LimiteImagem = 10 * 1024 * 1024;
     public const string VersaoRegraRisco = "waterpath-risk-v1";
 
@@ -70,6 +83,9 @@ public class PredicaoIAService(WaterPathDbContext context, IaClient client)
         if (string.IsNullOrWhiteSpace(name)) name = contentType == "image/png" ? "imagem.png" : "imagem.jpg";
         var history = data is null ? "[]"
             : await BuscarHistoricoAsync(coleta.CorpoHidricoId, coleta.DataHora, cancellationToken);
+        logger.LogInformation(
+            "Iniciando análise de IA. ColetaId={CollectionId} CorpoHidricoId={WaterBodyId} Tipo={AnalysisType} TamanhoImagem={ImageBytes}",
+            coletaId, coleta.CorpoHidricoId, data is null ? "vision" : "integrada", original.Length);
         var analise = await client.AnalisarAsync(data, original, contentType, name, cancellationToken, history, collectionContext);
         var predicao = new PredicaoIAEntity
         {
@@ -85,13 +101,16 @@ public class PredicaoIAService(WaterPathDbContext context, IaClient client)
         {
             // Impede que uma gravação posterior no mesmo contexto tente salvar esta análise falha.
             context.Entry(predicao).State = EntityState.Detached;
-            throw new IaException(500, "Não foi possível salvar a análise.");
+            throw new IaException(500, IaErrorCodes.Persistence, "Não foi possível salvar a análise.");
         }
         catch (OperationCanceledException)
         {
             context.Entry(predicao).State = EntityState.Detached;
             throw;
         }
+        logger.LogInformation(
+            "Análise de IA concluída e persistida. PredicaoId={PredictionId} ColetaId={CollectionId} Tipo={AnalysisType}",
+            predicao.Id, predicao.ColetaId, predicao.Tipo);
         return predicao;
     }
 

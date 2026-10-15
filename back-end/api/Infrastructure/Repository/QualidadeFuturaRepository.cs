@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using back_end.src.Domain.QualidadeFutura;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace back_end.src.Infrastructure.Repository
 {
@@ -15,42 +16,42 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
-        public void Atualizar(QualidadeFuturaEntity qualidadeFutura)
+        public async Task Atualizar(QualidadeFuturaEntity qualidadeFutura, CancellationToken cancellationToken = default)
         {
-            var entityToUpdate = context.QualidadesFuturas.Find(qualidadeFutura.Id);
+            var entityToUpdate = await context.QualidadesFuturas.FindAsync([qualidadeFutura.Id], cancellationToken);
             if (entityToUpdate == null)
             {
                 throw new ArgumentException("Qualidade futura não encontrada");
             }
             context.QualidadesFuturas.Update(entityToUpdate);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Cadastrar(QualidadeFuturaEntity qualidadeFutura)
+        public async Task Cadastrar(QualidadeFuturaEntity qualidadeFutura, CancellationToken cancellationToken = default)
         {
-            context.QualidadesFuturas.Add(qualidadeFutura);
-            context.SaveChanges();
+            await context.QualidadesFuturas.AddAsync(qualidadeFutura, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Deletar(int id)
+        public async Task Deletar(int id, CancellationToken cancellationToken = default)
         {
-            var entityToDelete = context.QualidadesFuturas.Find(id);
+            var entityToDelete = await context.QualidadesFuturas.FindAsync([id], cancellationToken);
             if (entityToDelete == null)
             {
                 throw new ArgumentException("Qualidade futura não encontrada");
             }
             context.QualidadesFuturas.Remove(entityToDelete);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public List<QualidadeFuturaEntity> ObterTodos()
+        public Task<List<QualidadeFuturaEntity>> ObterTodos(CancellationToken cancellationToken = default)
         {
-            return context.QualidadesFuturas.ToList();
+            return context.QualidadesFuturas.ToListAsync(cancellationToken);
         }
 
-        public QualidadeFuturaEntity ObterPorId(int id)
+        public Task<QualidadeFuturaEntity?> ObterPorId(int id, CancellationToken cancellationToken = default)
         {
-            return context.QualidadesFuturas.FirstOrDefault(q => q.Id == id);
+            return context.QualidadesFuturas.FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
         }
     }
 }

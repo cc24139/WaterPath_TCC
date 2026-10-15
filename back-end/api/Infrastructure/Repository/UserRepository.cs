@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Domain.User;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace back_end.src.Infrastructure.Repository
 {
@@ -17,66 +18,65 @@ namespace back_end.src.Infrastructure.Repository
         {
             this.context = context;
         }
-        public void Atualizar(UserEntity user)
+        public async Task Atualizar(UserEntity user, CancellationToken cancellationToken = default)
         {
-            var userToUpdate = context.Usuarios.Find(user.Id);
+            var userToUpdate = await context.Usuarios.FindAsync([user.Id], cancellationToken);
             if (userToUpdate == null)
             {
                 throw new ArgumentException("Usuário não encontrado");
             }
-            userToUpdate = new UserEntity(user.Nome, user.Senha, user.Email);
-            context.Usuarios.Update(userToUpdate);
-            context.SaveChanges();
+            context.Entry(userToUpdate).CurrentValues.SetValues(user);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Cadastrar(UserEntity user)
+        public async Task Cadastrar(UserEntity user, CancellationToken cancellationToken = default)
         {
-            context.Usuarios.Add(user);
-            context.SaveChanges();
+            await context.Usuarios.AddAsync(user, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Deletar(int id)
+        public async Task Deletar(int id, CancellationToken cancellationToken = default)
         {
-            var userToDelete = context.Usuarios.Find(id);
+            var userToDelete = await context.Usuarios.FindAsync([id], cancellationToken);
             if (userToDelete == null)
             {
                 throw new ArgumentException("Usuário não encontrado");
             }
             context.Usuarios.Remove(userToDelete);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public List<UserEntity> ObterTodos()
+        public Task<List<UserEntity>> ObterTodos(CancellationToken cancellationToken = default)
         {
-            return context.Usuarios.ToList();
+            return context.Usuarios.ToListAsync(cancellationToken);
         }
 
-        public Task<UserEntity> ObterUsuarioPorEmail(string email)
+        public Task<UserEntity?> ObterUsuarioPorEmail(string email, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(context.Usuarios.FirstOrDefault(u => u.Email == email));
+            return context.Usuarios.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
         }
         
 
-        public UserEntity ObterUsuarioPorId(int id)
+        public Task<UserEntity?> ObterUsuarioPorId(int id, CancellationToken cancellationToken = default)
         {
-            return context.Usuarios.FirstOrDefault(u => u.Id == id);
+            return context.Usuarios.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         }
 
-        public List<UserEntity> ObterUsuariosPorIds(List<int> ids)
+        public Task<List<UserEntity>> ObterUsuariosPorIds(List<int> ids, CancellationToken cancellationToken = default)
         {
-            return context.Usuarios.Where(u => ids.Contains(u.Id)).ToList();
+            return context.Usuarios.Where(u => ids.Contains(u.Id)).ToListAsync(cancellationToken);
         }
 
-        public void AlterarSenha(string email, string senha)
+        public async Task AlterarSenha(string email, string senha, CancellationToken cancellationToken = default)
         {
-            var userToUpdate = context.Usuarios.FirstOrDefault(u => u.Email == email);
+            var userToUpdate = await context.Usuarios.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
             if (userToUpdate == null)
             {
                 throw new ArgumentException("Usuário não encontrado");
             }
             userToUpdate.Senha = senha;
             context.Usuarios.Update(userToUpdate);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

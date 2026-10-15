@@ -4,12 +4,12 @@ namespace Domain.User
 {
     public interface IUserRepository
     {
-        void Cadastrar(UserEntity user);
-        void Atualizar(UserEntity user);
-        void Deletar(int id);
-        UserEntity ObterUsuarioPorId(int id);
-        Task<UserEntity> ObterUsuarioPorEmail(string email);
-        List<UserEntity> ObterTodos();
-        List<UserEntity> ObterUsuariosPorIds(List<int> ids);
+        Task Cadastrar(UserEntity user, CancellationToken cancellationToken = default);
+        Task Atualizar(UserEntity user, CancellationToken cancellationToken = default);
+        Task Deletar(int id, CancellationToken cancellationToken = default);
+        Task<UserEntity?> ObterUsuarioPorId(int id, CancellationToken cancellationToken = default);
+        Task<UserEntity?> ObterUsuarioPorEmail(string email, CancellationToken cancellationToken = default);
+        Task<List<UserEntity>> ObterTodos(CancellationToken cancellationToken = default);
+        Task<List<UserEntity>> ObterUsuariosPorIds(List<int> ids, CancellationToken cancellationToken = default);
     }
 }

@@ -10,3 +10,4 @@ back-end/api/obj/
 back-end/ia/app/services/Predict/model/metals_v2*/data/
 back-end/ia/app/services/Predict/model/metals_v2_20261004/historico/
 back-end/ia/app/services/Predict/model/metals_v2_20261004/runs/
+AGENTS.md

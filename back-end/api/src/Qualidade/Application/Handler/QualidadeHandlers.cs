@@ -14,10 +14,10 @@ public class CadastrarQualidadeHandler : IRequestHandler<CommandCadastrarQualida
         this.qualidadeRepository = qualidadeRepository;
     }
 
-    public Task<Unit> Handle(CommandCadastrarQualidade request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CommandCadastrarQualidade request, CancellationToken cancellationToken)
     {
-        qualidadeRepository.Cadastrar(request.Qualidade);
-        return Task.FromResult(Unit.Value);
+        await qualidadeRepository.Cadastrar(request.Qualidade, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -30,10 +30,10 @@ public class AtualizarQualidadeHandler : IRequestHandler<CommandAtualizarQualida
         this.qualidadeRepository = qualidadeRepository;
     }
 
-    public Task<Unit> Handle(CommandAtualizarQualidade request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CommandAtualizarQualidade request, CancellationToken cancellationToken)
     {
-        qualidadeRepository.Atualizar(request.Qualidade);
-        return Task.FromResult(Unit.Value);
+        await qualidadeRepository.Atualizar(request.Qualidade, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -46,10 +46,10 @@ public class DeletarQualidadeHandler : IRequestHandler<CommandDeletarQualidade, 
         this.qualidadeRepository = qualidadeRepository;
     }
 
-    public Task<Unit> Handle(CommandDeletarQualidade request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CommandDeletarQualidade request, CancellationToken cancellationToken)
     {
-        qualidadeRepository.Deletar(request.Id);
-        return Task.FromResult(Unit.Value);
+        await qualidadeRepository.Deletar(request.Id, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -68,8 +68,7 @@ public class ObterQualidadePorIdHandler
         CancellationToken cancellationToken
     )
     {
-        var qualidade = qualidadeRepository.ObterPorId(request.Id);
-        return Task.FromResult(qualidade);
+        return qualidadeRepository.ObterPorId(request.Id, cancellationToken);
     }
 }
 
@@ -88,7 +87,6 @@ public class ObterTodasQualidadesHandler
         CancellationToken cancellationToken
     )
     {
-        var qualidades = qualidadeRepository.ObterTodos();
-        return Task.FromResult(qualidades);
+        return qualidadeRepository.ObterTodos(cancellationToken);
     }
 }

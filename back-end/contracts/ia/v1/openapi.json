@@ -1,0 +1,208 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "WaterPath - contrato interno da IA",
+    "version": "1.0.0",
+    "description": "Fonte versionada do multipart trocado entre a API principal e o servico de inferencia. Alteracoes incompatíveis exigem uma nova pasta de versao."
+  },
+  "paths": {
+    "/analyze": {
+      "post": {
+        "operationId": "analyze",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["image"],
+                "properties": {
+                  "image": { "type": "string", "format": "binary" },
+                  "data": { "type": "string", "contentMediaType": "application/json", "contentSchema": { "$ref": "#/components/schemas/Sample" } },
+                  "history": { "type": "string", "default": "[]", "contentMediaType": "application/json", "contentSchema": { "$ref": "#/components/schemas/RiskHistory" } },
+                  "collectionContext": { "type": "string", "contentMediaType": "application/json", "contentSchema": { "$ref": "#/components/schemas/CollectionContext" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Inferencia concluida",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnalyzeResponse" } } }
+          },
+          "400": { "description": "Imagem invalida" },
+          "413": { "description": "Imagem acima do limite" },
+          "422": { "description": "Dados estruturados invalidos" },
+          "503": { "description": "Inferencia indisponivel" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "MetalName": { "type": "string", "enum": ["Fe", "Mn", "Cr", "Ni", "Cu", "Zn", "Cd", "Pb"] },
+      "MetalMeasurement": {
+        "type": "object", "additionalProperties": false, "required": ["name"],
+        "properties": {
+          "name": { "$ref": "#/components/schemas/MetalName" },
+          "value": { "type": ["number", "null"], "minimum": 0 },
+          "unit": { "type": ["string", "null"], "minLength": 1 }
+        }
+      },
+      "MetalReference": {
+        "type": "object", "additionalProperties": false,
+        "properties": {
+          "data": { "type": ["string", "null"] },
+          "metais_pesados": { "type": "array", "maxItems": 8, "items": { "$ref": "#/components/schemas/MetalMeasurement" } }
+        }
+      },
+      "Sample": {
+        "type": "object", "additionalProperties": false,
+        "required": ["temperatura", "ph", "condutividade_eletrica", "oxigenio_dissolvido"],
+        "properties": {
+          "estacao": { "type": ["string", "null"] },
+          "latitude": { "type": ["string", "null"] },
+          "longitude": { "type": ["string", "null"] },
+          "data": { "type": ["string", "null"] },
+          "profundidade": { "type": ["number", "null"], "minimum": 0 },
+          "estacao_ano": { "type": ["string", "null"] },
+          "temperatura": { "type": "number" },
+          "ph": { "type": "number", "minimum": 0, "maximum": 14 },
+          "condutividade_eletrica": { "type": "number", "minimum": 0 },
+          "oxigenio_dissolvido": { "type": "number", "minimum": 0 },
+          "solidos_suspensos_totais": { "type": ["number", "null"], "minimum": 0 },
+          "carbono_organico_total": { "type": ["number", "null"], "minimum": 0 },
+          "fosforo_total": { "type": ["number", "null"], "minimum": 0 },
+          "metais_pesados": { "type": ["array", "null"], "maxItems": 8, "items": { "$ref": "#/components/schemas/MetalMeasurement" } },
+          "referencia_metais_pesados": { "anyOf": [{ "$ref": "#/components/schemas/MetalReference" }, { "type": "null" }] }
+        },
+        "example": {
+          "temperatura": 22, "ph": 7, "condutividade_eletrica": 100, "oxigenio_dissolvido": 6,
+          "data": "2026-10-07T12:00:00Z"
+        }
+      },
+      "RiskHistoryItem": {
+        "type": "object", "additionalProperties": false, "required": ["predictionId", "coletaId", "baseRiskLevel"],
+        "properties": {
+          "predictionId": { "type": "integer", "minimum": 1 },
+          "coletaId": { "type": "integer", "minimum": 1 },
+          "baseRiskLevel": { "type": "integer", "minimum": 1, "maximum": 3 }
+        }
+      },
+      "RiskHistory": { "type": "array", "maxItems": 5, "items": { "$ref": "#/components/schemas/RiskHistoryItem" }, "example": [] },
+      "Measurement": {
+        "type": "object", "additionalProperties": false, "required": ["code", "value", "unit", "censored", "limit"],
+        "properties": {
+          "code": { "type": "string", "minLength": 1 }, "value": { "type": ["number", "null"] },
+          "unit": { "type": "string", "minLength": 1 }, "censored": { "type": "boolean" }, "limit": { "type": ["number", "null"] }
+        }
+      },
+      "MetalObservation": {
+        "type": "object", "additionalProperties": false, "required": ["name", "value", "unit"],
+        "properties": { "name": { "type": "string", "minLength": 1 }, "value": { "type": "number" }, "unit": { "type": "string", "minLength": 1 } }
+      },
+      "Collection": {
+        "type": "object", "additionalProperties": false,
+        "required": ["waterBodyId", "collectionId", "collectedAt", "measurements", "metals"],
+        "properties": {
+          "waterBodyId": { "type": "integer", "minimum": 1 }, "collectionId": { "type": "integer", "minimum": 1 },
+          "collectedAt": { "type": "string" }, "measurements": { "type": "array", "items": { "$ref": "#/components/schemas/Measurement" } },
+          "metals": { "type": "array", "items": { "$ref": "#/components/schemas/MetalObservation" } }
+        }
+      },
+      "CollectionContext": {
+        "type": "object", "additionalProperties": false,
+        "required": ["waterBodyId", "currentCollectionId", "currentCollectedAt", "history"],
+        "properties": {
+          "waterBodyId": { "type": "integer", "minimum": 1 }, "currentCollectionId": { "type": "integer", "minimum": 1 },
+          "currentCollectedAt": { "type": "string" }, "history": { "type": "array", "items": { "$ref": "#/components/schemas/Collection" } }
+        },
+        "example": { "waterBodyId": 1, "currentCollectionId": 10, "currentCollectedAt": "2026-10-07T12:00:00Z", "history": [] }
+      },
+      "Detection": {
+        "type": "object", "additionalProperties": false,
+        "required": ["indicatesRisk", "classId", "className", "count", "maxConfidence", "meanBoxAreaRatio", "interpretation"],
+        "properties": {
+          "indicatesRisk": { "type": "boolean" }, "classId": { "type": "integer", "minimum": 0 }, "className": { "type": "string", "minLength": 1 },
+          "count": { "type": "integer", "minimum": 1 }, "maxConfidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "meanBoxAreaRatio": { "type": "number", "minimum": 0, "maximum": 1 }, "interpretation": { "type": "string" }
+        }
+      },
+      "MetalPrediction": {
+        "type": "object", "additionalProperties": false, "required": ["name", "value", "unit"],
+        "properties": { "name": { "$ref": "#/components/schemas/MetalName" }, "value": { "type": "number", "minimum": 0 }, "unit": { "type": "string", "enum": ["mg/L", "µg/L"] } }
+      },
+      "RiskInputs": {
+        "type": "object", "additionalProperties": false, "required": ["ph", "oxigenio_dissolvido", "visualClasses"],
+        "properties": {
+          "ph": { "type": "number", "minimum": 0, "maximum": 14 },
+          "oxigenio_dissolvido": { "type": "number", "minimum": 0 },
+          "visualClasses": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        }
+      },
+      "RiskHistorySummary": {
+        "type": "object", "additionalProperties": false,
+        "required": ["evaluatedCollections", "alertCollections", "adjustment", "samples"],
+        "properties": {
+          "evaluatedCollections": { "type": "integer", "minimum": 0, "maximum": 5 },
+          "alertCollections": { "type": "integer", "minimum": 0, "maximum": 5 },
+          "adjustment": { "type": "integer", "minimum": 0, "maximum": 1 },
+          "samples": { "$ref": "#/components/schemas/RiskHistory" }
+        }
+      },
+      "MetalVariationItem": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "currentValue", "currentUnit", "previousValue", "previousUnit", "variation", "delta", "unit", "reason"],
+        "properties": {
+          "name": { "$ref": "#/components/schemas/MetalName" },
+          "currentValue": { "type": ["number", "null"], "minimum": 0 }, "currentUnit": { "type": ["string", "null"] },
+          "previousValue": { "type": ["number", "null"], "minimum": 0 }, "previousUnit": { "type": ["string", "null"] },
+          "variation": { "type": "string", "enum": ["indeterminada", "aumento", "reducao", "estabilidade"] },
+          "delta": { "type": ["number", "null"] }, "unit": { "type": ["string", "null"] },
+          "reason": { "type": ["string", "null"], "enum": [null, "dados_ausentes", "referencia_temporal_ausente_ou_invalida", "referencia_nao_anterior", "unidades_ausentes", "unidades_incompativeis", "variacao_nao_representavel"] }
+        }
+      },
+      "MetalVariation": {
+        "type": "object", "additionalProperties": false, "required": ["status", "currentDate", "referenceDate", "metals", "message"],
+        "properties": {
+          "status": { "type": "string", "enum": ["indeterminada", "parcial", "completa"] },
+          "currentDate": { "type": ["string", "null"] }, "referenceDate": { "type": ["string", "null"] },
+          "metals": { "type": "array", "maxItems": 8, "items": { "$ref": "#/components/schemas/MetalVariationItem" } }, "message": { "type": "string", "minLength": 1 }
+        }
+      },
+      "AnalyzeResponse": {
+        "type": "object", "additionalProperties": false,
+        "required": ["detections", "totalObjects", "metalPredictions", "visionModelVersion", "annotatedImage", "annotatedImageContentType"],
+        "properties": {
+          "detections": { "type": "array", "items": { "$ref": "#/components/schemas/Detection" } },
+          "totalObjects": { "type": "integer", "minimum": 0 }, "metalPredictions": { "type": "array", "items": { "$ref": "#/components/schemas/MetalPrediction" } },
+          "riskLevel": { "type": "integer", "minimum": 1, "maximum": 3 }, "baseRiskLevel": { "type": "integer", "minimum": 1, "maximum": 3 },
+          "riskLabel": { "type": "string", "enum": ["baixo", "moderado", "alto"] }, "riskReasons": { "type": "array", "items": { "type": "string" } },
+          "riskRuleVersion": { "const": "waterpath-risk-v1" }, "riskInputs": { "$ref": "#/components/schemas/RiskInputs" }, "history": { "$ref": "#/components/schemas/RiskHistorySummary" },
+          "metalVariation": { "$ref": "#/components/schemas/MetalVariation" }, "visionModelVersion": { "type": "string", "minLength": 1 },
+          "metalModelVersion": { "type": "string", "minLength": 1 }, "collectionContext": { "$ref": "#/components/schemas/CollectionContext" },
+          "annotatedImage": { "type": "string", "contentEncoding": "base64" }, "annotatedImageContentType": { "const": "image/jpeg" }
+        },
+        "example": {
+          "detections": [{ "indicatesRisk": true, "classId": 0, "className": "Lixo", "count": 1, "maxConfidence": 0.8, "meanBoxAreaRatio": 0.1, "interpretation": "Sinal visual detectado." }],
+          "totalObjects": 1,
+          "metalPredictions": [
+            { "name": "Fe", "value": 0.1, "unit": "mg/L" }, { "name": "Mn", "value": 0.1, "unit": "mg/L" },
+            { "name": "Cr", "value": 0.1, "unit": "µg/L" }, { "name": "Ni", "value": 0.1, "unit": "µg/L" },
+            { "name": "Cu", "value": 0.1, "unit": "µg/L" }, { "name": "Zn", "value": 0.1, "unit": "µg/L" },
+            { "name": "Cd", "value": 0.1, "unit": "µg/L" }, { "name": "Pb", "value": 0.1, "unit": "µg/L" }
+          ],
+          "riskLevel": 2, "baseRiskLevel": 2, "riskLabel": "moderado", "riskReasons": ["Sinal visual: Lixo."], "riskRuleVersion": "waterpath-risk-v1",
+          "riskInputs": { "ph": 7, "oxigenio_dissolvido": 6, "visualClasses": ["Lixo"] },
+          "history": { "evaluatedCollections": 0, "alertCollections": 0, "adjustment": 0, "samples": [] },
+          "metalVariation": { "status": "indeterminada", "currentDate": "2026-10-07T12:00:00Z", "referenceDate": null, "metals": [], "message": "Não é possível determinar a variação de todos os metais: faltam dados comparáveis." },
+          "visionModelVersion": "vision-test", "metalModelVersion": "metals-test",
+          "collectionContext": { "waterBodyId": 1, "currentCollectionId": 10, "currentCollectedAt": "2026-10-07T12:00:00Z", "history": [] },
+          "annotatedImage": "/9j/2Q==", "annotatedImageContentType": "image/jpeg"
+        }
+      }
+    }
+  }
+}

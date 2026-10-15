@@ -1,7 +1,16 @@
-import type { IndicatorName, MetalSymbol } from "@/features/add-analysis/types/addAnalysis";
+import type { MetalSymbol } from "@/features/add-analysis/types/addAnalysis";
 
 export interface MetalObservationDTO { name: MetalSymbol; value: number; unit: string }
-export type AmostraDTO = Partial<Record<IndicatorName, number>> & { metais_pesados?: MetalObservationDTO[] };
+export interface AmostraDTO {
+  temperatura: number;
+  ph: number;
+  condutividade_eletrica: number;
+  oxigenio_dissolvido: number;
+  solidos_suspensos_totais?: number;
+  carbono_organico_total?: number;
+  fosforo_total?: number;
+  metais_pesados?: MetalObservationDTO[];
+}
 export interface PredicaoDTO {
   id: number;
   coletaId: number;

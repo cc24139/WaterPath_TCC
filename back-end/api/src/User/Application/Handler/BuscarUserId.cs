@@ -12,9 +12,9 @@ public class HandlerBuscarUserId
         this.userRepository = userRepository;
     }
 
-    public UserEntity Handle(QueryUserId query)
+    public async Task<UserEntity> Handle(QueryUserId query, CancellationToken cancellationToken = default)
     {
-        var user = userRepository.ObterUsuarioPorId(query.Id);
+        var user = await userRepository.ObterUsuarioPorId(query.Id, cancellationToken);
         if (user == null)
         {
             throw new ArgumentException("Usuário não encontrado");

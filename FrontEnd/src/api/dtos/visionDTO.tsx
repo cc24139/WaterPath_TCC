@@ -1,7 +1,6 @@
 export interface VisionPredicaoDTO {
-  pathImagem: string;
+  coletaId: number;
+  image: File;
 }
 
-export interface VisionPredicaoResponseDTO {
-  mensagem: string;
-}
+export type VisionPredicaoResponseDTO = Blob;

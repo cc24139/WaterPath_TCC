@@ -69,6 +69,7 @@ builder
             ValidateAudience = false,
         };
     });
+builder.Services.AddAuthorization();
 
 // Registro dos repositórios
 builder.Services.AddScoped<IMedicoesRepository, MedicoesRepository>();
@@ -81,11 +82,19 @@ builder.Services.AddScoped<IMetalPesadoRepository, MetalPesadoRepository>();
 builder.Services.AddScoped<IQualidadeRepository, QualidadeRepository>();
 builder.Services.AddScoped<IQualidadeFuturaRepository, QualidadeFuturaRepository>();
 builder.Services.AddScoped<PredicaoIAService>();
+builder.Services.AddScoped<PredicaoIAAuthorizationService>();
+var configuredIaUrl = builder.Configuration["IA:BaseUrl"];
+if (!Uri.TryCreate(configuredIaUrl, UriKind.Absolute, out var iaUrl)
+    || (iaUrl.Scheme != Uri.UriSchemeHttp && iaUrl.Scheme != Uri.UriSchemeHttps))
+    throw new InvalidOperationException(
+        "Configure IA__BaseUrl no ambiente do servidor com uma URL HTTP(S) válida.");
+var iaTimeoutSeconds = builder.Configuration.GetValue("IA:TimeoutSeconds", 120);
+if (iaTimeoutSeconds is < 1 or > 300)
+    throw new InvalidOperationException("IA__TimeoutSeconds deve estar entre 1 e 300 segundos.");
 builder.Services.AddHttpClient<IaClient>(client =>
 {
-    var url = builder.Configuration["IA:BaseUrl"] ?? "http://localhost:8000";
-    client.BaseAddress = new Uri(url.TrimEnd('/') + "/");
-    client.Timeout = TimeSpan.FromSeconds(builder.Configuration.GetValue("IA:TimeoutSeconds", 120));
+    client.BaseAddress = new Uri(iaUrl.ToString().TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(iaTimeoutSeconds);
 });
 
 //CORS
@@ -109,14 +118,16 @@ builder
         opts.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
 var app = builder.Build();
-app.UseCors("AllowAll");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-app.MapControllers();
 app.UseHttpsRedirection();
+app.UseCors("AllowAll");
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 
 app.Run();

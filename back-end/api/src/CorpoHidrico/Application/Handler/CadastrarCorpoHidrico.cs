@@ -21,7 +21,7 @@ namespace back_end.src.Application.Handler.CorpoHidrico
             this.userRepository = userRepository;
         }
 
-        public Task<Unit> Handle(
+        public async Task<Unit> Handle(
             CommandCadastrarCorpoHidrico request,
             CancellationToken cancellationToken
         )
@@ -32,10 +32,10 @@ namespace back_end.src.Application.Handler.CorpoHidrico
                 request.Tamanho,
                 request.EhPrivado
             );
-            var usuarios = userRepository.ObterUsuariosPorIds(request.UserIds);
+            var usuarios = await userRepository.ObterUsuariosPorIds(request.UserIds, cancellationToken);
             corpoHidrico.users.AddRange(usuarios);
-            corpoHidricoRepository.Cadastrar(corpoHidrico);
-            return Task.FromResult(Unit.Value);
+            await corpoHidricoRepository.Cadastrar(corpoHidrico, cancellationToken);
+            return Unit.Value;
         }
     }
 }

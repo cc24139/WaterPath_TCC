@@ -17,25 +17,25 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
-        public void Atualizar(CorpoHidricoEntity corpoHidrico)
+        public async Task Atualizar(CorpoHidricoEntity corpoHidrico, CancellationToken cancellationToken = default)
         {
-            var entityToUpdate = context.CorposHidricos.Find(corpoHidrico.Id);
+            var entityToUpdate = await context.CorposHidricos.FindAsync([corpoHidrico.Id], cancellationToken);
             if (entityToUpdate == null)
             {
                 throw new ArgumentException("Corpo hídrico não encontrado");
             }
             context.CorposHidricos.Update(corpoHidrico);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Cadastrar(CorpoHidricoEntity corpoHidrico)
+        public async Task Cadastrar(CorpoHidricoEntity corpoHidrico, CancellationToken cancellationToken = default)
         {
-            context.CorposHidricos.Add(corpoHidrico);
-            context.SaveChanges();
+            await context.CorposHidricos.AddAsync(corpoHidrico, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
             var usuarios = corpoHidrico.users;
             foreach (var usuario in usuarios)
             {
-                var userEntity = context.Usuarios.Find(usuario.Id);
+                var userEntity = await context.Usuarios.FindAsync([usuario.Id], cancellationToken);
                 if (userEntity != null)
                 {
                     userEntity.CorpoHidricos.Add(corpoHidrico);
@@ -43,52 +43,52 @@ namespace back_end.src.Infrastructure.Repository
                     context.Usuarios.Update(userEntity);
                 }
             }
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Deletar(int id)
+        public async Task Deletar(int id, CancellationToken cancellationToken = default)
         {
-            var entityToDelete = context.CorposHidricos.Find(id);
+            var entityToDelete = await context.CorposHidricos.FindAsync([id], cancellationToken);
             if (entityToDelete == null)
             {
                 throw new ArgumentException("Corpo hídrico não encontrado");
             }
             context.CorposHidricos.Remove(entityToDelete);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public List<CorpoHidricoEntity> ObterTodos()
+        public Task<List<CorpoHidricoEntity>> ObterTodos(CancellationToken cancellationToken = default)
         {
-            return context.CorposHidricos.Include(c => c.users).ToList();
+            return context.CorposHidricos.Include(c => c.users).ToListAsync(cancellationToken);
         }
 
-        public CorpoHidricoEntity? ObterCorpoHidricoPorId(int id)
+        public Task<CorpoHidricoEntity?> ObterCorpoHidricoPorId(int id, CancellationToken cancellationToken = default)
         {
-            return context.CorposHidricos.Include(c => c.users).FirstOrDefault(c => c.Id == id);
+            return context.CorposHidricos.Include(c => c.users).FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         }
 
-        public List<CorpoHidricoEntity> ObterCorposHidricosPorUsuario(int userId)
+        public Task<List<CorpoHidricoEntity>> ObterCorposHidricosPorUsuario(int userId, CancellationToken cancellationToken = default)
         {
             return context
                 .CorposHidricos.Include(c => c.users)
                 .Where(c => c.users.Any(u => u.Id == userId))
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
 
-        public List<int> ObterUsuariosDoCorpoHidrico(int corpoHidricoId)
+        public Task<List<int>> ObterUsuariosDoCorpoHidrico(int corpoHidricoId, CancellationToken cancellationToken = default)
         {
             return context
                 .Usuarios.Where(u => u.CorpoHidricos.Any(c => c.Id == corpoHidricoId))
                 .Select(u => u.Id)
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
 
-        public List<int> ObterColetasDoCorpoHidrico(int corpoHidricoId)
+        public Task<List<int>> ObterColetasDoCorpoHidrico(int corpoHidricoId, CancellationToken cancellationToken = default)
         {
             return context
                 .Coletas.Where(c => c.CorpoHidricoId == corpoHidricoId)
                 .Select(c => c.Id)
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
 
         public IAsyncEnumerable<ResultadoRiscoPersistido> ObterResultadosRisco(int corpoHidricoId)
@@ -104,18 +104,18 @@ namespace back_end.src.Infrastructure.Repository
                 .AsAsyncEnumerable();
         }
 
-        public void AdicionarUsuario(int corpoHidricoId, int userId)
+        public async Task AdicionarUsuario(int corpoHidricoId, int userId, CancellationToken cancellationToken = default)
         {
-            var corpoHidrico = context
+            var corpoHidrico = await context
                 .CorposHidricos.Include(c => c.users)
-                .FirstOrDefault(c => c.Id == corpoHidricoId);
+                .FirstOrDefaultAsync(c => c.Id == corpoHidricoId, cancellationToken);
 
             if (corpoHidrico == null)
             {
                 throw new ArgumentException("Corpo hídrico não encontrado");
             }
 
-            var usuario = context.Usuarios.Find(userId);
+            var usuario = await context.Usuarios.FindAsync([userId], cancellationToken);
             if (usuario == null)
             {
                 throw new ArgumentException("Usuário não encontrado");
@@ -127,14 +127,14 @@ namespace back_end.src.Infrastructure.Repository
             }
 
             corpoHidrico.users.Add(usuario);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public void DeletarUsuario(int corpoHidricoId, int userId)
+        public async Task DeletarUsuario(int corpoHidricoId, int userId, CancellationToken cancellationToken = default)
         {
-            var corpoHidrico = context
+            var corpoHidrico = await context
                 .CorposHidricos.Include(c => c.users)
-                .FirstOrDefault(c => c.Id == corpoHidricoId);
+                .FirstOrDefaultAsync(c => c.Id == corpoHidricoId, cancellationToken);
 
             if (corpoHidrico == null)
             {
@@ -148,12 +148,12 @@ namespace back_end.src.Infrastructure.Repository
             }
 
             corpoHidrico.users.Remove(usuario);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
         }
 
-        public CorpoHidricoEntity? ObterCorpoHidricoPorNome(string nome)
+        public Task<CorpoHidricoEntity?> ObterCorpoHidricoPorNome(string nome, CancellationToken cancellationToken = default)
         {
-            return context.CorposHidricos.Include(c => c.users).FirstOrDefault(c => c.Nome == nome);
+            return context.CorposHidricos.Include(c => c.users).FirstOrDefaultAsync(c => c.Nome == nome, cancellationToken);
         }
     }
 }

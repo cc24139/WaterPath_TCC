@@ -15,13 +15,13 @@ public class CadastrarQualidadeFuturaHandler
         this.qualidadeFuturaRepository = qualidadeFuturaRepository;
     }
 
-    public Task<Unit> Handle(
+    public async Task<Unit> Handle(
         CommandCadastrarQualidadeFutura request,
         CancellationToken cancellationToken
     )
     {
-        qualidadeFuturaRepository.Cadastrar(request.QualidadeFutura);
-        return Task.FromResult(Unit.Value);
+        await qualidadeFuturaRepository.Cadastrar(request.QualidadeFutura, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -35,13 +35,13 @@ public class AtualizarQualidadeFuturaHandler
         this.qualidadeFuturaRepository = qualidadeFuturaRepository;
     }
 
-    public Task<Unit> Handle(
+    public async Task<Unit> Handle(
         CommandAtualizarQualidadeFutura request,
         CancellationToken cancellationToken
     )
     {
-        qualidadeFuturaRepository.Atualizar(request.QualidadeFutura);
-        return Task.FromResult(Unit.Value);
+        await qualidadeFuturaRepository.Atualizar(request.QualidadeFutura, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -54,13 +54,13 @@ public class DeletarQualidadeFuturaHandler : IRequestHandler<CommandDeletarQuali
         this.qualidadeFuturaRepository = qualidadeFuturaRepository;
     }
 
-    public Task<Unit> Handle(
+    public async Task<Unit> Handle(
         CommandDeletarQualidadeFutura request,
         CancellationToken cancellationToken
     )
     {
-        qualidadeFuturaRepository.Deletar(request.Id);
-        return Task.FromResult(Unit.Value);
+        await qualidadeFuturaRepository.Deletar(request.Id, cancellationToken);
+        return Unit.Value;
     }
 }
 
@@ -79,8 +79,7 @@ public class ObterQualidadeFuturaPorIdHandler
         CancellationToken cancellationToken
     )
     {
-        var qualidadeFutura = qualidadeFuturaRepository.ObterPorId(request.Id);
-        return Task.FromResult(qualidadeFutura);
+        return qualidadeFuturaRepository.ObterPorId(request.Id, cancellationToken);
     }
 }
 
@@ -99,7 +98,6 @@ public class ObterTodasQualidadesFuturasHandler
         CancellationToken cancellationToken
     )
     {
-        var qualidadesFuturas = qualidadeFuturaRepository.ObterTodos();
-        return Task.FromResult(qualidadesFuturas);
+        return qualidadeFuturaRepository.ObterTodos(cancellationToken);
     }
 }

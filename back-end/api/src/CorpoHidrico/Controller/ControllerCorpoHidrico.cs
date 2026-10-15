@@ -24,7 +24,7 @@ namespace back_end.src.Controllers.CorpoHidrico
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> Cadastrar([FromBody] CommandCadastrarCorpoHidrico command)
+        public async Task<IActionResult> Cadastrar([FromBody] CommandCadastrarCorpoHidrico command, CancellationToken cancellationToken)
         {
             try
             {
@@ -36,7 +36,7 @@ namespace back_end.src.Controllers.CorpoHidrico
                             ?? "0"
                     )
                 );
-                await mediator.Send(command);
+                await mediator.Send(command, cancellationToken);
                 return Ok("Corpo hídrico cadastrado com sucesso");
             }
             catch (ArgumentException ex)
@@ -47,11 +47,11 @@ namespace back_end.src.Controllers.CorpoHidrico
 
         [Authorize]
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObterPorId(int id)
+        public async Task<IActionResult> ObterPorId(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var corpoHidrico = await mediator.Send(new QueryObterCorpoHidricoPorId { Id = id });
+                var corpoHidrico = await mediator.Send(new QueryObterCorpoHidricoPorId { Id = id }, cancellationToken);
                 if (corpoHidrico == null)
                     return NotFound("Corpo hídrico não encontrado");
                 //salva o corpoHidrico no token para consultas
@@ -86,11 +86,11 @@ namespace back_end.src.Controllers.CorpoHidrico
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObterTodos()
+        public async Task<IActionResult> ObterTodos(CancellationToken cancellationToken)
         {
             try
             {
-                var corposHidricos = await mediator.Send(new QueryObterTodosCorposHidricos());
+                var corposHidricos = await mediator.Send(new QueryObterTodosCorposHidricos(), cancellationToken);
                 var dtos = CorpoHidricoDTO.FromEntities(corposHidricos);
                 return Ok(dtos);
             }
@@ -102,7 +102,7 @@ namespace back_end.src.Controllers.CorpoHidrico
 
         [Authorize]
         [HttpGet("usuario")]
-        public async Task<IActionResult> ObterPorUsuario()
+        public async Task<IActionResult> ObterPorUsuario(CancellationToken cancellationToken)
         {
             try
             {
@@ -111,7 +111,8 @@ namespace back_end.src.Controllers.CorpoHidrico
                         ?? "0"
                 );
                 var corposHidricos = await mediator.Send(
-                    new QueryObterCorposHidricosPorUsuario { UserId = id }
+                    new QueryObterCorposHidricosPorUsuario { UserId = id },
+                    cancellationToken
                 );
                 if (corposHidricos == null || !corposHidricos.Any())
                     return NotFound("Corpos hídricos não encontrados para o usuário");
@@ -125,11 +126,11 @@ namespace back_end.src.Controllers.CorpoHidrico
 
         [Authorize]
         [HttpGet("usuario/{nome}")]
-        public async Task<IActionResult> ObterPorUsuario(string nome)
+        public async Task<IActionResult> ObterPorUsuario(string nome, CancellationToken cancellationToken)
         {
             try
             {
-                var corpoHidrico = await mediator.Send(new CorpoHidricoNomeCommand { Nome = nome });
+                var corpoHidrico = await mediator.Send(new CorpoHidricoNomeCommand { Nome = nome }, cancellationToken);
                 if (corpoHidrico == null)
                     return NotFound("Corpo hídrico não encontrado");
                 return Ok(CorpoHidricoDTO.FromEntity(corpoHidrico));
@@ -144,13 +145,14 @@ namespace back_end.src.Controllers.CorpoHidrico
         [HttpPut("{id}")]
         public async Task<IActionResult> Atualizar(
             int id,
-            [FromBody] CommandAtualizarCorpoHidrico corpoHidrico
+            [FromBody] CommandAtualizarCorpoHidrico corpoHidrico,
+            CancellationToken cancellationToken
         )
         {
             try
             {
                 corpoHidrico.Id = id;
-                await mediator.Send(corpoHidrico);
+                await mediator.Send(corpoHidrico, cancellationToken);
                 return Ok("Corpo hídrico atualizado com sucesso");
             }
             catch (ArgumentException ex)
@@ -160,11 +162,11 @@ namespace back_end.src.Controllers.CorpoHidrico
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Deletar(int id)
+        public async Task<IActionResult> Deletar(int id, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandDeletarCorpoHidrico { Id = id });
+                await mediator.Send(new CommandDeletarCorpoHidrico { Id = id }, cancellationToken);
                 return Ok("Corpo hídrico deletado com sucesso");
             }
             catch (ArgumentException ex)
@@ -174,11 +176,11 @@ namespace back_end.src.Controllers.CorpoHidrico
         }
 
         [HttpGet("nome/{nome}")]
-        public async Task<IActionResult> ObterPorNome(string nome)
+        public async Task<IActionResult> ObterPorNome(string nome, CancellationToken cancellationToken)
         {
             try
             {
-                var corpoHidrico = await mediator.Send(new QueryObterCorpoHidricoPorNome { Nome = nome });
+                var corpoHidrico = await mediator.Send(new QueryObterCorpoHidricoPorNome { Nome = nome }, cancellationToken);
                 if (corpoHidrico == null)
                     return NotFound("Corpo hídrico não encontrado");
                 return Ok(CorpoHidricoDTO.FromEntity(corpoHidrico));
