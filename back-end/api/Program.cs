@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using back_end.src.IA.Application;
+using back_end.src.QualidadeFutura.Application;
 using Infrastructure.Data.Seeding;
 
 // Variáveis explícitas do processo prevalecem sobre o .env local (inclusive na população).
@@ -92,6 +93,11 @@ var iaTimeoutSeconds = builder.Configuration.GetValue("IA:TimeoutSeconds", 120);
 if (iaTimeoutSeconds is < 1 or > 300)
     throw new InvalidOperationException("IA__TimeoutSeconds deve estar entre 1 e 300 segundos.");
 builder.Services.AddHttpClient<IaClient>(client =>
+{
+    client.BaseAddress = new Uri(iaUrl.ToString().TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(iaTimeoutSeconds);
+});
+builder.Services.AddHttpClient<PrevisaoQualidadeFuturaService>(client =>
 {
     client.BaseAddress = new Uri(iaUrl.ToString().TrimEnd('/') + "/");
     client.Timeout = TimeSpan.FromSeconds(iaTimeoutSeconds);

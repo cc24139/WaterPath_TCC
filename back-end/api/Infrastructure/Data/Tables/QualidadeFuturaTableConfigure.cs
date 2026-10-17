@@ -11,20 +11,13 @@ public class QualidadeFuturaTableConfigure : IEntityTypeConfiguration<QualidadeF
         builder.ToTable("QualidadesFuturas", "waterPath");
         builder.HasKey(e => e.Id);
 
-        builder.Property(e => e.Nome).IsRequired();
-        builder.Property(e => e.Data).IsRequired();
-        builder.Property(e => e.Ph).IsRequired();
-        builder.Property(e => e.OxigenioDissolvido).IsRequired();
-        builder.Property(e => e.Turbidez).IsRequired();
-        builder.Property(e => e.CloroResidual).IsRequired();
-        builder.Property(e => e.Floretos).IsRequired();
-        builder.Property(e => e.ColiformesTotais).IsRequired();
-        builder.Property(e => e.EscherichiaColi).IsRequired();
+        builder.Property(e => e.ResultadoJson).HasColumnType("jsonb");
+        builder.HasIndex(e => new { e.CorpoHidricoId, e.DataAlvo, e.CriadaEm });
 
         builder
             .HasOne(e => e.CorpoHidrico)
             .WithMany()
-            .HasForeignKey("CorpoHidricoId")
+            .HasForeignKey(e => e.CorpoHidricoId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

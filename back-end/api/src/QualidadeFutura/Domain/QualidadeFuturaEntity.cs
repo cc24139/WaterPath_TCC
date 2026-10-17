@@ -13,15 +13,24 @@ namespace back_end.src.Domain.QualidadeFutura
     public class QualidadeFuturaEntity
     {
         public int Id { get; private set; }
-        public string Nome { get; private set; }
-        public DateTime Data { get; private set; }
-        public float Ph { get; private set; }
-        public float OxigenioDissolvido { get; private set; }
-        public float Turbidez { get; private set; }
-        public float CloroResidual { get; private set; }
-        public float Floretos { get; private set; }
-        public float ColiformesTotais { get; private set; }
-        public bool EscherichiaColi { get; private set; }
+        public string? Nome { get; private set; }
+        public DateTime? Data { get; private set; }
+        public float? Ph { get; private set; }
+        public float? OxigenioDissolvido { get; private set; }
+        public float? Turbidez { get; private set; }
+        public float? CloroResidual { get; private set; }
+        public float? Floretos { get; private set; }
+        public float? ColiformesTotais { get; private set; }
+        public bool? EscherichiaColi { get; private set; }
+
+        public int CorpoHidricoId { get; set; }
+        public DateOnly? DataReferencia { get; set; }
+        public DateOnly? DataAlvo { get; set; }
+        public int? HorizonteDias { get; set; }
+        public string? Ponto { get; set; }
+        public double? Profundidade { get; set; }
+        public string? ResultadoJson { get; set; }
+        public DateTime? CriadaEm { get; set; }
 
         public CorpoHidricoEntity CorpoHidrico { get; private set; }
         public List<ImagemEntity> Imagens { get; private set; }
