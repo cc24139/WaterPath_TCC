@@ -7,7 +7,8 @@ import os
 import pandas as pd
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse, Response
-from pydantic import ValidationError
+from typing import Any
+from pydantic import BaseModel, ValidationError
 
 from DTOs.Amostra import Amostra
 from DTOs.CollectionContext import parse_collection_context
@@ -16,6 +17,7 @@ from services.integration import build_visual_report, structured_metals
 from services.Infos.objetos import create_images
 from services.Predict.schema import TARGETS
 from services.risk.classification import classify_risk, parse_history
+from services.PredictGeral.predictor import prever
 
 app = FastAPI(title="API de IA", description="API para predição com YOLO e regressão de metais", version="2.0.0")
 logger = logging.getLogger(__name__)
@@ -70,6 +72,22 @@ def analyze_image(image, data=None, include_annotation=False, history="[]", coll
         result["annotatedImageContentType"] = "image/jpeg"
     return result
 
+
+
+class PredictGeralRequest(BaseModel):
+    coletas: list[dict[str, Any]]
+    horizonte_dias: int
+    ponto: str | None = None
+    profundidade: float | None = None
+
+
+@app.post("/predict/geral/")
+async def predictGeral(request: PredictGeralRequest):
+    try:
+        return prever(request.coletas, request.horizonte_dias,
+                      ponto=request.ponto, profundidade=request.profundidade)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="Histórico de coletas inválido.") from exc
 
 @app.post("/analyze")
 def analyze(image: UploadFile = File(...), data: str | None = Form(None), history: str = Form("[]"),
