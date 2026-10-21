@@ -16,6 +16,8 @@
 !services/risk/*.py
 !services/Predict/
 !services/Predict/schema.py
+!services/PredictGeral/
+!services/PredictGeral/*.py
 !models/
 !models/vision/
 !models/vision/best.onnx

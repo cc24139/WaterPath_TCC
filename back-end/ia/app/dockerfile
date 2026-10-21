@@ -20,6 +20,7 @@ COPY services/metals.py ./services/metals.py
 COPY services/Infos ./services/Infos
 COPY services/risk ./services/risk
 COPY services/Predict/schema.py ./services/Predict/schema.py
+COPY services/PredictGeral ./services/PredictGeral
 COPY models ./models
 
 EXPOSE 10000
