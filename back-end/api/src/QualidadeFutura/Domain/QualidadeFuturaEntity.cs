@@ -7,6 +7,7 @@ using back_end.src.Domain.CorpoHidrico;
 using back_end.src.Domain.Imagem;
 using back_end.src.Domain.MetalPesado;
 using back_end.src.Domain.Qualidade;
+using back_end.src.Medicoes.Domain;
 
 namespace back_end.src.Domain.QualidadeFutura
 {
@@ -37,8 +38,30 @@ namespace back_end.src.Domain.QualidadeFutura
         public List<MetalPesadoEntity> MetaisPesados { get; private set; }
         public List<CianoBacteriaEntity> CianoBacterias { get; private set; }
         public List<QualidadeEntity> Qualidade { get; private set; }
+        private List<MedicoesEntity> _medicoes = new();
 
-        public QualidadeFuturaEntity() { }
+        [System.Text.Json.Serialization.JsonInclude]
+        public List<MedicoesEntity> Medicoes
+        {
+            get => _medicoes;
+            private set
+            {
+                _medicoes = value ?? new List<MedicoesEntity>();
+                MedicoesInformadas = true;
+            }
+        }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        internal bool MedicoesInformadas { get; private set; }
+
+        public QualidadeFuturaEntity()
+        {
+            Imagens = new List<ImagemEntity>();
+            MetaisPesados = new List<MetalPesadoEntity>();
+            CianoBacterias = new List<CianoBacteriaEntity>();
+            Qualidade = new List<QualidadeEntity>();
+            _medicoes = new List<MedicoesEntity>();
+        }
 
         public QualidadeFuturaEntity(
             string nome,
@@ -67,6 +90,7 @@ namespace back_end.src.Domain.QualidadeFutura
             MetaisPesados = new List<MetalPesadoEntity>();
             CianoBacterias = new List<CianoBacteriaEntity>();
             Qualidade = new List<QualidadeEntity>();
+            _medicoes = new List<MedicoesEntity>();
         }
     }
 }

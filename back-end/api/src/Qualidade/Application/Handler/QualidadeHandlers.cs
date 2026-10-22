@@ -1,6 +1,7 @@
 using Application.Commands.Qualidade;
 using Application.Queries.Qualidade;
 using back_end.src.Domain.Qualidade;
+using back_end.src.Medicoes.Domain;
 using MediatR;
 
 namespace Application.Handler.Qualidade;
@@ -32,7 +33,7 @@ public class AtualizarQualidadeHandler : IRequestHandler<CommandAtualizarQualida
 
     public async Task<Unit> Handle(CommandAtualizarQualidade request, CancellationToken cancellationToken)
     {
-        await qualidadeRepository.Atualizar(request.Qualidade, cancellationToken);
+        await qualidadeRepository.Atualizar(request.Id, request.Qualidade, cancellationToken);
         return Unit.Value;
     }
 }
@@ -88,5 +89,25 @@ public class ObterTodasQualidadesHandler
     )
     {
         return qualidadeRepository.ObterTodos(cancellationToken);
+    }
+}
+
+public class ObterMedicaoDaQualidadeHandler
+    : IRequestHandler<QueryObterMedicaoDaQualidade, List<MedicoesEntity>>
+{
+    private readonly IQualidadeRepository qualidadeRepository;
+
+    public ObterMedicaoDaQualidadeHandler(IQualidadeRepository qualidadeRepository)
+    {
+        this.qualidadeRepository = qualidadeRepository;
+    }
+
+    public async Task<List<MedicoesEntity>> Handle(
+        QueryObterMedicaoDaQualidade request,
+        CancellationToken cancellationToken
+    )
+    {
+        var qualidade = await qualidadeRepository.ObterPorId(request.Id, cancellationToken);
+        return qualidade?.Medicoes?.Where(m => m.codigoMedicao == request.CodigoMedicao).ToList() ?? [];
     }
 }

@@ -4,8 +4,14 @@ public class MedicoesEntity
 {
     public int Id { get; private set; }
     [System.Text.Json.Serialization.JsonIgnore]
-    public back_end.src.Domain.Coleta.ColetaEntity Coleta { get; private set; } = null!;
-    public int ColetaId { get; private set; }
+    public back_end.src.Domain.Coleta.ColetaEntity? Coleta { get; private set; }
+    public int? ColetaId { get; private set; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public back_end.src.Domain.Qualidade.QualidadeEntity? Qualidade { get; private set; }
+    public int? QualidadeId { get; private set; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public back_end.src.Domain.QualidadeFutura.QualidadeFuturaEntity? QualidadeFutura { get; private set; }
+    public int? QualidadeFuturaId { get; private set; }
     public Medicao codigoMedicao { get; private set; }
     public double? valor { get; private set; }
     public string unidade { get; private set; } = null!;
@@ -14,19 +20,48 @@ public class MedicoesEntity
 
     private MedicoesEntity() { }
 
-    public MedicoesEntity(Medicao codigo, double? valor, string unidade, bool censurado, double? limite)
+    [System.Text.Json.Serialization.JsonConstructor]
+    public MedicoesEntity(
+        Medicao codigoMedicao,
+        double? valor,
+        string unidade,
+        bool censurado,
+        double? limite)
     {
-        Atualizar(codigo, valor, unidade, censurado, limite);
+        Atualizar(codigoMedicao, valor, unidade, censurado, limite);
     }
 
     public void VincularColeta(int coletaId)
     {
         if (coletaId <= 0)
             throw new ArgumentException("Id da coleta inválido.");
-        if (ColetaId != 0 && ColetaId != coletaId)
+        if (TemOutroVinculo(ColetaId, coletaId, QualidadeId, QualidadeFuturaId))
             throw new InvalidOperationException("Não é permitido transferir a medição para outra coleta.");
         ColetaId = coletaId;
     }
+
+    public void VincularQualidade(int qualidadeId)
+    {
+        if (qualidadeId <= 0)
+            throw new ArgumentException("Id da qualidade inválido.");
+        if (TemOutroVinculo(QualidadeId, qualidadeId, ColetaId, QualidadeFuturaId))
+            throw new InvalidOperationException("A medição já está vinculada a outra entidade.");
+        QualidadeId = qualidadeId;
+    }
+
+    public void VincularQualidadeFutura(int qualidadeFuturaId)
+    {
+        if (qualidadeFuturaId <= 0)
+            throw new ArgumentException("Id da qualidade futura inválido.");
+        if (TemOutroVinculo(QualidadeFuturaId, qualidadeFuturaId, ColetaId, QualidadeId))
+            throw new InvalidOperationException("A medição já está vinculada a outra entidade.");
+        QualidadeFuturaId = qualidadeFuturaId;
+    }
+
+    private static bool TemOutroVinculo(int? vinculoAtual, int novoId, int? outroVinculo1, int? outroVinculo2)
+        => (vinculoAtual.HasValue && vinculoAtual.Value != novoId)
+            || outroVinculo1.HasValue
+            || outroVinculo2.HasValue;
 
     public void Atualizar(Medicao codigo, double? valor, string unidade, bool censurado, double? limite)
     {

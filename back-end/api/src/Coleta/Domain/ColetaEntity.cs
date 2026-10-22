@@ -58,7 +58,7 @@ namespace back_end.src.Domain.Coleta
         public void AdicionarMedicao(MedicoesEntity medicao)
         {
             ArgumentNullException.ThrowIfNull(medicao);
-            if (medicao.ColetaId != 0 && medicao.ColetaId != Id)
+            if (medicao.ColetaId.HasValue && medicao.ColetaId.Value != Id)
                 throw new InvalidOperationException("A medição pertence a outra coleta.");
             if (Id > 0)
                 medicao.VincularColeta(Id);

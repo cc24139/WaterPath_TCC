@@ -16,14 +16,23 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
-        public async Task Atualizar(QualidadeEntity qualidade, CancellationToken cancellationToken = default)
+        public async Task Atualizar(int id, QualidadeEntity qualidade, CancellationToken cancellationToken = default)
         {
-            var entityToUpdate = await context.Qualidades.FindAsync([qualidade.Id], cancellationToken);
+            var entityToUpdate = await context.Qualidades
+                .Include(q => q.Medicoes)
+                .FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
             if (entityToUpdate == null)
             {
                 throw new ArgumentException("Qualidade não encontrada");
             }
-            context.Qualidades.Update(entityToUpdate);
+
+            if (qualidade.MedicoesInformadas)
+            {
+                context.Medicoes.RemoveRange(entityToUpdate.Medicoes);
+                entityToUpdate.Medicoes.Clear();
+                entityToUpdate.Medicoes.AddRange(qualidade.Medicoes);
+            }
+
             await context.SaveChangesAsync(cancellationToken);
         }
 
@@ -49,12 +58,15 @@ namespace back_end.src.Infrastructure.Repository
             return context.Qualidades.AsNoTracking()
                 .Include(q => q.CorpoHidrico)
                 .Include(q => q.QualidadeFutura)
+                .Include(q => q.Medicoes)
                 .ToListAsync(cancellationToken);
         }
 
         public Task<QualidadeEntity?> ObterPorId(int id, CancellationToken cancellationToken = default)
         {
-            return context.Qualidades.FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
+            return context.Qualidades
+                .Include(q => q.Medicoes)
+                .FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
         }
     }
 }

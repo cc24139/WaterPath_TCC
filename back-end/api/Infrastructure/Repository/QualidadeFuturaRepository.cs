@@ -16,14 +16,23 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
-        public async Task Atualizar(QualidadeFuturaEntity qualidadeFutura, CancellationToken cancellationToken = default)
+        public async Task Atualizar(int id, QualidadeFuturaEntity qualidadeFutura, CancellationToken cancellationToken = default)
         {
-            var entityToUpdate = await context.QualidadesFuturas.FindAsync([qualidadeFutura.Id], cancellationToken);
+            var entityToUpdate = await context.QualidadesFuturas
+                .Include(q => q.Medicoes)
+                .FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
             if (entityToUpdate == null)
             {
                 throw new ArgumentException("Qualidade futura não encontrada");
             }
-            context.QualidadesFuturas.Update(entityToUpdate);
+
+            if (qualidadeFutura.MedicoesInformadas)
+            {
+                context.Medicoes.RemoveRange(entityToUpdate.Medicoes);
+                entityToUpdate.Medicoes.Clear();
+                entityToUpdate.Medicoes.AddRange(qualidadeFutura.Medicoes);
+            }
+
             await context.SaveChangesAsync(cancellationToken);
         }
 
@@ -46,12 +55,14 @@ namespace back_end.src.Infrastructure.Repository
 
         public Task<List<QualidadeFuturaEntity>> ObterTodos(CancellationToken cancellationToken = default)
         {
-            return context.QualidadesFuturas.ToListAsync(cancellationToken);
+            return context.QualidadesFuturas.Include(q => q.Medicoes).ToListAsync(cancellationToken);
         }
 
         public Task<QualidadeFuturaEntity?> ObterPorId(int id, CancellationToken cancellationToken = default)
         {
-            return context.QualidadesFuturas.FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
+            return context.QualidadesFuturas
+                .Include(q => q.Medicoes)
+                .FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
         }
     }
 }

@@ -10,6 +10,7 @@ public class CommandCadastrarQualidade : IRequest<Unit>
 
 public class CommandAtualizarQualidade : IRequest<Unit>
 {
+    public int Id { get; set; }
     public QualidadeEntity Qualidade { get; set; } = new();
 }
 
