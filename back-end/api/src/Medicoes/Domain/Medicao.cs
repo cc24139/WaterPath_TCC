@@ -18,6 +18,7 @@ namespace back_end.src.Medicoes.Domain
         NitrogenioAmoniacal,
         Nitrito,
         Nitrato,
-        NitrogenioTotal
+        NitrogenioTotal,
+        Iqa
     }
 }
