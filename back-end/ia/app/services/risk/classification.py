@@ -31,6 +31,10 @@ def parse_history(data):
         raise HTTPException(status_code=422, detail="Histórico de risco inválido") from exc
 
 
+def _count_alert_collections(history):
+    return sum(item.base_risk_level >= 2 for item in history)
+
+
 def classify_risk(images, sample, history):
     print("classify_risk called with images:", images, "sample:", sample, "history:", history)
     visual_classes = sorted({image.name for image in images if image.indica_risco()})
@@ -45,7 +49,7 @@ def classify_risk(images, sample, history):
     reasons.extend(measurement_alerts)
     base_level = 1 + int(bool(visual_classes)) + int(bool(measurement_alerts))
     # Usa o nível anterior ao ajuste para não realimentar o peso do histórico.
-    previous_alerts = sum(item.base_risk_level >= 2 for item in history)
+    previous_alerts = _count_alert_collections(history)
     level = min(3, base_level + int(previous_alerts >= 3))
     if not visual_classes and not measurement_alerts:
         reasons.append("Sem sinais atuais pelos critérios de triagem avaliados.")
@@ -71,7 +75,7 @@ def getResponse(level, base_level, risk_label, risk_reasons, history):
         "riskRuleVersion": RULE_VERSION,
         "history": {
             "evaluatedCollections": len(history),
-            "alertCollections": sum(item.base_risk_level >= 2 for item in history),
+            "alertCollections": _count_alert_collections(history),
             "adjustment": level - base_level,
             "samples": [item.model_dump(by_alias=True) for item in history],
         },

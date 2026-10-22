@@ -41,6 +41,7 @@ class RiskTests(unittest.TestCase):
     def test_history_requires_three_occurrences(self):
         result = self.classify(levels=(2, 3, 1, 1, 1))
         self.assertEqual(result["riskLevel"], 1)
+        self.assertEqual(result["history"]["alertCollections"], 2)
         result = self.classify(levels=(2, 3, 2, 1, 1))
         self.assertEqual(result["baseRiskLevel"], 1)
         self.assertEqual(result["riskLevel"], 2)
