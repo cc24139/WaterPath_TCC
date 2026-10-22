@@ -4,6 +4,7 @@ using Application.Queries.QualidadeFutura;
 using back_end.src.Domain.QualidadeFutura;
 using back_end.src.IA.Application;
 using back_end.src.QualidadeFutura.Application;
+using back_end.src.Medicoes.Application;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -99,6 +100,29 @@ namespace back_end.src.Controllers.QualidadeFutura
             }
         }
 
+        [HttpGet("{id:int}/medicoes/{parametro}")]
+        public async Task<IActionResult> ObterMedicao(int id, string parametro, CancellationToken cancellationToken)
+        {
+            if (!MedicaoParameterParser.TryParse(parametro, out var codigo))
+                return BadRequest("Parâmetro de medição inválido.");
+
+            var medicao = await mediator.Send(
+                new QueryObterMedicaoDaQualidadeFutura { Id = id, CodigoMedicao = codigo },
+                cancellationToken
+            );
+            return medicao.Count == 0
+                ? NotFound("Qualidade futura ou parâmetro não encontrado.")
+                : Ok(medicao.Select(item => new
+                {
+                    item.Id,
+                    item.codigoMedicao,
+                    item.valor,
+                    item.unidade,
+                    item.censurado,
+                    item.limite,
+                }));
+        }
+
         [HttpGet]
         public async Task<IActionResult> ObterTodos(CancellationToken cancellationToken)
         {
@@ -113,7 +137,7 @@ namespace back_end.src.Controllers.QualidadeFutura
             }
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         public async Task<IActionResult> Atualizar(
             int id,
             [FromBody] QualidadeFuturaEntity qualidadeFutura,
@@ -123,7 +147,7 @@ namespace back_end.src.Controllers.QualidadeFutura
             try
             {
                 await mediator.Send(
-                    new CommandAtualizarQualidadeFutura { QualidadeFutura = qualidadeFutura },
+                    new CommandAtualizarQualidadeFutura { Id = id, QualidadeFutura = qualidadeFutura },
                     cancellationToken
                 );
                 return Ok("Qualidade futura atualizada com sucesso");

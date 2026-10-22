@@ -419,7 +419,13 @@ namespace back_end.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ColetaId")
+                    b.Property<int?>("ColetaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("QualidadeFuturaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("QualidadeId")
                         .HasColumnType("integer");
 
                     b.Property<bool>("censurado")
@@ -444,7 +450,17 @@ namespace back_end.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_Medicoes_ColetaId_codigoMedicao");
 
-                    b.ToTable("Medicoes", "waterPath");
+                    b.HasIndex("QualidadeFuturaId", "codigoMedicao")
+                        .HasDatabaseName("IX_Medicoes_QualidadeFuturaId_codigoMedicao");
+
+                    b.HasIndex("QualidadeId", "codigoMedicao")
+                        .HasDatabaseName("IX_Medicoes_QualidadeId_codigoMedicao");
+
+                    b.ToTable("Medicoes", "waterPath", t => t.HasCheckConstraint(
+                        "CK_Medicoes_ExactlyOneOwner",
+                        "(\"ColetaId\" IS NOT NULL AND \"QualidadeId\" IS NULL AND \"QualidadeFuturaId\" IS NULL) OR " +
+                        "(\"ColetaId\" IS NULL AND \"QualidadeId\" IS NOT NULL AND \"QualidadeFuturaId\" IS NULL) OR " +
+                        "(\"ColetaId\" IS NULL AND \"QualidadeId\" IS NULL AND \"QualidadeFuturaId\" IS NOT NULL)"));
                 });
 
             modelBuilder.Entity("QualidadeCianoBacterias", b =>
@@ -601,10 +617,23 @@ namespace back_end.Migrations
                     b.HasOne("back_end.src.Domain.Coleta.ColetaEntity", "Coleta")
                         .WithMany("Medicoes")
                         .HasForeignKey("ColetaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("back_end.src.Domain.Qualidade.QualidadeEntity", "Qualidade")
+                        .WithMany("Medicoes")
+                        .HasForeignKey("QualidadeId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("back_end.src.Domain.QualidadeFutura.QualidadeFuturaEntity", "QualidadeFutura")
+                        .WithMany("Medicoes")
+                        .HasForeignKey("QualidadeFuturaId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Coleta");
+
+                    b.Navigation("Qualidade");
+
+                    b.Navigation("QualidadeFutura");
                 });
 
             modelBuilder.Entity("back_end.src.Domain.Coleta.ColetaEntity", b =>
@@ -634,6 +663,8 @@ namespace back_end.Migrations
                     b.Navigation("MetaisPesados");
 
                     b.Navigation("Qualidade");
+
+                    b.Navigation("Medicoes");
                 });
 #pragma warning restore 612, 618
         }

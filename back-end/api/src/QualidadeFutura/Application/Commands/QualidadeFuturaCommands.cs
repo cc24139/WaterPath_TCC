@@ -10,6 +10,7 @@ public class CommandCadastrarQualidadeFutura : IRequest<Unit>
 
 public class CommandAtualizarQualidadeFutura : IRequest<Unit>
 {
+    public int Id { get; set; }
     public QualidadeFuturaEntity QualidadeFutura { get; set; } = new();
 }
 

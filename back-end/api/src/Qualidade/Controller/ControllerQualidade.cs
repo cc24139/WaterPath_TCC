@@ -2,6 +2,8 @@ using System;
 using Application.Commands.Qualidade;
 using Application.Queries.Qualidade;
 using back_end.src.Domain.Qualidade;
+using back_end.src.Medicoes.Application;
+using back_end.src.Qualidade.Application;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -48,6 +50,44 @@ namespace back_end.src.Controllers.Qualidade
             }
         }
 
+        [HttpGet("{id:int}/medicoes/{parametro}")]
+        public async Task<IActionResult> ObterMedicao(int id, string parametro, CancellationToken cancellationToken)
+        {
+            if (!MedicaoParameterParser.TryParse(parametro, out var codigo))
+                return BadRequest("Parâmetro de medição inválido.");
+
+            var medicao = await mediator.Send(
+                new QueryObterMedicaoDaQualidade { Id = id, CodigoMedicao = codigo },
+                cancellationToken
+            );
+            return medicao.Count == 0
+                ? NotFound("Qualidade ou parâmetro não encontrado.")
+                : Ok(medicao.Select(item => new
+                {
+                    item.Id,
+                    item.codigoMedicao,
+                    item.valor,
+                    item.unidade,
+                    item.censurado,
+                    item.limite,
+                }));
+        }
+
+        [HttpGet("{id:int}/iqa")]
+        public async Task<IActionResult> ObterIqa(int id, CancellationToken cancellationToken)
+        {
+            var qualidade = await mediator.Send(new QueryObterQualidadePorId { Id = id }, cancellationToken);
+            if (qualidade is null)
+                return NotFound("Qualidade não encontrada");
+
+            return Ok(new
+            {
+                qualidade.Id,
+                IQA = qualidade.IQA,
+                Classificacao = IqaCalculator.Classificar(qualidade.IQA),
+            });
+        }
+
         [HttpGet]
         public async Task<IActionResult> ObterTodos(CancellationToken cancellationToken)
         {
@@ -68,12 +108,12 @@ namespace back_end.src.Controllers.Qualidade
             }
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         public async Task<IActionResult> Atualizar(int id, [FromBody] QualidadeEntity qualidade, CancellationToken cancellationToken)
         {
             try
             {
-                await mediator.Send(new CommandAtualizarQualidade { Qualidade = qualidade }, cancellationToken);
+                await mediator.Send(new CommandAtualizarQualidade { Id = id, Qualidade = qualidade }, cancellationToken);
                 return Ok("Qualidade atualizada com sucesso");
             }
             catch (ArgumentException ex)

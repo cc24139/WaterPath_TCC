@@ -1,6 +1,7 @@
 using Application.Commands.QualidadeFutura;
 using Application.Queries.QualidadeFutura;
 using back_end.src.Domain.QualidadeFutura;
+using back_end.src.Medicoes.Domain;
 using MediatR;
 
 namespace Application.Handler.QualidadeFutura;
@@ -40,7 +41,7 @@ public class AtualizarQualidadeFuturaHandler
         CancellationToken cancellationToken
     )
     {
-        await qualidadeFuturaRepository.Atualizar(request.QualidadeFutura, cancellationToken);
+        await qualidadeFuturaRepository.Atualizar(request.Id, request.QualidadeFutura, cancellationToken);
         return Unit.Value;
     }
 }
@@ -99,5 +100,25 @@ public class ObterTodasQualidadesFuturasHandler
     )
     {
         return qualidadeFuturaRepository.ObterTodos(cancellationToken);
+    }
+}
+
+public class ObterMedicaoDaQualidadeFuturaHandler
+    : IRequestHandler<QueryObterMedicaoDaQualidadeFutura, List<MedicoesEntity>>
+{
+    private readonly IQualidadeFuturaRepository qualidadeFuturaRepository;
+
+    public ObterMedicaoDaQualidadeFuturaHandler(IQualidadeFuturaRepository qualidadeFuturaRepository)
+    {
+        this.qualidadeFuturaRepository = qualidadeFuturaRepository;
+    }
+
+    public async Task<List<MedicoesEntity>> Handle(
+        QueryObterMedicaoDaQualidadeFutura request,
+        CancellationToken cancellationToken
+    )
+    {
+        var qualidade = await qualidadeFuturaRepository.ObterPorId(request.Id, cancellationToken);
+        return qualidade?.Medicoes?.Where(m => m.codigoMedicao == request.CodigoMedicao).ToList() ?? [];
     }
 }
