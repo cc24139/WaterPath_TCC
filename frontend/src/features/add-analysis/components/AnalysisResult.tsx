@@ -1,3 +1,4 @@
+import { RiskBadge } from "@/features/analysis-risk/components/RiskBadge";
 import { LuCircleCheck } from "react-icons/lu";
 import type { PredicaoDTO } from "@/api/dtos/predicaoDTO";
 import { AddAnalysisFormSection } from "./AddAnalysisFormSection";
@@ -8,7 +9,7 @@ export function AnalysisResult({ prediction }: { prediction: PredicaoDTO }) {
   return (
     <AddAnalysisFormSection title="Resultado da análise com IA" description={`Análise #${prediction.id} · Coleta #${prediction.coletaId}`} icon={LuCircleCheck}>
       <div className="space-y-4 font-heading text-xs">
-        <p className="font-bold text-text-primary">Risco {result.riskLabel} · Nível {result.riskLevel}</p>
+        <RiskBadge level={result.riskLevel} unavailable />
         {result.riskReasons.length > 0 && <ul className="list-disc space-y-1 pl-5 text-text-secondary">{result.riskReasons.map((reason, index) => <li key={index}>{reason}</li>)}</ul>}
         <div className="border-t border-placeholder pt-4">
           <h3 className="font-bold text-text-primary">Estimativas de metais da IA</h3>

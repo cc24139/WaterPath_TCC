@@ -99,6 +99,20 @@ public class ControllerIA(WaterPathDbContext context, PredicaoIAService service,
         return Ok(new { total, pagina, tamanhoPagina, itens });
     }
 
+    [HttpGet("resumos")]
+    public async Task<IActionResult> Resumos(CancellationToken cancellationToken,
+        [FromQuery, Range(1, int.MaxValue)] int? corpoHidricoId = null,
+        [FromQuery] bool somenteMinhas = false, [FromQuery] int[]? coletaIds = null,
+        [FromQuery, StringLength(100)] string? busca = null, [FromQuery] bool antigasPrimeiro = false,
+        [FromQuery, Range(1, 1000000)] int pagina = 1, [FromQuery, Range(1, 100)] int tamanhoPagina = 10)
+    {
+        if (coletaIds is { Length: > 100 } || coletaIds?.Any(id => id <= 0) == true)
+            return BadRequest("Informe até 100 IDs de coleta válidos.");
+        if (corpoHidricoId.HasValue) await GarantirAcessoCorpoHidricoAsync(corpoHidricoId.Value, cancellationToken);
+        return Ok(await AnalysisSummaryQuery.ReadAsync(context, UsuarioId(), corpoHidricoId, somenteMinhas,
+            coletaIds ?? [], busca, antigasPrimeiro, pagina, tamanhoPagina, cancellationToken));
+    }
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Obter(int id, CancellationToken cancellationToken)
     {

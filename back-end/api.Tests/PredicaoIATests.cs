@@ -72,6 +72,15 @@ public class PredicaoIATests : IAsyncLifetime
     }
 
     [Fact]
+    public void ClienteIaPodeSerResolvidoPeloRegistroHttpDaAplicacao()
+    {
+        var services = new ServiceCollection();
+        services.AddHttpClient<IaClient>(client => client.BaseAddress = new Uri("http://127.0.0.1:18000/"));
+        using var provider = services.BuildServiceProvider();
+        Assert.NotNull(provider.GetRequiredService<IaClient>());
+    }
+
+    [Fact]
     public async Task RotasDeIaExigemJwtEPermissaoSobreAColeta()
     {
         var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
@@ -728,6 +737,75 @@ public class PredicaoIATests : IAsyncLifetime
                 classes: level == 1 ? [] : ["Lixo"]),
         });
         await db.SaveChangesAsync();
+    }
+
+    private async Task<JsonElement> Summaries(int userId = TestJwt.UserId, bool mine = true,
+        int page = 1, int size = 10, int[]? ids = null, string? search = null, bool oldest = false)
+        => JsonSerializer.SerializeToElement(await AnalysisSummaryQuery.ReadAsync(db, userId, null, mine,
+            ids ?? [], search, oldest, page, size, default), new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
+
+    [Fact]
+    public async Task ResumosUsamUltimaPredicaoIntegradaSemImagensNemFallbackParaRiscoAntigo()
+    {
+        var now = DateTimeOffset.UtcNow;
+        await SavePrediction(coletaId, 1, now);
+        await SavePrediction(coletaId, 3, now);
+        var latest = await db.PredicoesIA.OrderByDescending(p => p.Id).FirstAsync();
+        var summary = (await Summaries()).GetProperty("itens")[0];
+        Assert.Equal(latest.Id, summary.GetProperty("predicaoId").GetInt32());
+        Assert.Equal(3, summary.GetProperty("risco").GetProperty("level").GetInt32());
+        Assert.False(summary.TryGetProperty("imagemOriginal", out _));
+        Assert.False(summary.TryGetProperty("resultadoJson", out _));
+        latest.ResultadoJson = "{invalid";
+        await db.SaveChangesAsync();
+        Assert.Equal(JsonValueKind.Null, (await Summaries()).GetProperty("itens")[0].GetProperty("risco").ValueKind);
+        latest.Tipo = "visual";
+        await db.SaveChangesAsync();
+        Assert.Equal(1, (await Summaries()).GetProperty("itens")[0].GetProperty("risco").GetProperty("level").GetInt32());
+    }
+
+    [Fact]
+    public async Task ResumosIncluemColetasPendentesComPaginacaoBuscaEIsolamentoDeUsuario()
+    {
+        var original = await db.Coletas.SingleAsync();
+        var pending = new ColetaEntity { CorpoHidricoId = original.CorpoHidricoId, DataHora = original.DataHora.AddDays(1) };
+        pending.RegistrarResponsavel(TestJwt.UserId, "Teste");
+        var other = new ColetaEntity { CorpoHidricoId = original.CorpoHidricoId, DataHora = original.DataHora.AddDays(2) };
+        other.RegistrarResponsavel(999, "Outro usuário");
+        db.Coletas.AddRange(pending, other);
+        await db.SaveChangesAsync();
+        var first = await Summaries(size: 1);
+        Assert.Equal(2, first.GetProperty("total").GetInt32());
+        Assert.Equal(pending.Id, first.GetProperty("itens")[0].GetProperty("coletaId").GetInt32());
+        Assert.Equal(JsonValueKind.Null, first.GetProperty("itens")[0].GetProperty("predicaoId").ValueKind);
+        Assert.Equal(coletaId, (await Summaries(page: 2, size: 1)).GetProperty("itens")[0].GetProperty("coletaId").GetInt32());
+        Assert.Equal(coletaId, (await Summaries(size: 1, oldest: true)).GetProperty("itens")[0].GetProperty("coletaId").GetInt32());
+        Assert.Equal(1, (await Summaries(ids: [coletaId, other.Id])).GetProperty("total").GetInt32());
+        Assert.Equal(2, (await Summaries(search: "RIO DE TESTE")).GetProperty("total").GetInt32());
+        Assert.Equal(0, (await Summaries(search: "inexistente")).GetProperty("total").GetInt32());
+        Assert.Equal(0, (await Summaries(userId: 888, mine: false)).GetProperty("total").GetInt32());
+    }
+
+    [Fact]
+    public async Task RotaDeResumosExigeSessaoEValidaAcessoEPaginacao()
+    {
+        var handler = new Handler(_ => throw new Exception("Consultar resumos não chama a IA"));
+        await using var app = await HttpHost(new IaClient(new HttpClient(handler)));
+        var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
+        using var api = new HttpClient { BaseAddress = new Uri(address) };
+        Assert.Equal(HttpStatusCode.Unauthorized, (await api.GetAsync("/api/ia/predicoes/resumos")).StatusCode);
+        api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TestJwt.Token(999));
+        var riverId = (await db.Coletas.SingleAsync()).CorpoHidricoId;
+        Assert.Equal(HttpStatusCode.Forbidden, (await api.GetAsync($"/api/ia/predicoes/resumos?corpoHidricoId={riverId}")).StatusCode);
+        api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TestJwt.Token());
+        Assert.Equal(HttpStatusCode.BadRequest, (await api.GetAsync("/api/ia/predicoes/resumos?tamanhoPagina=101")).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await api.GetAsync("/api/ia/predicoes/resumos?coletaIds=-1")).StatusCode);
+        var response = await api.GetAsync("/api/ia/predicoes/resumos?somenteMinhas=true");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var result = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(1, result.RootElement.GetProperty("total").GetInt32());
+        Assert.Equal(0, handler.Calls);
     }
 
     private sealed class TestDbContext(DbContextOptions<WaterPathDbContext> options) : WaterPathDbContext(options)

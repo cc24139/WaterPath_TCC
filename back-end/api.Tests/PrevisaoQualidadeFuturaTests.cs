@@ -16,6 +16,18 @@ namespace WaterPath.Api.Tests;
 
 public sealed class PrevisaoQualidadeFuturaTests : IAsyncLifetime
 {
+    private sealed class TestDbContext(DbContextOptions<WaterPathDbContext> options) : WaterPathDbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder model)
+        {
+            base.OnModelCreating(model);
+            // Como nos demais testes: SQLite compara/ordena o instante UTC como DateTime.
+            model.Entity<ColetaEntity>().Property(c => c.DataHora).HasConversion(
+                value => value.UtcDateTime,
+                value => new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Utc)));
+        }
+    }
+
     private readonly SqliteConnection connection = new("Data Source=:memory:");
     private WaterPathDbContext db = null!;
     private int riverId;
@@ -23,7 +35,7 @@ public sealed class PrevisaoQualidadeFuturaTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await connection.OpenAsync();
-        db = new WaterPathDbContext(new DbContextOptionsBuilder<WaterPathDbContext>()
+        db = new TestDbContext(new DbContextOptionsBuilder<WaterPathDbContext>()
             .UseSqlite(connection).Options);
         await db.Database.EnsureCreatedAsync();
         var river = new CorpoHidricoEntity("Rio", "Teste", 10, false);

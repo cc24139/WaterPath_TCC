@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test:water-bodies": "node --experimental-strip-types --test tests/waterBodies.test.mjs",
     "test:dashboard": "node --experimental-strip-types --test tests/dashboard.test.mjs",
-    "test:add-analysis": "node --experimental-strip-types --test tests/addAnalysis.test.mjs"
+    "test:add-analysis": "node --experimental-strip-types --test tests/addAnalysis.test.mjs",
+    "test:add-analysis:integration": "node --experimental-strip-types tests/addAnalysis.integration.mjs",
+    "test:analysis-risk": "node --experimental-strip-types --test tests/analysisRisk.test.mjs"
   },
   "dependencies": {
     "@svgr/webpack": "^8.1.0",

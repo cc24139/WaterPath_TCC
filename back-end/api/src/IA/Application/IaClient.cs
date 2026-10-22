@@ -32,12 +32,10 @@ public class IaClient
     private readonly HttpClient client;
     private readonly ILogger<IaClient> logger;
 
-    public IaClient(HttpClient client) : this(client, NullLogger<IaClient>.Instance) { }
-
-    public IaClient(HttpClient client, ILogger<IaClient> logger)
+    public IaClient(HttpClient client, ILogger<IaClient>? logger = null)
     {
         this.client = client;
-        this.logger = logger;
+        this.logger = logger ?? NullLogger<IaClient>.Instance;
     }
 
     private async Task<HttpResponseMessage> EnviarAsync(string route, MultipartFormDataContent form,

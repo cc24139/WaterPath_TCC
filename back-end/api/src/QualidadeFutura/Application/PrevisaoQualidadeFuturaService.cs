@@ -46,8 +46,9 @@ public sealed class PrevisaoQualidadeFuturaService(
                 .AnyAsync(c => c.Id == input.CorpoHidricoId, cancellationToken))
             throw new IaException(404, "Corpo hídrico não encontrado.");
 
+        var instanteAtual = DateTimeOffset.UtcNow;
         var coletas = await context.Coletas.AsNoTracking()
-            .Where(c => c.CorpoHidricoId == input.CorpoHidricoId && c.DataHora <= DateTimeOffset.UtcNow)
+            .Where(c => c.CorpoHidricoId == input.CorpoHidricoId && c.DataHora <= instanteAtual)
             .Include(c => c.Medicoes)
             .OrderBy(c => c.DataHora).ThenBy(c => c.Id)
             .ToListAsync(cancellationToken);

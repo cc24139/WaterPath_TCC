@@ -15,11 +15,13 @@ export interface AuthSessionUser {
 
 export function useAuthSession() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [user, setUser] = useState<AuthSessionUser | null>(null);
 
   useEffect(() => {
     function syncAuthSession() {
       const session = getAuthSession();
+      setIsReady(true);
       setIsAuthenticated(Boolean(session));
 
       if (!session) {
@@ -47,5 +49,5 @@ export function useAuthSession() {
     };
   }, []);
 
-  return { isAuthenticated, user };
+  return { isAuthenticated, isReady, user };
 }
