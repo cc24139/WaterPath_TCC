@@ -20,12 +20,13 @@ export async function submitAnalysis(input: Submission, operations: SubmissionOp
   return input.image ? operations.analyze(id, input.image, input.sample) : null;
 }
 
-export async function readSubmissionResponse(response: Response): Promise<unknown> {
+export async function readSubmissionResponse(response: Response, emptyNotFoundMessage?: string): Promise<unknown> {
   const text = await response.text();
   let data: unknown;
   try { data = JSON.parse(text); } catch { data = null; }
   if (!response.ok) {
     if (response.status === 401) throw new Error("Sua sessão expirou. Entre novamente para continuar.");
+    if (response.status === 404 && !text.trim() && emptyNotFoundMessage) throw new Error(emptyNotFoundMessage);
     const detail = data && typeof data === "object" && "detail" in data ? data.detail : null;
     const message = typeof detail === "string" ? detail : typeof data === "string" ? data : !text.includes("<") ? text : "";
     throw new Error(message.slice(0, 300) || "Não foi possível concluir o envio. Tente novamente.");

@@ -12,7 +12,7 @@ namespace back_end.src.Domain.CorpoHidrico
         public string Nome { get; private set; }
         public string Localizacao { get; private set; }
         public double Tamanho { get; private set; }
-        private bool EhPrivado { get; set; }
+        public bool EhPrivado { get; private set; }
 
         public List<UserEntity> users { get; private set; }
         public List<Coleta.ColetaEntity> Coletas { get; private set; } = [];
@@ -38,6 +38,16 @@ namespace back_end.src.Domain.CorpoHidrico
             users = new List<UserEntity>();
             Coletas = new List<Coleta.ColetaEntity>();
             Imagens = new List<Imagem.ImagemEntity>();
+        }
+
+        public void AtualizarDados(string nome, string localizacao, double tamanho, bool ehPrivado)
+        {
+            if (string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(localizacao) || tamanho <= 0)
+                throw new ArgumentException("Informe nome, localização e tamanho válidos.");
+            Nome = nome;
+            Localizacao = localizacao;
+            Tamanho = tamanho;
+            EhPrivado = ehPrivado;
         }
     }
 }

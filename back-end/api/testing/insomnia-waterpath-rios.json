@@ -493,10 +493,10 @@
       "_id": "req_rios_update_river",
       "_type": "request",
       "parentId": "fld_rios_crud",
-      "name": "03 PUT válido — divergência conhecida",
+      "name": "03 Atualizar rio próprio",
       "method": "PUT",
       "url": "{{ _.base_url }}/api/corpohidrico/{{ _.created_river_id }}",
-      "description": "Espera sucesso, mas o handler atual perde o ID e responde 400. A falha é intencional para expor a divergência.",
+      "description": "",
       "metaSortKey": 200,
       "body": {
         "mimeType": "application/json",
@@ -539,7 +539,11 @@
           "value": "application/json"
         }
       ],
-      "authentication": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}",
+        "prefix": "Bearer"
+      },
       "preRequestScript": "if (insomnia.environment.get('confirm_dev_database') !== true) throw new Error('Confirme o banco de desenvolvimento/testes em confirm_dev_database.');\nconst base = insomnia.environment.get('base_url');\nif (!/^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/.test(base)) throw new Error('Esta coleção aceita somente API local.');\nconst id = insomnia.environment.get('created_river_id');\nif (!(id > 0) || insomnia.environment.get('owned_run') !== insomnia.environment.get('run_nonce')) throw new Error('Sem ID pertencente à execução atual.');\ninsomnia.request.body.update({ mode: 'raw', raw: JSON.stringify({ corpoHidricoId: id, dataHora: '2026-09-07T12:00:00Z', latitude: -23.5, longitude: -46.6, profundidadeMetros: 1, medicoes: [{codigoMedicao:'Temperatura',valor:22,unidade:'°C'},{codigoMedicao:'Ph',valor:7.2,unidade:'pH'},{codigoMedicao:'OxigenioDissolvido',valor:6,unidade:'mg/L'},{codigoMedicao:'CondutividadeEletrica',valor:120,unidade:'µS/cm'}] }) });",
       "afterResponseScript": "function check(name, actual, expected) { insomnia.test(name, () => insomnia.expect(actual).to.eql(expected)); }\nfunction body() { return insomnia.response.json(); }\nfunction text() { return insomnia.response.text(); }\nconst status = insomnia.response.status;\ncheck('HTTP 201', status, 201);\nif (status === 201) { const b = body(); check('Coleta vinculada', b.id > 0 && b.corpoHidricoId === insomnia.environment.get('created_river_id') && b.medicoes.length === 4, true); if (status === 201 && b.corpoHidricoId === insomnia.environment.get('created_river_id')) insomnia.environment.set('created_collection_id', b.id); }",
       "settingFollowRedirects": "off",
@@ -927,7 +931,7 @@
       "_id": "req_rios_missing_update",
       "_type": "request",
       "parentId": "fld_rios_invalid",
-      "name": "PUT de rio inexistente",
+      "name": "PUT de rio sem permissão",
       "method": "PUT",
       "url": "{{ _.base_url }}/api/corpohidrico/{{ _.missing_id }}",
       "description": "",
@@ -949,7 +953,7 @@
         "prefix": "Bearer"
       },
       "preRequestScript": "if (insomnia.environment.get('confirm_dev_database') !== true) throw new Error('Confirme o banco de desenvolvimento/testes em confirm_dev_database.');\nconst base = insomnia.environment.get('base_url');\nif (!/^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/.test(base)) throw new Error('Esta coleção aceita somente API local.');\n",
-      "afterResponseScript": "function check(name, actual, expected) { insomnia.test(name, () => insomnia.expect(actual).to.eql(expected)); }\nfunction body() { return insomnia.response.json(); }\nfunction text() { return insomnia.response.text(); }\nconst status = insomnia.response.status;\ncheck('HTTP 400', status, 400);\nif (status === 400) { check('Mensagem da resposta', text().includes(\"não encontrado\"), true); }",
+      "afterResponseScript": "function check(name, actual, expected) { insomnia.test(name, () => insomnia.expect(actual).to.eql(expected)); }\nfunction body() { return insomnia.response.json(); }\nfunction text() { return insomnia.response.text(); }\nconst status = insomnia.response.status;\ncheck('HTTP 403', status, 403);\nif (status === 403) {  }",
       "settingFollowRedirects": "off",
       "settingDisableRenderRequestBody": false
     },
@@ -1035,7 +1039,11 @@
           "value": "application/json"
         }
       ],
-      "authentication": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}",
+        "prefix": "Bearer"
+      },
       "preRequestScript": "if (insomnia.environment.get('confirm_dev_database') !== true) throw new Error('Confirme o banco de desenvolvimento/testes em confirm_dev_database.');\nconst base = insomnia.environment.get('base_url');\nif (!/^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/.test(base)) throw new Error('Esta coleção aceita somente API local.');\n",
       "afterResponseScript": "function check(name, actual, expected) { insomnia.test(name, () => insomnia.expect(actual).to.eql(expected)); }\nfunction body() { return insomnia.response.json(); }\nfunction text() { return insomnia.response.text(); }\nconst status = insomnia.response.status;\ncheck('HTTP 400', status, 400);\nif (status === 400) { check('Mensagem da resposta', text().includes(\"Id inválido\"), true); }",
       "settingFollowRedirects": "off",
@@ -1397,7 +1405,11 @@
       "body": {},
       "parameters": [],
       "headers": [],
-      "authentication": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}",
+        "prefix": "Bearer"
+      },
       "preRequestScript": "if (insomnia.environment.get('confirm_dev_database') !== true) throw new Error('Confirme o banco de desenvolvimento/testes em confirm_dev_database.');\nconst base = insomnia.environment.get('base_url');\nif (!/^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/.test(base)) throw new Error('Esta coleção aceita somente API local.');\nconst id = insomnia.environment.get('created_river_id');\nif (!(id > 0) || insomnia.environment.get('owned_run') !== insomnia.environment.get('run_nonce')) throw new Error('Sem ID pertencente à execução atual.');\nconst response = await new Promise((resolve,reject) => insomnia.sendRequest({url: insomnia.environment.get('base_url') + '/api/corpohidrico/' + id, method:'GET', header:{Authorization:'Bearer ' + insomnia.environment.get('token')}}, (err,res) => err ? reject(err) : resolve(res)));\nconst river = response.json();\nif (response.code !== 200 || river.nome !== insomnia.environment.get('created_river_name') || river.localizacao !== '[SINTETICO TESTE] local ' + insomnia.environment.get('run_nonce') || !river.users.some(u => u.id === insomnia.environment.get('user_id'))) throw new Error('Limpeza bloqueada: propriedade do rio não comprovada.');\nconst cid = insomnia.environment.get('created_collection_id'); if (!(cid > 0)) throw new Error('Sem coleta própria.');\nconst responseC = await new Promise((resolve,reject) => insomnia.sendRequest({url: insomnia.environment.get('base_url') + '/api/coleta/' + cid, method:'GET'}, (err,res) => err ? reject(err) : resolve(res)));\nif (responseC.code !== 200 || responseC.json().corpoHidricoId !== id) throw new Error('A coleta não pertence ao rio desta execução.');",
       "afterResponseScript": "function check(name, actual, expected) { insomnia.test(name, () => insomnia.expect(actual).to.eql(expected)); }\nfunction body() { return insomnia.response.json(); }\nfunction text() { return insomnia.response.text(); }\nconst status = insomnia.response.status;\ncheck('HTTP 200', status, 200);\nif (status === 200) { check('Mensagem da resposta', text().includes(\"deletada com sucesso\"), true); }",
       "settingFollowRedirects": "off",
@@ -1425,15 +1437,19 @@
       "_id": "req_rios_delete_river",
       "_type": "request",
       "parentId": "fld_rios_cleanup",
-      "name": "05 Excluir rio próprio (rota pública atual)",
+      "name": "05 Excluir rio próprio",
       "method": "DELETE",
       "url": "{{ _.base_url }}/api/corpohidrico/{{ _.created_river_id }}",
-      "description": "DELETE está público no contrato atual. A pré-verificação autenticada impede limpar fixtures ou outros rios.",
+      "description": "",
       "metaSortKey": 400,
       "body": {},
       "parameters": [],
       "headers": [],
-      "authentication": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}",
+        "prefix": "Bearer"
+      },
       "preRequestScript": "if (insomnia.environment.get('confirm_dev_database') !== true) throw new Error('Confirme o banco de desenvolvimento/testes em confirm_dev_database.');\nconst base = insomnia.environment.get('base_url');\nif (!/^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/.test(base)) throw new Error('Esta coleção aceita somente API local.');\nconst id = insomnia.environment.get('created_river_id');\nif (!(id > 0) || insomnia.environment.get('owned_run') !== insomnia.environment.get('run_nonce')) throw new Error('Sem ID pertencente à execução atual.');\nconst response = await new Promise((resolve,reject) => insomnia.sendRequest({url: insomnia.environment.get('base_url') + '/api/corpohidrico/' + id, method:'GET', header:{Authorization:'Bearer ' + insomnia.environment.get('token')}}, (err,res) => err ? reject(err) : resolve(res)));\nconst river = response.json();\nif (response.code !== 200 || river.nome !== insomnia.environment.get('created_river_name') || river.localizacao !== '[SINTETICO TESTE] local ' + insomnia.environment.get('run_nonce') || !river.users.some(u => u.id === insomnia.environment.get('user_id'))) throw new Error('Limpeza bloqueada: propriedade do rio não comprovada.');",
       "afterResponseScript": "function check(name, actual, expected) { insomnia.test(name, () => insomnia.expect(actual).to.eql(expected)); }\nfunction body() { return insomnia.response.json(); }\nfunction text() { return insomnia.response.text(); }\nconst status = insomnia.response.status;\ncheck('HTTP 200', status, 200);\nif (status === 200) { check('Mensagem da resposta', text().includes(\"deletado com sucesso\"), true); }",
       "settingFollowRedirects": "off",

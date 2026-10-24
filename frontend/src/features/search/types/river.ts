@@ -16,6 +16,8 @@ export type River = {
   userIds: string[];
   measurements: RiverMeasurement[];
   iqa: number | null;
+  iqaCollectedAt?: number;
+  iqaSamples: { collectionId: string; timestamp: number; value: number }[];
   iqaValues: number[];
   qualityRecordCount: number;
 };

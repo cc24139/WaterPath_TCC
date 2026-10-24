@@ -14,6 +14,8 @@ public class PredicaoIAEntity
     public string Tipo { get; set; } = null!;
     public string? EntradaJson { get; set; }
     public string? ResultadoJson { get; set; }
+    public Guid? AnaliseRequestKey { get; set; }
+    public string? AnaliseRequestHash { get; set; }
     public string NomeArquivo { get; set; } = null!;
     public string ContentTypeOriginal { get; set; } = null!;
     public byte[] ImagemOriginal { get; set; } = null!;

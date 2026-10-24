@@ -1,5 +1,7 @@
 # Verificação em 07/10/2026
 
+> Registro histórico desta execução. Em 24/10/2026, a coleção Insomnia foi atualizada: o `PUT` de corpo hídrico válido foi corrigido, a exclusão de corpo hídrico e as escritas de coleta passaram a exigir autorização, e o teste HTTP da coleção passou com cinco divergências legadas conhecidas. Os números e contratos abaixo descrevem apenas 07/10/2026. O estado atual do cadastro está em `frontend/src/features/add-analysis/IMPLEMENTACAO.md`.
+
 ## Resultado e limite da execução
 
 Implementação e coleção concluídas. **Nenhum registro foi inserido no PostgreSQL configurado.** Os dois `.env` apontam para o mesmo Neon remoto, banco `neondb`, sem indicação verificável de desenvolvimento/testes. Foi solicitada confirmação dessa finalidade, ainda sem resposta nesta execução. O comando de população não recebeu `WATERPATH_SEED_TARGET` confirmado e recusou a gravação antes de acessar o banco. Os dados existentes foram preservados.

@@ -18,12 +18,12 @@ import { indicatorFields } from "../constants/addAnalysisOptions";
 import { useAddAnalysisForm } from "../hooks/useAddAnalysisForm";
 import { useWaterBodyOptions } from "../hooks/useWaterBodyOptions";
 
-export function AddAnalysisPage() {
+export function AddAnalysisPage({ resumeCollectionId = null }: { resumeCollectionId?: number | null }) {
   const router = useRouter();
   const { user } = useAuthSession();
   const { options: waterBodyOptions, loading: loadingWaterBodies, error: waterBodiesError, retry: retryWaterBodies } = useWaterBodyOptions();
   const { form, errors, image, imagePreviewUrl, updateField, toggleMetal, updateMetal, updateImage, removeImage,
-    resetForm, save, savedCollectionId, prediction, status, feedback, isBusy } = useAddAnalysisForm();
+    resetForm, save, savedCollectionId, prediction, status, feedback, isBusy } = useAddAnalysisForm(resumeCollectionId);
   const selectedWaterBody = waterBodyOptions.find((option) => option.value === form.waterBody);
   const cannotSubmit = isBusy || loadingWaterBodies || Boolean(waterBodiesError) || !user || !selectedWaterBody;
 
@@ -47,7 +47,7 @@ export function AddAnalysisPage() {
             </div>
             <div className="flex flex-wrap gap-3 lg:justify-end">
               <Button variant="ghost" disabled={isBusy} onClick={() => router.push("/water-bodies")}>{savedCollectionId ? "Voltar" : "Cancelar"}</Button>
-              {savedCollectionId && <Button variant="outline" disabled={isBusy} onClick={resetForm}>Nova análise</Button>}
+              {savedCollectionId && <Button variant="outline" disabled={isBusy} onClick={() => { resetForm(); router.replace("/add-analysis"); }}>Nova análise</Button>}
               {!savedCollectionId && <Button type="submit" name="action" value="save" variant="outline" disabled={cannotSubmit} isLoading={status === "saving"}>Salvar coleta</Button>}
               {!prediction && <Button type="submit" name="action" value="analyze" disabled={cannotSubmit || !image} isLoading={status === "analyzing"}>{status === "analyzing" ? "Analisando..." : savedCollectionId ? "Analisar com IA" : "Salvar e analisar com IA"}</Button>}
             </div>
@@ -70,7 +70,7 @@ export function AddAnalysisPage() {
                         placeholder={loadingWaterBodies ? "Carregando..." : "Selecione um corpo hídrico"} options={waterBodyOptions}
                         disabled={loadingWaterBodies || Boolean(waterBodiesError) || !waterBodyOptions.length} error={waterBodiesError ?? errors.waterBody} required />
                       {waterBodiesError && <button type="button" onClick={retryWaterBodies} className="mt-2 rounded text-xs font-semibold text-primary underline underline-offset-4">Tentar novamente</button>}
-                      {!loadingWaterBodies && !waterBodiesError && !waterBodyOptions.length && <div className="mt-2 text-xs text-text-secondary"><p>Nenhum corpo hídrico cadastrado.</p><Link href="/add-water-bodie" className="font-semibold text-primary underline">Adicionar corpo hídrico</Link></div>}
+                      {!loadingWaterBodies && !waterBodiesError && !waterBodyOptions.length && <div className="mt-2 text-xs text-text-secondary"><p>Nenhum rio público ou vinculado à sua conta disponível.</p><Link href="/add-water-bodie" className="font-semibold text-primary underline">Adicionar corpo hídrico</Link></div>}
                     </div>
                     <AddAnalysisField label="Data e hora da coleta *" name="analysisDate" value={form.analysisDate} onChange={updateField} type="datetime-local" helper="Informe o horário local da coleta." error={errors.analysisDate} required />
                     <FormField id="analysis-responsible" name="responsible" label="Responsável pelo cadastro" value={user?.name ?? ""} onChange={() => {}} disabled helper="Identificado pela sua conta." />

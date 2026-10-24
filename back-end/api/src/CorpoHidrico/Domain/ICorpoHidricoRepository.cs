@@ -8,7 +8,7 @@ namespace back_end.src.Domain.CorpoHidrico
     public interface ICorpoHidricoRepository
     {
         Task Cadastrar(CorpoHidricoEntity corpoHidrico, CancellationToken cancellationToken = default);
-        Task Atualizar(CorpoHidricoEntity corpoHidrico, CancellationToken cancellationToken = default);
+        Task Atualizar(int id, CorpoHidricoEntity corpoHidrico, CancellationToken cancellationToken = default);
         Task Deletar(int id, CancellationToken cancellationToken = default);
         Task<CorpoHidricoEntity?> ObterCorpoHidricoPorId(int id, CancellationToken cancellationToken = default);
         Task<List<CorpoHidricoEntity>> ObterTodos(CancellationToken cancellationToken = default);

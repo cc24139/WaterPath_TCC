@@ -11,6 +11,7 @@ namespace Application.DTOs
         public string Nome { get; set; }
         public string Localizacao { get; set; }
         public double Tamanho { get; set; }
+        public bool EhPrivado { get; set; }
         public List<UserDTO> Users { get; set; }
 
         public static CorpoHidricoDTO FromEntity(CorpoHidricoEntity e)
@@ -21,6 +22,7 @@ namespace Application.DTOs
                 Nome = e.Nome,
                 Localizacao = e.Localizacao,
                 Tamanho = e.Tamanho,
+                EhPrivado = e.EhPrivado,
                 Users =
                     e.users?.Select(u => new UserDTO
                         {

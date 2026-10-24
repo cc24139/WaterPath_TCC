@@ -99,9 +99,9 @@ check('Registro criado nesta execução', owned, true);
 if (owned) insomnia.environment.set('created_river_id', b.id);`) });
 const own = `const id = insomnia.environment.get('created_river_id');
 if (!(id > 0) || insomnia.environment.get('owned_run') !== insomnia.environment.get('run_nonce')) throw new Error('Sem ID pertencente à execução atual.');`;
-req('update_river', '03 PUT válido — divergência conhecida', 'PUT', '/api/corpohidrico/{{ _.created_river_id }}', { auth: true, body: {}, pre: `${own}\n${raw("{ nome: insomnia.environment.get('created_river_name'), localizacao: '[SINTETICO TESTE] local ' + insomnia.environment.get('run_nonce'), tamanho: 8.5, ehPrivado: false }")}`,
-after: msg(200, 'atualizado com sucesso'), description: 'Espera sucesso, mas o handler atual perde o ID e responde 400. A falha é intencional para expor a divergência.' });
-req('create_collection', '04 Cadastrar coleta própria com medições', 'POST', '/api/coleta', { body: {}, pre: `${own}\n${raw("{ corpoHidricoId: id, dataHora: '2026-09-07T12:00:00Z', latitude: -23.5, longitude: -46.6, profundidadeMetros: 1, medicoes: [{codigoMedicao:'Temperatura',valor:22,unidade:'°C'},{codigoMedicao:'Ph',valor:7.2,unidade:'pH'},{codigoMedicao:'OxigenioDissolvido',valor:6,unidade:'mg/L'},{codigoMedicao:'CondutividadeEletrica',valor:120,unidade:'µS/cm'}] }")}`,
+req('update_river', '03 Atualizar rio próprio', 'PUT', '/api/corpohidrico/{{ _.created_river_id }}', { auth: true, body: {}, pre: `${own}\n${raw("{ nome: insomnia.environment.get('created_river_name'), localizacao: '[SINTETICO TESTE] local ' + insomnia.environment.get('run_nonce'), tamanho: 8.5, ehPrivado: false }")}`,
+after: msg(200, 'atualizado com sucesso') });
+req('create_collection', '04 Cadastrar coleta própria com medições', 'POST', '/api/coleta', { auth: true, body: {}, pre: `${own}\n${raw("{ corpoHidricoId: id, dataHora: '2026-09-07T12:00:00Z', latitude: -23.5, longitude: -46.6, profundidadeMetros: 1, medicoes: [{codigoMedicao:'Temperatura',valor:22,unidade:'°C'},{codigoMedicao:'Ph',valor:7.2,unidade:'pH'},{codigoMedicao:'OxigenioDissolvido',valor:6,unidade:'mg/L'},{codigoMedicao:'CondutividadeEletrica',valor:120,unidade:'µS/cm'}] }")}`,
 after: test(201, `const b = body(); check('Coleta vinculada', b.id > 0 && b.corpoHidricoId === insomnia.environment.get('created_river_id') && b.medicoes.length === 4, true); if (status === 201 && b.corpoHidricoId === insomnia.environment.get('created_river_id')) insomnia.environment.set('created_collection_id', b.id);`) });
 req('get_collection', '05 Consultar coleta própria', 'GET', '/api/coleta/{{ _.created_collection_id }}', { pre: own,
 after: test(200, `check('Medições da coleta', body().medicoes.length, 4); check('Rio da coleta', body().corpoHidricoId, insomnia.environment.get('created_river_id'));`) });
@@ -124,11 +124,11 @@ for (const [id, name, payload, message] of [
 req('bad_type','Tamanho com tipo inválido','POST','/api/corpohidrico',{auth:true,body:{nome:'Inválido',localizacao:'Sintética',tamanho:'abc'},after:test(400,`check('Erros de binding', typeof body().errors, 'object');`)});
 req('missing_river','Rio inexistente por ID','GET','/api/corpohidrico/{{ _.missing_id }}',{auth:true,after:msg(404,'não encontrado')});
 req('missing_name','Rio inexistente por nome','GET','/api/corpohidrico/nome/SINTETICO-INEXISTENTE-{{ _.missing_id }}',{after:msg(404,'não encontrado')});
-req('missing_update','PUT de rio inexistente','PUT','/api/corpohidrico/{{ _.missing_id }}',{auth:true,body:{nome:'Sintético',localizacao:'Sintética',tamanho:1},after:msg(400,'não encontrado')});
+req('missing_update','PUT de rio sem permissão','PUT','/api/corpohidrico/{{ _.missing_id }}',{auth:true,body:{nome:'Sintético',localizacao:'Sintética',tamanho:1},after:test(403)});
 req('missing_risk','Risco de ID inválido','GET','/api/corpohidrico/{{ _.missing_id }}/risco-atual',{auth:true,after:msg(400,'ID')});
 req('missing_positive_risk','Risco de registro inexistente','GET','/api/corpohidrico/{{ _.missing_positive_id }}/risco-atual',{auth:true,after:msg(404,'não encontrado')});
 req('missing_collection','Coleta inexistente','GET','/api/coleta/{{ _.missing_id }}',{after:msg(404,'não encontrada')});
-req('invalid_collection','Coleta sem corpo hídrico obrigatório','POST','/api/coleta',{body:{dataHora:'2026-09-07T12:00:00Z'},after:msg(400,'Id inválido')});
+req('invalid_collection','Coleta sem corpo hídrico obrigatório','POST','/api/coleta',{auth:true,body:{dataHora:'2026-09-07T12:00:00Z'},after:msg(400,'Id inválido')});
 req('invalid_measure','Medição negativa','POST','/api/medicoes',{body:{coletaId:'{{ _.created_collection_id }}',medicao:{codigoMedicao:'Ph',valor:-1,unidade:'pH'}},pre:raw("{ coletaId: insomnia.environment.get('created_collection_id'), medicao: {codigoMedicao:'Ph',valor:-1,unidade:'pH'} }"),after:msg(400,'não negativo')});
 req('missing_unit','Medição sem unidade','POST','/api/medicoes',{body:{},pre:raw("{ coletaId: insomnia.environment.get('created_collection_id'), medicao: {codigoMedicao:'Cor',valor:1} }"),after:test(400,`check('Erro presente', text().length > 0, true);`)});
 req('missing_measure','Medição inexistente','GET','/api/medicoes/{{ _.seed_collection_id }}/{{ _.missing_id }}',{after:msg(400,'inválido')});
@@ -159,9 +159,9 @@ const responseC = await new Promise((resolve,reject) => insomnia.sendRequest({ur
 if (responseC.code !== 200 || responseC.json().corpoHidricoId !== id) throw new Error('A coleta não pertence ao rio desta execução.');`;
 req('delete_measure','01 Excluir medição própria','DELETE','/api/medicoes/{{ _.created_collection_id }}/{{ _.created_measurement_id }}',{auth:true,pre:verifyCollection,after:test(204,`check('Resposta vazia', text().length, 0);`)});
 req('deleted_measure','02 Confirmar medição excluída','GET','/api/medicoes/{{ _.created_collection_id }}/{{ _.created_measurement_id }}',{pre:own,after:msg(404,'não encontrada')});
-req('delete_collection','03 Excluir coleta própria','DELETE','/api/coleta/{{ _.created_collection_id }}',{pre:verifyCollection,after:msg(200,'deletada com sucesso')});
+req('delete_collection','03 Excluir coleta própria','DELETE','/api/coleta/{{ _.created_collection_id }}',{auth:true,pre:verifyCollection,after:msg(200,'deletada com sucesso')});
 req('deleted_collection','04 Confirmar coleta excluída','GET','/api/coleta/{{ _.created_collection_id }}',{pre:own,after:msg(404,'não encontrada')});
-req('delete_river','05 Excluir rio próprio (rota pública atual)','DELETE','/api/corpohidrico/{{ _.created_river_id }}',{pre:verifyOwned,after:msg(200,'deletado com sucesso'),description:'DELETE está público no contrato atual. A pré-verificação autenticada impede limpar fixtures ou outros rios.'});
+req('delete_river','05 Excluir rio próprio','DELETE','/api/corpohidrico/{{ _.created_river_id }}',{auth:true,pre:verifyOwned,after:msg(200,'deletado com sucesso')});
 req('deleted_river','06 Confirmar rio excluído','GET','/api/corpohidrico/{{ _.created_river_id }}',{auth:true,after:msg(404,'não encontrado') + `\nif (status === 404) { for (const key of ['created_river_id','created_collection_id','created_measurement_id']) insomnia.environment.set(key, 0); insomnia.environment.set('owned_run',''); }`});
 
 group('registration','06 — Cadastro de usuário de teste');

@@ -8,6 +8,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using back_end.src.Domain.CorpoHidrico;
+using back_end.src.Authorization;
 
 namespace back_end.src.Controllers.CorpoHidrico
 {
@@ -16,10 +17,19 @@ namespace back_end.src.Controllers.CorpoHidrico
     public class ControllerCorpoHidrico : ControllerBase
     {
         private readonly IMediator mediator;
+        private readonly ResourceAuthorizationService authorization;
 
-        public ControllerCorpoHidrico(IMediator mediator)
+        public ControllerCorpoHidrico(IMediator mediator, ResourceAuthorizationService authorization)
         {
             this.mediator = mediator;
+            this.authorization = authorization;
+        }
+
+        private Task<bool> PodeAlterar(int id, CancellationToken cancellationToken)
+        {
+            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) || userId <= 0)
+                return Task.FromResult(false);
+            return authorization.PodeGerenciarCorpoHidricoAsync(id, userId, cancellationToken);
         }
 
         [Authorize]
@@ -151,6 +161,7 @@ namespace back_end.src.Controllers.CorpoHidrico
         {
             try
             {
+                if (!await PodeAlterar(id, cancellationToken)) return Forbid();
                 corpoHidrico.Id = id;
                 await mediator.Send(corpoHidrico, cancellationToken);
                 return Ok("Corpo hídrico atualizado com sucesso");
@@ -161,11 +172,13 @@ namespace back_end.src.Controllers.CorpoHidrico
             }
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Deletar(int id, CancellationToken cancellationToken)
         {
             try
             {
+                if (!await PodeAlterar(id, cancellationToken)) return Forbid();
                 await mediator.Send(new CommandDeletarCorpoHidrico { Id = id }, cancellationToken);
                 return Ok("Corpo hídrico deletado com sucesso");
             }

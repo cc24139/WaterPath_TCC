@@ -13,6 +13,7 @@ export interface AnalysisFieldConfig {
   label: string;
   unit: string;
   measurementCode: string;
+  numericCode: number;
   placeholder: string;
   required: boolean;
 }

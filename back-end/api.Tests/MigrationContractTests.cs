@@ -9,6 +9,21 @@ namespace WaterPath.Api.Tests;
 public class MigrationContractTests
 {
     [Fact]
+    public void IdempotenciaAdicionaChavesOpcionaisEUnicas()
+    {
+        using var db = new WaterPathDbContext(new DbContextOptionsBuilder<WaterPathDbContext>()
+            .UseNpgsql("Host=localhost;Database=waterpath_contract_test").Options);
+        var sql = db.GetService<IMigrator>().GenerateScript("20261017021850_EvoluirQualidadeFuturaPredicaoGeral",
+            "20261024120000_AnalysisIdempotency");
+        Assert.Contains("ADD \"CadastroRequestKey\" uuid", sql);
+        Assert.Contains("ADD \"AnaliseRequestKey\" uuid", sql);
+        Assert.Contains("CREATE UNIQUE INDEX \"IX_Coletas_CadastroRequestKey\"", sql);
+        Assert.Contains("CREATE UNIQUE INDEX \"IX_PredicoesIA_AnaliseRequestKey\"", sql);
+        Assert.DoesNotContain("DROP TABLE", sql);
+        Assert.False(db.Database.HasPendingModelChanges());
+    }
+
+    [Fact]
     public void CadastroAnalisePreservaLegadosEUsaPrecisaoDupla()
     {
         using var db = new WaterPathDbContext(new DbContextOptionsBuilder<WaterPathDbContext>()

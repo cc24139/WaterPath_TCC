@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using back_end.src.Controllers.CorpoHidrico;
+using back_end.src.Authorization;
 using back_end.src.Domain.Coleta;
 using back_end.src.Domain.CorpoHidrico;
 using back_end.src.Infrastructure.Repository;
@@ -65,6 +66,7 @@ public class RiverCollectionHttpTests(ITestOutputHelper output)
             builder.Services.AddScoped<WaterPathDbContext>(_ => new HttpDb(
                 new DbContextOptionsBuilder<WaterPathDbContext>().UseSqlite(connection).Options));
             builder.Services.AddScoped<ICorpoHidricoRepository, CorpoHidricoRepository>();
+            builder.Services.AddScoped<ResourceAuthorizationService>();
             builder.Services.AddScoped<IColetaRepository, ColetaRepository>();
             builder.Services.AddScoped<IMedicoesRepository, MedicoesRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -112,14 +114,13 @@ public class RiverCollectionHttpTests(ITestOutputHelper output)
             output.WriteLine(await stderr);
             using var result = JsonDocument.Parse(await File.ReadAllTextAsync(report));
             var failures = result.RootElement.GetProperty("failures").EnumerateArray().ToArray();
-            // O verificador deve continuar e limpar os próprios dados mesmo após a falha do PUT.
+            // O verificador deve continuar e limpar os próprios dados apesar dos contratos legados pendentes.
             Assert.Equal(65, result.RootElement.GetProperty("requests").GetArrayLength());
             Assert.True(result.RootElement.GetProperty("assertions").GetInt32() > 100);
-            Assert.Equal(6, failures.Length);
+            Assert.Equal(5, failures.Length);
             Assert.All(failures, f => Assert.Contains(f.GetProperty("request").GetString(),
-                new[] { "req_rios_update_river", "req_rios_register_missing", "req_rios_seed_name",
+                new[] { "req_rios_register_missing", "req_rios_seed_name",
                     "req_rios_missing_name", "req_rios_seed_period", "req_rios_all_measures" }));
-            Assert.Contains(failures, f => f.GetProperty("request").GetString() == "req_rios_update_river");
             Assert.Equal(1, process.ExitCode);
             db.ChangeTracker.Clear();
             Assert.Equal(6, await db.CorposHidricos.CountAsync());

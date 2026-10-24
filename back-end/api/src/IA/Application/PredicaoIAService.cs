@@ -47,10 +47,12 @@ public class PredicaoIAService
     }
 
     public Task<PredicaoIAEntity> CriarAsync(int coletaId, IFormFile image, string? data,
-        CancellationToken cancellationToken) => ProcessarAsync(coletaId, image, data, cancellationToken);
+        CancellationToken cancellationToken, Guid? requestKey = null, string? requestHash = null) =>
+        ProcessarAsync(coletaId, image, data, cancellationToken, requestKey: requestKey, requestHash: requestHash);
 
     private async Task<PredicaoIAEntity> ProcessarAsync(int coletaId, IFormFile image, string? data,
-        CancellationToken cancellationToken, string? collectionContext = null, ColetaEntity? coletaSnapshot = null)
+        CancellationToken cancellationToken, string? collectionContext = null, ColetaEntity? coletaSnapshot = null,
+        Guid? requestKey = null, string? requestHash = null)
     {
         if (coletaId <= 0) throw new IaException(400, "Informe uma coleta válida.");
         if (image is null || image.Length == 0) throw new IaException(400, "Informe uma imagem.");
@@ -91,12 +93,24 @@ public class PredicaoIAService
         {
             ColetaId = coletaId, CorpoHidricoId = coleta.CorpoHidricoId, DataColeta = coleta.DataHora.UtcDateTime, CriadaEm = DateTime.UtcNow,
             Tipo = data is null ? "vision" : "integrada", EntradaJson = data, ResultadoJson = analise.ResultadoJson,
+            AnaliseRequestKey = requestKey, AnaliseRequestHash = requestHash,
             NomeArquivo = name, ContentTypeOriginal = contentType, ImagemOriginal = original,
             ContentTypeResultado = "image/jpeg", ImagemResultado = analise.Imagem,
         };
         // Grava imagem e resultado juntos somente após a análise ter sucesso.
         context.PredicoesIA.Add(predicao);
         try { await context.SaveChangesAsync(cancellationToken); }
+        catch (DbUpdateException) when (requestKey.HasValue)
+        {
+            context.Entry(predicao).State = EntityState.Detached;
+            var prior = await context.PredicoesIA.AsNoTracking()
+                .SingleOrDefaultAsync(p => p.AnaliseRequestKey == requestKey.Value, cancellationToken);
+            if (prior is not null && prior.ColetaId == coletaId && prior.AnaliseRequestHash == requestHash)
+                return prior;
+            if (prior is not null)
+                throw new IaException(409, "Esta chave de requisição já foi usada com outros dados.");
+            throw new IaException(500, IaErrorCodes.Persistence, "Não foi possível salvar a análise.");
+        }
         catch (DbUpdateException)
         {
             // Impede que uma gravação posterior no mesmo contexto tente salvar esta análise falha.

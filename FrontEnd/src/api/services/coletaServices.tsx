@@ -12,10 +12,10 @@ export const coletaServices = {
     return apiFetch(`${routes.coleta}periodo/${id}?${query}`, { signal }, { redirectOnUnauthorized: false });
   },
 
-  async create(data: ColetaCadastroDTO): Promise<Response> {
+  async create(data: ColetaCadastroDTO, requestKey?: string): Promise<Response> {
     return apiFetch(routes.coleta, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(requestKey ? { "Idempotency-Key": requestKey } : {}) },
       body: JSON.stringify(data),
     }, { redirectOnUnauthorized: false });
   },

@@ -30,7 +30,7 @@ namespace back_end.src.Application.Handler.CorpoHidrico
                 request.EhPrivado
             );
 
-            await corpoHidricoRepository.Atualizar(corpoHidrico, cancellationToken);
+            await corpoHidricoRepository.Atualizar(request.Id, corpoHidrico, cancellationToken);
             return Unit.Value;
         }
     }

@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Security.Claims;
+using back_end.src.Authorization;
 using back_end.src.Domain.Coleta;
 using back_end.src.Domain.CorpoHidrico;
 using back_end.src.IA;
@@ -63,7 +64,7 @@ public class PredicaoIATests : IAsyncLifetime
 
     private ControllerIA Controller(Handler handler)
     {
-        var controller = new ControllerIA(db, Service(handler), new PredicaoIAAuthorizationService(db));
+        var controller = new ControllerIA(db, Service(handler), new ResourceAuthorizationService(db));
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext { User = TestJwt.Principal() },
@@ -255,6 +256,37 @@ public class PredicaoIATests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task RepetirAnaliseComMesmaChaveNaoChamaIaNovamente()
+    {
+        var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            { Content = new StringContent(ValidResponse()) }));
+        var controller = Controller(handler);
+        var key = Guid.NewGuid().ToString();
+        var first = Assert.IsType<CreatedAtActionResult>(await controller.Predizer(
+            new PredicaoIAInput { ColetaId = coletaId, Image = Upload(), Amostra = Sample }, default, key));
+        var repeated = Assert.IsType<CreatedAtActionResult>(await controller.Predizer(
+            new PredicaoIAInput { ColetaId = coletaId, Image = Upload(), Amostra = Sample }, default, key));
+        Assert.Equal(JsonSerializer.SerializeToElement(first.Value).GetProperty("Id").GetInt32(),
+            JsonSerializer.SerializeToElement(repeated.Value).GetProperty("Id").GetInt32());
+        Assert.Equal(1, handler.Calls);
+        Assert.Equal(1, await db.PredicoesIA.CountAsync());
+
+        Assert.IsType<ConflictObjectResult>(await controller.Predizer(
+            new PredicaoIAInput { ColetaId = coletaId, Image = Upload(), Amostra = Sample.Replace("\"ph\":7", "\"ph\":8") },
+            default, key));
+        Assert.Equal(1, handler.Calls);
+    }
+
+    [Fact]
+    public async Task SomenteResponsavelRetomaColetaSemAnaliseIntegrada()
+    {
+        var controller = Controller(new Handler(_ => throw new Exception("Nao deve chamar IA")));
+        Assert.IsType<OkObjectResult>(await controller.RetomarColeta(coletaId, default));
+        controller.HttpContext.User = TestJwt.Principal(999);
+        Assert.IsType<NotFoundObjectResult>(await controller.RetomarColeta(coletaId, default));
+    }
+
+    [Fact]
     public async Task AnaliseVisualTambemSalvaDeteccoesSemFabricarMetais()
     {
         var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
@@ -379,7 +411,7 @@ public class PredicaoIATests : IAsyncLifetime
         builder.Services.AddSingleton(db);
         builder.Services.AddSingleton(ia);
         builder.Services.AddScoped<PredicaoIAService>();
-        builder.Services.AddScoped<PredicaoIAAuthorizationService>();
+        builder.Services.AddScoped<ResourceAuthorizationService>();
         builder.Services.AddScoped<back_end.src.Domain.CorpoHidrico.ICorpoHidricoRepository, back_end.src.Infrastructure.Repository.CorpoHidricoRepository>();
         builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ControllerIA).Assembly));
         TestJwt.Configure(builder.Services);

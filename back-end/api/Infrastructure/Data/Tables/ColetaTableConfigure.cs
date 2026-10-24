@@ -17,6 +17,8 @@ public class ColetaTableConfigure : IEntityTypeConfiguration<ColetaEntity>
         builder.Property(e => e.Latitude);
         builder.Property(e => e.Longitude);
         builder.Property(e => e.ProfundidadeMetros);
+        builder.Property(e => e.CadastroRequestHash).HasMaxLength(64);
+        builder.HasIndex(e => e.CadastroRequestKey).IsUnique();
 
 
         builder

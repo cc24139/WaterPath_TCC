@@ -3,6 +3,27 @@ import test from "node:test";
 import { parseWaterBodyId } from "../src/features/water-body-monitoring/utils/waterBodyId.ts";
 import { buildRivers, readNumber, readTimestamp } from "../src/features/search/utils/riverData.ts";
 import { measurementChart } from "../src/features/search/utils/measurementChart.ts";
+import { collectionIqa, comparableAnalysisValue } from "../src/features/water-body-monitoring/analysis/utils/analysisData.ts";
+import { dashboardMetrics } from "../src/features/water-body-monitoring/dashboard/utils/dashboardData.ts";
+
+test("analysis card uses only one exact, uncensored IQA measurement", () => {
+  const sample = { medicoes: [{ codigoMedicao: 17, valor: 0, unidade: "pontos", censurado: false }] };
+  assert.equal(collectionIqa(sample), 0);
+  assert.equal(collectionIqa({ medicoes: [...sample.medicoes, ...sample.medicoes] }), null);
+  assert.equal(collectionIqa({ medicoes: [{ ...sample.medicoes[0], censurado: true }] }), null);
+  assert.equal(collectionIqa({ medicoes: [{ ...sample.medicoes[0], unidade: "mg/L" }] }), null);
+  assert.equal(collectionIqa({ medicoes: [{ ...sample.medicoes[0], valor: 101 }] }), null);
+});
+
+test("analysis trends reject censored, incompatible-unit and invalid indicator values", () => {
+  const sample = { medicoes: [{ codigoMedicao: 4, valor: 250, unidade: "µS/cm", censurado: false }] };
+  const conductivity = dashboardMetrics.find((metric) => metric.key === "conductivity");
+  assert.equal(comparableAnalysisValue(sample, conductivity), 250);
+  assert.equal(comparableAnalysisValue({ medicoes: [{ ...sample.medicoes[0], unidade: "mg/L" }] }, conductivity), null);
+  assert.equal(comparableAnalysisValue({ medicoes: [{ ...sample.medicoes[0], censurado: true }] }, conductivity), null);
+  const ph = dashboardMetrics.find((metric) => metric.key === "ph");
+  assert.equal(comparableAnalysisValue({ medicoes: [{ codigoMedicao: 1, valor: 15, unidade: "pH", censurado: false }] }, ph), null);
+});
 
 const bodies = [{ id: 1, nome: "Rio de teste", localizacao: "Niterói/RJ", users: [{ id: 3 }] }];
 
@@ -75,6 +96,28 @@ test("IQA is not rescaled or guessed from an unordered series", () => {
   assert.equal(river.iqa, null);
   assert.equal(river.status, "Sem classificação");
   assert.deepEqual(river.iqaValues, [80, 40]);
+});
+
+test("dated collection IQA takes precedence over undated legacy quality and preserves zero", () => {
+  const sample = (id, date, value) => ({ id, corpoHidricoId: 1, dataHora: date,
+    medicoes: [{ codigoMedicao: "Iqa", valor: value, unidade: "pontos", censurado: false }] });
+  const river = buildRivers(bodies, [sample(9, "2026-02-01T12:00:00Z", 80),
+    sample(2, "2026-03-01T12:00:00Z", 0)], [{ id: 1, corpoHidricoId: 1, iqa: 95 }]).rivers[0];
+  assert.equal(river.iqa, 0);
+  assert.equal(river.iqaCollectedAt, Date.parse("2026-03-01T12:00:00Z"));
+  assert.deepEqual(river.iqaSamples.map(item => item.value), [80, 0]);
+  assert.equal(river.status, "Crítica");
+});
+
+test("invalid, censored, duplicate and wrong-unit collection IQA does not replace legacy value", () => {
+  const valid = { codigoMedicao: 17, valor: 75, unidade: "pontos", censurado: false };
+  for (const medicoes of [[{ ...valid, valor: 101 }], [{ ...valid, censurado: true }],
+    [valid, valid], [{ ...valid, unidade: "mg/L" }]]) {
+    const river = buildRivers(bodies, [{ id: 1, corpoHidricoId: 1, dataHora: "2026-02-01T12:00:00Z", medicoes }],
+      [{ id: 1, corpoHidricoId: 1, iqa: 60 }]).rivers[0];
+    assert.equal(river.iqa, 60);
+    assert.equal(river.iqaCollectedAt, undefined);
+  }
 });
 
 test("invalid nonempty body payload fails instead of masquerading as an empty database", () => {

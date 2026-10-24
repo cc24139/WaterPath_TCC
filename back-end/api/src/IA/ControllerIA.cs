@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using back_end.src.IA.Application;
+using back_end.src.Authorization;
+using back_end.src.Requests;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,7 +41,7 @@ public class AnaliseLagoInput
 [IaExceptionFilter]
 [Route("api/ia/predicoes")]
 public class ControllerIA(WaterPathDbContext context, PredicaoIAService service,
-    PredicaoIAAuthorizationService authorization) : ControllerBase
+    ResourceAuthorizationService authorization) : ControllerBase
 {
     private int UsuarioId()
     {
@@ -68,7 +70,9 @@ public class ControllerIA(WaterPathDbContext context, PredicaoIAService service,
     public async Task<IActionResult> AnalisarLago(int corpoHidricoId, [FromForm] AnaliseLagoInput input,
         CancellationToken cancellationToken)
     {
-        await GarantirAcessoCorpoHidricoAsync(corpoHidricoId, cancellationToken);
+        if (!await authorization.PodeIniciarAnaliseCorpoHidricoAsync(corpoHidricoId, UsuarioId(), cancellationToken))
+            throw new IaException(403, IaErrorCodes.Forbidden,
+                "Você não tem permissão para analisar este corpo hídrico.");
         var result = await service.AnalisarLagoAsync(corpoHidricoId, input.Image, cancellationToken);
         return RespostaCriada(result);
     }
@@ -79,10 +83,23 @@ public class ControllerIA(WaterPathDbContext context, PredicaoIAService service,
     [HttpPost]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(PredicaoIAService.LimiteImagem + 1024 * 1024)]
-    public async Task<IActionResult> Predizer([FromForm] PredicaoIAInput input, CancellationToken cancellationToken)
+    public async Task<IActionResult> Predizer([FromForm] PredicaoIAInput input, CancellationToken cancellationToken,
+        [FromHeader(Name = "Idempotency-Key")] string? requestKey = null)
     {
         await GarantirAcessoColetaAsync(input.ColetaId, cancellationToken);
-        var result = await service.CriarAsync(input.ColetaId, input.Image, input.ObterAmostra(), cancellationToken);
+        if (!RequestIdempotency.TryParse(requestKey, out var key)) return BadRequest("Idempotency-Key deve ser um UUID válido.");
+        var sample = input.ObterAmostra();
+        var hash = key.HasValue ? await RequestIdempotency.HashAnalysisAsync(input.Image, sample, cancellationToken) : null;
+        if (key.HasValue)
+        {
+            var prior = await context.PredicoesIA.AsNoTracking()
+                .SingleOrDefaultAsync(p => p.AnaliseRequestKey == key.Value, cancellationToken);
+            if (prior is not null)
+                return prior.ColetaId == input.ColetaId && prior.AnaliseRequestHash == hash
+                    ? RespostaCriada(prior)
+                    : Conflict("Esta chave de requisição já foi usada com outros dados.");
+        }
+        var result = await service.CriarAsync(input.ColetaId, input.Image, sample, cancellationToken, key, hash);
         return RespostaCriada(result);
     }
 
@@ -111,6 +128,24 @@ public class ControllerIA(WaterPathDbContext context, PredicaoIAService service,
         if (corpoHidricoId.HasValue) await GarantirAcessoCorpoHidricoAsync(corpoHidricoId.Value, cancellationToken);
         return Ok(await AnalysisSummaryQuery.ReadAsync(context, UsuarioId(), corpoHidricoId, somenteMinhas,
             coletaIds ?? [], busca, antigasPrimeiro, pagina, tamanhoPagina, cancellationToken));
+    }
+
+    [HttpGet("coletas/{coletaId:int}/retomada")]
+    public async Task<IActionResult> RetomarColeta(int coletaId, CancellationToken cancellationToken)
+    {
+        var userId = UsuarioId();
+        var coleta = await context.Coletas.AsNoTracking()
+            .Where(c => c.Id == coletaId && c.ResponsavelId == userId)
+            .Select(c => new
+            {
+                c.Id, c.CorpoHidricoId, c.DataHora,
+                Medicoes = c.Medicoes.Select(m => new { m.codigoMedicao, m.valor, m.unidade, m.censurado }),
+                MetaisPesados = c.MetaisPesados.Select(m => new { m.Nome, m.Concentracao, m.Unidade }),
+            }).SingleOrDefaultAsync(cancellationToken);
+        if (coleta is null) return NotFound("Coleta não encontrada para esta conta.");
+        if (await context.PredicoesIA.AsNoTracking().AnyAsync(p => p.ColetaId == coletaId && p.Tipo == "integrada", cancellationToken))
+            return Conflict("Esta coleta já possui análise integrada.");
+        return Ok(coleta);
     }
 
     [HttpGet("{id:int}")]

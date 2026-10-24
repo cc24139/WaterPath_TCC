@@ -10,8 +10,10 @@ import type { AddAnalysisErrors, AddAnalysisFieldName, MetalSymbol } from "../ty
 import { buildAnalysisPayload, validateAnalysis, validateImage } from "../utils/analysisForm";
 import { readSubmissionResponse, submitAnalysis } from "../utils/submitAnalysis";
 import { readPrediction } from "../utils/predictionResponse";
+import { restoreCollectionForm } from "../utils/restoreCollection";
+import { clearRequestKey, imageFingerprint, requestKey } from "../utils/idempotencyKeys";
 
-export function useAddAnalysisForm() {
+export function useAddAnalysisForm(resumeCollectionId: number | null = null) {
   const [form, setForm] = useState(initialAddAnalysisForm);
   const [errors, setErrors] = useState<AddAnalysisErrors>({});
   const [image, setImage] = useState<File | null>(null);
@@ -20,11 +22,35 @@ export function useAddAnalysisForm() {
   const [savedCollectionId, setSavedCollectionId] = useState<number | null>(null);
   const savedIdRef = useRef<number | null>(null);
   const [prediction, setPrediction] = useState<PredicaoDTO | null>(null);
-  const [status, setStatus] = useState<"idle" | "saving" | "analyzing">("idle");
+  const [status, setStatus] = useState<"idle" | "restoring" | "saving" | "analyzing">(resumeCollectionId ? "restoring" : "idle");
   const [feedback, setFeedback] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const busyRef = useRef(false);
 
   useEffect(() => () => { if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current); }, []);
+  useEffect(() => {
+    if (!resumeCollectionId) return;
+    const controller = new AbortController();
+    async function restore() {
+      try {
+        const response = await predicaoServices.getCollectionToResume(resumeCollectionId!, controller.signal);
+        const collection = await readSubmissionResponse(response,
+          "A retomada da análise ainda não está disponível nesta API. Atualize o backend para concluir esta coleta com IA.");
+        const restored = restoreCollectionForm(collection, resumeCollectionId!);
+        if (!controller.signal.aborted) {
+          setForm(restored);
+          savedIdRef.current = resumeCollectionId;
+          setSavedCollectionId(resumeCollectionId);
+          setFeedback({ type: "success", message: `Coleta #${resumeCollectionId} recuperada. Anexe uma imagem para concluir a análise.` });
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) setFeedback({ type: "error", message: error instanceof Error ? error.message : "Não foi possível recuperar a coleta." });
+      } finally {
+        if (!controller.signal.aborted) setStatus("idle");
+      }
+    }
+    void restore();
+    return () => controller.abort();
+  }, [resumeCollectionId]);
 
   function clearError(name: keyof AddAnalysisErrors) {
     setErrors((current) => { const next = { ...current }; delete next[name]; return next; });
@@ -98,16 +124,23 @@ export function useAddAnalysisForm() {
       const payload = buildAnalysisPayload(form);
       const result = await submitAnalysis({ ...payload, savedCollectionId: savedIdRef.current, image: withAI ? image : null }, {
         createCollection: async (data) => {
-          const response = await coletaServices.create(data);
+          const scope = `coleta:${getAuthSession()!.id}`;
+          const key = requestKey(scope, JSON.stringify(data));
+          const response = await coletaServices.create(data, key);
           const created = await readSubmissionResponse(response) as { id?: number } | null;
           if (!created || !Number.isInteger(created.id) || created.id! <= 0) throw new Error("O servidor não confirmou o ID da coleta. Consulte os registros antes de repetir o cadastro.");
+          clearRequestKey(scope, key);
           return created.id!;
         },
         onCollectionSaved: (id) => { savedIdRef.current = id; setSavedCollectionId(id); },
         analyze: async (id, file, sample) => {
           setStatus("analyzing");
-          const result = await readSubmissionResponse(await predicaoServices.create(id, file, sample));
-          return readPrediction(result, id);
+          const scope = `predicao:${getAuthSession()!.id}:${id}`;
+          const key = requestKey(scope, await imageFingerprint(file, sample));
+          const result = await readSubmissionResponse(await predicaoServices.create(id, file, sample, key));
+          const prediction = readPrediction(result, id);
+          clearRequestKey(scope, key);
+          return prediction;
         },
       });
       setPrediction(result);

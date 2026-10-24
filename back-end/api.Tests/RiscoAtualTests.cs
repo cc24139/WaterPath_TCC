@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Claims;
+using back_end.src.Authorization;
 using System.Text;
 using System.Text.Json;
 using Application.Handler.CorpoHidrico;
@@ -254,6 +255,7 @@ public class RiscoAtualTests : IAsyncLifetime
         builder.Logging.ClearProviders();
         builder.Services.AddSingleton(db);
         builder.Services.AddScoped<ICorpoHidricoRepository, CorpoHidricoRepository>();
+        builder.Services.AddScoped<ResourceAuthorizationService>();
         builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ControllerCorpoHidrico).Assembly));
         builder.Services.AddControllers().AddApplicationPart(typeof(ControllerCorpoHidrico).Assembly);
         TestJwt.Configure(builder.Services);

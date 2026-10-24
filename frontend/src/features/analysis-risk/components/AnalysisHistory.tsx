@@ -49,6 +49,7 @@ export function AnalysisHistory({ waterBodyId }: { waterBodyId?: number }) {
               <RiskBadge level={item.risco?.level} unavailable={item.predicaoId !== null && !item.risco} />
             </div>
             {item.predicaoId ? <p className="mt-2 text-xs text-text-secondary">Análise #{item.predicaoId}{item.analisadaEm ? ` · ${formatMonitoringDate(item.analisadaEm)}` : ""}</p> : <p className="mt-2 text-xs text-text-secondary">Coleta salva, ainda sem resultado de risco da IA.</p>}
+            {!waterBodyId && !item.predicaoId && <Link href={`/add-analysis?coletaId=${item.coletaId}`} className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4">Concluir análise com IA</Link>}
             {!!item.risco?.reasons.length && <details className="mt-3 text-sm"><summary className="w-fit cursor-pointer font-semibold text-primary">Motivos da classificação</summary><ul className="mt-2 list-disc space-y-1 pl-5 text-text-secondary">{item.risco.reasons.map((reason, index) => <li key={index}>{reason}</li>)}</ul></details>}
           </li>)}</ul>}
         <nav aria-label="Paginação das análises" className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-placeholder pt-4">

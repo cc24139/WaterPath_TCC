@@ -6,6 +6,7 @@ import { LuCalendar, LuDownload, LuDroplet, LuMapPin, LuTrendingUp } from "react
 import { useWaterBodyDashboard } from "../hooks/useWaterBodyDashboard";
 import { buildMeasurementsCsv, dashboardPeriods, filterCollections, formatMonitoringDate } from "../utils/dashboardData";
 import { DashboardPanel } from "./DashboardPanel";
+import { DashboardSummaryCard } from "./DashboardSummaryCard";
 import { DashboardEvolutionChart } from "./DashboardEvolutionChart";
 import { CurrentParametersCard, RecentMeasurementsTable } from "./DashboardMeasurements";
 import { Button } from "@/components/ui/Button";
@@ -67,15 +68,19 @@ export function WaterBodyDashboard({ waterBodyId }: { waterBodyId: number }) {
         {collectionsLoading ? <MonitoringSkeleton /> : collectionsError && collections.length === 0 ? <DashboardPanel title="Medições indisponíveis"><p className="text-sm text-text-secondary">A consulta não foi concluída. Tente novamente para exibir os parâmetros e o histórico.</p></DashboardPanel> : <>
           {!collectionsError && collections.length === 0 && <p role="status" className="rounded-lg bg-primary/5 p-4 text-sm">Nenhuma coleta registrada para este corpo hídrico.</p>}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <DashboardPanel title="Risco da última coleta">{riskState.loading ? <p role="status" className="text-sm text-text-secondary">Carregando risco...</p> : <RiskBadge level={currentRisk?.risco?.level} unavailable={!!latest && (!currentRisk || currentRisk.predicaoId !== null)} />}<p className="mt-2 text-xs text-text-secondary">Classificação da IA, na escala de 1 a 3.</p></DashboardPanel>
-            <DashboardPanel title="Análise da coleta"><p className="text-sm text-text-secondary">{currentRisk?.analisadaEm ? formatMonitoringDate(currentRisk.analisadaEm) : currentRisk ? "Sem análise integrada" : "Resultado indisponível"}</p><p className="mt-2 text-xs text-text-secondary">{currentRisk?.predicaoId ? `Análise #${currentRisk.predicaoId}` : "O risco depende de uma análise da IA."}</p></DashboardPanel>
-            <DashboardPanel title="Última coleta"><div className="flex items-center gap-3"><LuCalendar aria-hidden="true" className="h-10 w-10 shrink-0 rounded-full bg-background p-2 text-text-secondary" /><strong className="text-sm">{latest ? formatMonitoringDate(latest.dataHora) : "—"}</strong></div><p className="mt-2 text-xs text-text-secondary">{latest ? "Horário de Brasília" : collectionsError ? "Consulta indisponível" : "Nenhuma coleta registrada"}</p></DashboardPanel>
-            <DashboardPanel title="Histórico de risco"><div className="flex items-center gap-3"><LuTrendingUp aria-hidden="true" className="h-10 w-10 rounded-full bg-background p-2 text-text-secondary" /><Link href={`${basePath}/history`} className="text-sm text-primary underline">Consultar riscos por coleta</Link></div><p className="mt-2 text-xs text-text-secondary">Cada resultado mantém a data da coleta analisada.</p></DashboardPanel>
+            <DashboardSummaryCard title="Risco da última coleta" value={riskState.loading ? <span role="status">Carregando risco...</span> : <RiskBadge level={currentRisk?.risco?.level} unavailable={!!latest && (!currentRisk || currentRisk.predicaoId !== null)} />}
+              detail={latest ? "Classificação da IA na escala de 1 a 3." : "Registre uma coleta para obter uma análise."} />
+            <DashboardSummaryCard title="Análise da coleta" value={currentRisk?.analisadaEm ? formatMonitoringDate(currentRisk.analisadaEm) : latest ? "Sem análise integrada" : "Sem coleta"}
+              detail={currentRisk?.predicaoId ? `Análise #${currentRisk.predicaoId}` : latest ? "A última coleta ainda não tem resultado da IA." : "Nenhuma análise disponível."} />
+            <DashboardSummaryCard title="Última coleta" icon={<LuCalendar aria-hidden="true" className="h-5 w-5" />} value={latest ? formatMonitoringDate(latest.dataHora) : "Sem coleta"}
+              detail={latest ? "Data e hora de Brasília." : collectionsError ? "Consulta indisponível." : "Nenhuma medição registrada."} />
+            <DashboardSummaryCard title="Histórico de risco" icon={<LuTrendingUp aria-hidden="true" className="h-5 w-5" />} value="Riscos por coleta"
+              detail="Compare resultados e datas anteriores." action={{ label: "Abrir histórico", href: `${basePath}/history` }} />
           </div>
           <DashboardEvolutionChart collections={filtered} period={period} onPeriodChange={changePeriod} />
           <div className="grid items-stretch gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
             <CurrentParametersCard latest={latest} basePath={basePath} />
-            <DashboardPanel title="Diagnóstico resumido" action={{ label: "Ver análise e recomendações", href: `${basePath}/analysis` }}>
+            <DashboardPanel title="Diagnóstico resumido" action={{ label: "Ver análise completa", href: `${basePath}/analysis` }}>
               <div className="flex min-h-28 items-center gap-4"><LuDroplet aria-hidden="true" className="h-14 w-14 shrink-0 rounded-full bg-primary/5 p-4 text-primary" />{currentRisk?.risco ? <div><RiskBadge level={currentRisk.risco.level} /><ul className="mt-3 list-disc space-y-1 pl-4 text-sm text-text-secondary">{currentRisk.risco.reasons.map((reason, index) => <li key={index}>{reason}</li>)}</ul></div> : <p className="text-sm leading-relaxed text-text-secondary">Nenhum resultado de risco disponível para a última coleta.</p>}</div>
             </DashboardPanel>
           </div>

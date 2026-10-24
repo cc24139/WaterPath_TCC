@@ -15,5 +15,6 @@ export interface CorpoHidricoDTO {
   nome: string;
   localizacao: string;
   tamanho: number;
+  ehPrivado: boolean;
   users: UserDTO[];
 }

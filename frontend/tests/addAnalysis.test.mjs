@@ -4,8 +4,18 @@ import { readPrediction } from "../src/features/add-analysis/utils/predictionRes
 import { initialAddAnalysisForm } from "../src/features/add-analysis/constants/addAnalysisOptions.ts";
 import { buildAnalysisPayload, parseDecimal, validateAnalysis, validateImage } from "../src/features/add-analysis/utils/analysisForm.ts";
 import { readSubmissionResponse, submitAnalysis } from "../src/features/add-analysis/utils/submitAnalysis.ts";
+import { restoreCollectionForm } from "../src/features/add-analysis/utils/restoreCollection.ts";
+import { clearRequestKey, requestKey } from "../src/features/add-analysis/utils/idempotencyKeys.ts";
+import { canAnalyzeWaterBody } from "../src/features/add-analysis/utils/waterBodyAccess.ts";
 
 const validForm = () => ({ ...initialAddAnalysisForm, waterBody: "12", analysisDate: "2026-01-02T10:30", temperatura: "24,3", ph: "7", condutividade_eletrica: "100", oxigenio_dissolvido: "6", metals: {} });
+
+test("public rivers and linked private rivers are available for analysis", () => {
+  assert.equal(canAnalyzeWaterBody({ ehPrivado: false, users: [] }, "7"), true);
+  assert.equal(canAnalyzeWaterBody({ ehPrivado: true, users: [{ id: 7 }] }, "7"), true);
+  assert.equal(canAnalyzeWaterBody({ ehPrivado: true, users: [{ id: 8 }] }, "7"), false);
+  assert.equal(canAnalyzeWaterBody({ users: [] }, "7"), false);
+});
 
 test("blank or malformed decimals never become zero", () => {
   for (const raw of ["", " ", "Infinity", "NaN", "0x10", "1.234,56", "3 mg/L", "1e309"]) assert.equal(parseDecimal(raw), null, raw);
@@ -94,6 +104,8 @@ test("API errors show ProblemDetails or readable fallback without server HTML", 
   await assert.rejects(readSubmissionResponse(new Response(JSON.stringify({ detail: "Amostra inválida" }), { status: 422 })), /Amostra inválida/);
   await assert.rejects(readSubmissionResponse(new Response("<html>proxy failure</html>", { status: 502 })), /Não foi possível concluir/);
   await assert.rejects(readSubmissionResponse(new Response("", { status: 401 })), /sessão expirou/);
+  await assert.rejects(readSubmissionResponse(new Response("", { status: 404 }), "A retomada não está disponível nesta API."), /retomada não está disponível/);
+  await assert.rejects(readSubmissionResponse(new Response("Coleta não encontrada para esta conta.", { status: 404 }), "A retomada não está disponível nesta API."), /Coleta não encontrada/);
 });
 
 
@@ -103,4 +115,40 @@ test("IA response must match collection and contain safe display values", () => 
   assert.throws(() => readPrediction(result, 99));
   assert.throws(() => readPrediction({ ...result, resultado: { ...result.resultado, metalPredictions: [{ name: "Fe", value: null, unit: "mg/L" }] } }, 1));
   assert.throws(() => readPrediction({ ...result, resultado: { ...result.resultado, riskReasons: [{}] } }, 1));
+});
+
+test("saved collection can restore a locked form with measured metals and zero", () => {
+  const collection = { id: 42, corpoHidricoId: 12, dataHora: "2026-01-02T13:30:00Z", medicoes: [
+    { codigoMedicao: 0, valor: -1, unidade: "°C", censurado: false },
+    { codigoMedicao: 1, valor: 7, unidade: "pH", censurado: false },
+    { codigoMedicao: 4, valor: 0, unidade: "µS/cm", censurado: false },
+    { codigoMedicao: 2, valor: 6, unidade: "mg/L", censurado: false },
+  ], metaisPesados: [{ nome: "Pb", concentracao: 0, unidade: "µg/L" }] };
+  const form = restoreCollectionForm(collection, 42);
+  const { collection: rebuilt, sample } = buildAnalysisPayload(form);
+  assert.equal(rebuilt.corpoHidricoId, 12);
+  assert.equal(rebuilt.medicoes.find(item => item.codigoMedicao === "CondutividadeEletrica").valor, 0);
+  assert.deepEqual(sample.metais_pesados, [{ name: "Pb", value: 0, unit: "µg/L" }]);
+  assert.throws(() => restoreCollectionForm(collection, 43));
+  assert.throws(() => restoreCollectionForm({ ...collection, medicoes: collection.medicoes.slice(1) }, 42));
+});
+
+test("lost response reuses the request key, while changed data receives a new key", () => {
+  const values = new Map();
+  const previous = globalThis.localStorage;
+  globalThis.localStorage = {
+    getItem: key => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: key => values.delete(key),
+  };
+  try {
+    const first = requestKey("coleta:7", "payload-a");
+    assert.equal(requestKey("coleta:7", "payload-a"), first);
+    assert.notEqual(requestKey("coleta:7", "payload-b"), first);
+    const second = requestKey("coleta:7", "payload-b");
+    clearRequestKey("coleta:7", second);
+    assert.notEqual(requestKey("coleta:7", "payload-b"), second);
+  } finally {
+    globalThis.localStorage = previous;
+  }
 });

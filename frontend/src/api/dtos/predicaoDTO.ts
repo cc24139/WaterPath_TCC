@@ -19,5 +19,7 @@ export interface PredicaoDTO {
     riskLabel: string;
     riskReasons: string[];
     metalPredictions: { name: string; value: number; unit: string }[];
+    totalObjects?: number;
+    detections?: { className: string; count: number; interpretation?: string }[];
   };
 }

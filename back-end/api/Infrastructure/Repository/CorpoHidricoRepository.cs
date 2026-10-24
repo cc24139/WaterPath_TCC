@@ -17,14 +17,15 @@ namespace back_end.src.Infrastructure.Repository
             this.context = context;
         }
 
-        public async Task Atualizar(CorpoHidricoEntity corpoHidrico, CancellationToken cancellationToken = default)
+        public async Task Atualizar(int id, CorpoHidricoEntity corpoHidrico, CancellationToken cancellationToken = default)
         {
-            var entityToUpdate = await context.CorposHidricos.FindAsync([corpoHidrico.Id], cancellationToken);
+            var entityToUpdate = await context.CorposHidricos.FindAsync([id], cancellationToken);
             if (entityToUpdate == null)
             {
                 throw new ArgumentException("Corpo hídrico não encontrado");
             }
-            context.CorposHidricos.Update(corpoHidrico);
+            entityToUpdate.AtualizarDados(corpoHidrico.Nome, corpoHidrico.Localizacao, corpoHidrico.Tamanho,
+                corpoHidrico.EhPrivado);
             await context.SaveChangesAsync(cancellationToken);
         }
 

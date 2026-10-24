@@ -1,6 +1,24 @@
 # Cadastro de análises — implementação inicial
 
-Implementado em 08/10/2026.
+Implementado inicialmente em 08/10/2026. As seções datadas abaixo registram o estado de cada entrega; o estado atual está nesta seção.
+
+## Atualização — 24/10/2026
+
+- A busca de corpos hídricos lê o IQA importado nas medições de coleta (código `17`, unidade `pontos`, escala de 0 a 100), com a data da coleta. Os registros legados de `Qualidade`, sem data, continuam disponíveis. Um valor sem data não substitui um valor datado.
+- Em **Minhas análises**, uma coleta própria sem predição integrada oferece **Concluir análise com IA**. A rota de cadastro recupera as medições e metais persistidos, bloqueia a edição desses dados e permite anexar ou trocar a imagem antes da análise. Uma resposta inexistente, de outra conta ou já analisada não é restaurada.
+- O frontend envia `Idempotency-Key` em UUID no cadastro e na análise. A chave pendente é preservada no armazenamento local para repetir a mesma requisição após uma resposta perdida. A API registra chave e hash do conteúdo; repetição idêntica devolve o mesmo registro, e reutilização com conteúdo diferente devolve conflito (`409`). O banco garante unicidade por índice.
+- O cadastro de coleta exige autenticação e aceita rios públicos ou rios privados vinculados à conta. A atualização ou exclusão do rio continua restrita aos usuários vinculados. Uma coleta com responsável só pode ser alterada ou excluída por ele; nas coletas antigas sem responsável, vale o vínculo ao corpo hídrico. O cadastro anônimo mencionado nas seções históricas não é mais aceito.
+- A migração `20261024120000_AnalysisIdempotency` adiciona chaves e hashes opcionais a `Coletas` e `PredicoesIA`. As colunas opcionais preservam os registros existentes. Aplicar essa migração **antes** de publicar a API e o frontend novos. Não houve implantação remota nesta entrega.
+- Verificação local: 117 testes .NET aprovados (2 de IA real ignorados por falta de serviço configurado), 12 testes do cadastro e 17 da busca aprovados, TypeScript e build de produção aprovados. O teste de migração gera o SQL PostgreSQL e confere os índices únicos e o snapshot do EF; a migração nova ainda não foi aplicada a um PostgreSQL real.
+- Permanecem pendentes a revisão visual em desktop e celular, a execução da nova migração em PostgreSQL de homologação e a publicação. Os itens históricos de retomada, idempotência e autorização marcados como futuros nas seções abaixo foram atendidos nesta atualização.
+
+### Retomada na API publicada
+
+Em 24/10/2026, `GET /api/ia/predicoes/resumos` na API padrão do Render respondeu `401` sem autenticação, enquanto `GET /api/ia/predicoes/coletas/1/retomada` respondeu `404` com corpo vazio. A rota de retomada existe no código local e exige autenticação; esse contraste indica que a versão publicada ainda não a inclui. O frontend agora informa que é necessário atualizar a API quando recebe esse `404` vazio, preservando a mensagem específica do servidor para uma coleta inexistente ou de outra conta. Para o botão **Concluir análise com IA** funcionar nesse ambiente, aplicar a migração `20261024120000_AnalysisIdempotency` e publicar o backend atualizado antes de publicar o frontend. Não usar a consulta pública legada de coleta como substituta da rota autorizada de retomada.
+
+### Rios disponíveis para análise
+
+O campo `EhPrivado` já existia no modelo, mas não era retornado por `CorpoHidricoDTO`; por isso o formulário só mostrava rios vinculados ao usuário. O DTO agora expõe `ehPrivado`. Um usuário autenticado pode cadastrar coleta e analisar um rio público sem vínculo prévio; um rio privado exige vínculo. A permissão para editar ou excluir rios não foi ampliada. O frontend trata uma resposta antiga sem `ehPrivado` como privada para não presumir acesso público. A API atualizada precisa ser publicada para que os rios públicos apareçam no formulário conectado ao ambiente remoto.
 
 ## Mudanças na tela
 
@@ -67,7 +85,7 @@ A migração **`20261008140000_CadastroAnalise`** adiciona `ResponsavelId` e `Re
 dotnet ef database update
 ```
 
-Publicar o backend antes do frontend: uma API antiga pode ignorar a nova lista de metais. A IA deve estar configurada em `IA:BaseUrl` (ou `IA__BaseUrl`) e oferecer o contrato descrito em `back-end/api/CONTRATO_PREDICAO.md`.
+Publicar o backend antes do frontend: uma API antiga pode ignorar a nova lista de metais. A IA deve estar configurada em `IA:BaseUrl` (ou `IA__BaseUrl`) e oferecer o contrato descrito em `back-end/contracts/ia/README.md`.
 
 ## Endereço da API
 

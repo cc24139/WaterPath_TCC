@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using back_end.src.Domain.CianoBacteria;
 using back_end.src.Domain.CorpoHidrico;
@@ -21,6 +22,8 @@ namespace back_end.src.Domain.Coleta
         public DateTimeOffset DataHora { get;  set; }
         public int? ResponsavelId { get; private set; }
         public string? ResponsavelNome { get; private set; }
+        [JsonIgnore] public Guid? CadastroRequestKey { get; private set; }
+        [JsonIgnore] public string? CadastroRequestHash { get; private set; }
         public double? Latitude { get;  set; }
         public double? Longitude { get;  set; }
         public double? ProfundidadeMetros { get;  set; }
@@ -53,6 +56,13 @@ namespace back_end.src.Domain.Coleta
                 throw new ArgumentException("Responsável inválido.");
             ResponsavelId = id;
             ResponsavelNome = nome;
+        }
+
+        public void RegistrarRequisicao(Guid key, string hash)
+        {
+            if (key == Guid.Empty || hash.Length != 64) throw new ArgumentException("Identificação da requisição inválida.");
+            CadastroRequestKey = key;
+            CadastroRequestHash = hash;
         }
 
         public void AdicionarMedicao(MedicoesEntity medicao)

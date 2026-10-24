@@ -12,7 +12,7 @@ a lista com aviso de indisponibilidade. Uma resposta vazia é diferente de erro.
 - Coletas: `id`, `dataHora`, `corpoHidricoId` e `medicoes[]` com `codigoMedicao`, `valor`, `unidade` e `censurado`.
 - Condutividade elétrica: código `4` ou `CondutividadeEletrica`, em `µS/cm` (também aceita as grafias `μS/cm` e `uS/cm`). O código `3` não é usado como substituto.
 - Registros planos legados continuam aceitos com `data`, `ph`, `oxigenioDissolvido` e `corpoHidrico.id`. Para condutividade, exigem `condutividadeEletrica` e `condutividadeEletricaUnidade` explícitos.
-- Qualidade: `id`, `iqa`, `corpoHidrico.id`. Não há data, unidade ou coleta associada.
+- IQA datado: medição da coleta com código `17` (`Iqa`), unidade `pontos`, valor entre 0 e 100 e `dataHora` da coleta. O endpoint legado de qualidade (`id`, `iqa`, `corpoHidrico.id`) continua como fonte sem data.
 - O adaptador também aceita campos em PascalCase, `IQA`, relações por
   `corpoHidricoId` e números como strings com ponto ou vírgula decimal. Não aceita
   objetos de paginação como se fossem listas; uma alteração desse contrato deve
@@ -24,12 +24,11 @@ a lista com aviso de indisponibilidade. Uma resposta vazia é diferente de erro.
 
 ## Gráficos e valores ausentes
 
-O antigo gráfico de IQA tinha números e meses fixos. Como `QualidadeEntity` não
-possui data nem vínculo com uma coleta, um histórico temporal de IQA não pode ser
-obtido desse contrato. A tela apresenta o histórico de pH, condutividade elétrica ou oxigênio
-dissolvido das coletas. Para implementar IQA ao longo do tempo será necessário
-persistir a data da avaliação ou a referência à coleta e expor isso na leitura.
-A data de uma previsão de qualidade futura não é a data de uma medição de IQA.
+O antigo gráfico de IQA tinha números e meses fixos. A tela apresenta o histórico
+de pH, condutividade elétrica ou oxigênio dissolvido das coletas. O IQA importado
+como medição usa a data da própria coleta; os registros legados de `QualidadeEntity`
+continuam sem data e não compõem uma série temporal. A data de uma previsão de
+qualidade futura não é a data de uma medição de IQA.
 
 - As coletas são ordenadas por data; os pontos no eixo X respeitam o tempo real
   entre registros. Não se presumem doze meses ou amostras mensais.
@@ -51,8 +50,9 @@ A data de uma previsão de qualidade futura não é a data de uma medição de I
   sem ler os eixos. Condutividade usa µS/cm; unidades ausentes/incompatíveis, medições censuradas ou códigos duplicados ficam indisponíveis para o gráfico. O contrato plano legado não informa unidade de oxigênio.
 - "Última coleta" usa a data, com ID como desempate determinístico, e não preenche
   seus valores ausentes com valores de outra coleta. A tabela permite ver empates.
-- Um único IQA válido é exibido como registro sem data. Havendo mais de um registro,
-  os valores são listados sem ordem cronológica e não se escolhe um "mais recente"
+- As medições datadas de IQA são ordenadas por data da coleta, e a mais recente
+  alimenta o resumo. Registros legados válidos ficam sem data e não substituem
+  uma medição datada. Havendo apenas registros legados, não se escolhe um "mais recente"
   pelo ID ou pela posição. As faixas visuais anteriores do projeto foram mantidas
   e explicitadas na tela; não constituem validação normativa de qualidade.
 - Temperatura, foto ilustrativa e porcentagem de IQA foram retiradas. Os valores

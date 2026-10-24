@@ -55,7 +55,9 @@ function RiverCard({ river, isSelected }: { river: River; isSelected: boolean })
                   <span className="text-sm font-bold">{formatMeasurement(river.iqa)} / 100</span>
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getRiverStatusClassName(river.status)}`}>{river.status}</span>
                 </div>
-                <p className="mt-2 text-xs text-text-secondary">Registro sem data; pode não corresponder à última coleta.</p>
+                <p className="mt-2 text-xs text-text-secondary">{river.iqaCollectedAt !== undefined
+                  ? `IQA da coleta de ${formatCollectionDate(river.iqaCollectedAt)} (UTC). Nota registrada, não calculada pela tela.`
+                  : "Registro sem data; pode não corresponder à última coleta."}</p>
               </>
             ) : (
               <p className="mt-2 text-xs text-text-secondary">{river.qualityRecordCount > 1 ? "Há vários registros sem data. Não é possível determinar o IQA mais recente." : "Sem IQA válido disponível."}</p>

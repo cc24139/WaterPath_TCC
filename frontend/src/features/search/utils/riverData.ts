@@ -120,6 +120,7 @@ export function buildRivers(bodies: unknown[], collections: unknown[], qualities
       status: "Sem classificação",
       measurements: [],
       iqa: null,
+      iqaSamples: [],
       iqaValues: [],
       qualityRecordCount: 0,
     });
@@ -150,6 +151,11 @@ export function buildRivers(bodies: unknown[], collections: unknown[], qualities
     };
     if ([measurement.ph, measurement.conductivity, measurement.dissolvedOxygen].includes(null)) invalidMetrics++;
     river.measurements.push(measurement);
+    // IQA imported with a collection has a reliable date; legacy Qualidade records do not.
+    if (Array.isArray(field(collection, "medicoes"))) {
+      const iqa = collectionMetric(collection, 17, "Iqa", "iqa", 100, "pontos");
+      if (iqa !== null) river.iqaSamples.push({ collectionId, timestamp, value: iqa });
+    }
   }
 
   const qualityIds = new Set<string>();
@@ -171,8 +177,11 @@ export function buildRivers(bodies: unknown[], collections: unknown[], qualities
 
   for (const river of rivers.values()) {
     river.measurements.sort((a, b) => a.timestamp - b.timestamp || Number(a.id) - Number(b.id));
+    river.iqaSamples.sort((a, b) => a.timestamp - b.timestamp || Number(a.collectionId) - Number(b.collectionId));
     // No date exists on Qualidade: neither response order nor ID proves recency.
-    river.iqa = river.qualityRecordCount === 1 ? river.iqaValues[0] ?? null : null;
+    const latestIqa = river.iqaSamples.at(-1);
+    river.iqa = latestIqa?.value ?? (river.qualityRecordCount === 1 ? river.iqaValues[0] ?? null : null);
+    river.iqaCollectedAt = latestIqa?.timestamp;
     river.status = getRiverStatus(river.iqa);
   }
 

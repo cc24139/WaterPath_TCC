@@ -128,6 +128,13 @@ namespace back_end.Migrations
 
             modelBuilder.Entity("back_end.src.Domain.Coleta.ColetaEntity", b =>
                 {
+                    b.Property<string>("CadastroRequestHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("CadastroRequestKey")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
@@ -158,6 +165,9 @@ namespace back_end.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CorpoHidricoId");
+
+                    b.HasIndex("CadastroRequestKey")
+                        .IsUnique();
 
                     b.ToTable("Coletas", "waterPath");
                 });
@@ -353,6 +363,13 @@ namespace back_end.Migrations
 
             modelBuilder.Entity("back_end.src.IA.Domain.PredicaoIAEntity", b =>
                 {
+                    b.Property<string>("AnaliseRequestHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("AnaliseRequestKey")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
@@ -407,6 +424,9 @@ namespace back_end.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ColetaId", "CriadaEm");
+
+                    b.HasIndex("AnaliseRequestKey")
+                        .IsUnique();
 
                     b.ToTable("PredicoesIA", "waterPath");
                 });

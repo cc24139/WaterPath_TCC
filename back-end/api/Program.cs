@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using back_end.src.IA.Application;
+using back_end.src.Authorization;
 using back_end.src.QualidadeFutura.Application;
 using Infrastructure.Data.Seeding;
 
@@ -83,7 +84,7 @@ builder.Services.AddScoped<IMetalPesadoRepository, MetalPesadoRepository>();
 builder.Services.AddScoped<IQualidadeRepository, QualidadeRepository>();
 builder.Services.AddScoped<IQualidadeFuturaRepository, QualidadeFuturaRepository>();
 builder.Services.AddScoped<PredicaoIAService>();
-builder.Services.AddScoped<PredicaoIAAuthorizationService>();
+builder.Services.AddScoped<ResourceAuthorizationService>();
 var configuredIaUrl = builder.Configuration["IA:BaseUrl"];
 if (!Uri.TryCreate(configuredIaUrl, UriKind.Absolute, out var iaUrl)
     || (iaUrl.Scheme != Uri.UriSchemeHttp && iaUrl.Scheme != Uri.UriSchemeHttps))

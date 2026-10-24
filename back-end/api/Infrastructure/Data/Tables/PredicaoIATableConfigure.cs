@@ -13,6 +13,8 @@ public class PredicaoIATableConfigure : IEntityTypeConfiguration<PredicaoIAEntit
         builder.Property(p => p.Tipo).HasMaxLength(20).IsRequired();
         builder.Property(p => p.EntradaJson).HasColumnType("jsonb");
         builder.Property(p => p.ResultadoJson).HasColumnType("jsonb");
+        builder.Property(p => p.AnaliseRequestHash).HasMaxLength(64);
+        builder.HasIndex(p => p.AnaliseRequestKey).IsUnique();
         builder.Property(p => p.NomeArquivo).IsRequired();
         builder.Property(p => p.ContentTypeOriginal).HasMaxLength(100).IsRequired();
         builder.Property(p => p.ContentTypeResultado).HasMaxLength(100).IsRequired();
