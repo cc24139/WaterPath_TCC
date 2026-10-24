@@ -1,8 +1,10 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { parseWaterBodyId } from "@/features/water-body-monitoring/utils/waterBodyId";
+import { WaterBodyDashboard } from "@/features/water-body-monitoring/dashboard/components/WaterBodyDashboard";
+
 export default async function WaterBodyPage({ params }: { params: Promise<{ waterBodyId: string }> }) {
   const { waterBodyId } = await params;
   const id = parseWaterBodyId(waterBodyId);
   if (id === null) notFound();
-  redirect(`/water-bodies/${id}/dashboard`);
+  return <WaterBodyDashboard key={id} waterBodyId={id} />;
 }

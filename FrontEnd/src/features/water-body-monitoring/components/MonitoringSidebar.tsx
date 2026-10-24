@@ -1,11 +1,13 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { SideBar, monitoringSideBarSections } from "@/components/layout/SideBar";
 
 const monitoringPaths = new Set(["/dashboard", "/history", "/analysis", "/report", "/insert"]);
 
 export function MonitoringSidebar({ waterBodyId }: { waterBodyId: string }) {
   const basePath = `/water-bodies/${encodeURIComponent(waterBodyId)}`;
+  const pathname = usePathname();
   const sections = monitoringSideBarSections.map((section) => ({
     ...section,
     items: section.items.map((item) => ({
@@ -17,5 +19,5 @@ export function MonitoringSidebar({ waterBodyId }: { waterBodyId: string }) {
     })),
   }));
 
-  return <SideBar variant="monitoring" sections={sections} />;
+  return <SideBar variant="monitoring" sections={sections} activeHref={pathname === basePath ? `${basePath}/dashboard` : undefined} />;
 }

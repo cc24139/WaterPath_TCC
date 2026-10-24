@@ -13,7 +13,7 @@ export function collectionIqa(collection: MonitoringColetaDTO | undefined): numb
 export function comparableAnalysisValue(collection: MonitoringColetaDTO, metric: DashboardMetric): number | null {
   const measurement = getMeasurement(collection, metric);
   const value = measurementValue(measurement);
-  if (value === null || value < 0 || (metric.key === "ph" && value > 14)) return null;
+  if (value === null || (value < 0 && metric.key !== "temperature") || (metric.key === "ph" && value > 14)) return null;
   const unit = measurement?.unidade.replace(/[μu]/g, "µ");
   const expected = metric.key === "ph" ? "pH" : metric.unit;
   return unit === expected ? value : null;

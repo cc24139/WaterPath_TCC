@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { LuArrowRight, LuWaves, LuZap } from "react-icons/lu";
+import { LuArrowRight, LuWaves } from "react-icons/lu";
 import { Card } from "@/components/ui/Card";
 import type { River } from "../types/river";
 import { formatCollectionDate, formatMeasurement, getRiverStatusClassName } from "../utils/riverData";
@@ -65,7 +65,7 @@ function RiverCard({ river, isSelected }: { river: River; isSelected: boolean })
             {river.qualityRecordCount > 1 && river.iqaValues.length > 0 && <p className="mt-2 break-words text-xs text-text-secondary">Valores registrados (escala de 0 a 100, sem ordem cronológica): {river.iqaValues.map(formatMeasurement).join("; ")}.</p>}
             </div>
             <Link
-              href={`/water-bodies/${river.id}`}
+              href={`/water-bodies/${river.id}/dashboard`}
               aria-label={`Ver análise completa de ${river.name}`}
               className="inline-flex shrink-0 items-center gap-2 rounded py-2 font-heading text-sm font-semibold text-primary transition-colors hover:text-secondary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
             >

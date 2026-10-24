@@ -4,7 +4,7 @@
 
 - O layout agora compartilha sidebar e área principal. `MonitoringSidebar` preserva o ID nos links; o relatório mantém seu conteúdo em `WaterBodyReport`, sem duplicar sidebar ou `<main>`.
 - `loading.tsx` e `not-found.tsx` reutilizam componentes da feature. `error.tsx` mantém as ações de recuperação.
-- `parseWaterBodyId` valida IDs positivos de 32 bits em todas as páginas desta área. A entrada redireciona para o dashboard.
+- `parseWaterBodyId` valida IDs positivos de 32 bits em todas as páginas desta área. A entrada também renderiza o dashboard, sem redirecionamento intermediário.
 - O dashboard consulta os detalhes no cliente com `useGetById`: trata carregamento, sucesso, 401, 403, 404 e falhas inesperadas, cancela requisições ao sair e ignora respostas antigas. A consulta de detalhes não redireciona automaticamente no 401; a interface oferece login com retorno ao dashboard.
 - O 404 recebido no navegador mostra o componente de recurso não encontrado como estado local; ele não altera o status HTTP da página. IDs inválidos são tratados com `notFound()` no servidor.
 - O dashboard agora possui a primeira implementação descrita abaixo. Integração das outras telas e proteção da inserção permanecem nas próximas etapas.
@@ -37,7 +37,7 @@ Base do projeto: Next.js 16.2.4, App Router, React 19 e Tailwind CSS. Caminhos i
 | `loading.tsx` | Interface temporária enquanto o conteúdo da rota suspende | Esqueleto de cartões e gráficos |
 | `error.tsx` | Recuperação de uma falha inesperada durante a renderização abaixo dele | Falha ao consultar a API ou processar a resposta |
 | `not-found.tsx` | Interface para recurso não encontrado | ID inválido ou corpo hídrico removido |
-| `page.tsx` | Entrada em `/water-bodies/{id}` | Encaminhamento para o dashboard |
+| `page.tsx` | Entrada em `/water-bodies/{id}` | Renderiza o dashboard do mesmo ID |
 
 Os quatro arquivos especiais não são endereços separados. Não se navega para `/loading` ou `/error` para usá-los.
 
@@ -340,10 +340,12 @@ Antes de conectar a ação de inserir dados, proteja também `/water-bodies/{id}
 
 **7. A entrada `page.tsx` e o fluxo completo**
 
-O botão “Ver Análise” já leva a `/water-bodies/{id}`. Quando o dashboard estiver preparado, a página de entrada pode encaminhar para ele:
+O cartão da lista abre `/water-bodies/{id}/dashboard` diretamente. A entrada antiga `/water-bodies/{id}` também renderiza o dashboard para preservar links salvos:
 
 ```tsx
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import { WaterBodyDashboard } from "@/features/water-body-monitoring/dashboard/components/WaterBodyDashboard";
+import { parseWaterBodyId } from "@/features/water-body-monitoring/utils/waterBodyId";
 
 export default async function WaterBodyPage({
   params,
@@ -351,17 +353,19 @@ export default async function WaterBodyPage({
   params: Promise<{ waterBodyId: string }>;
 }) {
   const { waterBodyId } = await params;
-  redirect(`/water-bodies/${encodeURIComponent(waterBodyId)}/dashboard`);
+  const id = parseWaterBodyId(waterBodyId);
+  if (id === null) notFound();
+  return <WaterBodyDashboard key={id} waterBodyId={id} />;
 }
 ```
 
-A página de destino continua responsável por validar o ID e consultar os dados. O redirecionamento não comprova que o registro existe.
+A validação do ID ocorre na rota; o componente consulta os dados e distingue 401, 403, 404 e falhas de rede.
 
 **8. Ordem de implementação sugerida**
 
 1. Criar `MonitoringSidebar`, adaptar o layout e retirar a estrutura duplicada do relatório.
 2. Implementar as interfaces de `loading`, `error` e `not-found` com os exemplos acima.
-3. Preparar o dashboard para validar o ID e adicionar o redirecionamento de entrada.
+3. Preparar o dashboard e a entrada para validar o ID e renderizar o mesmo conteúdo.
 4. Escolher a busca no cliente ou no servidor e implementar o tratamento dos status da API.
 5. Adicionar nome, localização e estado vazio antes dos gráficos reais.
 6. Integrar histórico, análise e relatório com o mesmo ID da URL e suas próprias consultas.
@@ -371,7 +375,7 @@ A página de destino continua responsável por validar o ID e consultar os dados
 
 | Cenário | Como verificar | Resultado esperado |
 | --- | --- | --- |
-| Entrada pelo cartão | Clicar em “Ver Análise” | Abrir o dashboard do mesmo ID após implementar o redirecionamento |
+| Entrada pelo cartão | Clicar em “Ver Análise” | Abrir o dashboard do mesmo ID diretamente |
 | Navegação interna | Abrir todas as opções da sidebar | Manter o ID, destacar a opção correta e exibir uma única sidebar |
 | Link direto | Recarregar `/water-bodies/12/history` | Consultar o ID da URL sem depender da seleção anterior |
 | Carregamento no servidor | Introduzir temporariamente uma espera na página assíncrona em desenvolvimento | Mostrar o esqueleto e preservar a estrutura do layout |
