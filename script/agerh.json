@@ -1,0 +1,36 @@
+{
+  "source_name": "PMQQS / Monitoramento Rio Doce - monitoramento convencional",
+  "source_url": "https://gis.samarco.com/arcgis/rest/services/R01_Camadas/REP_PMQQS_Matriz_Invertida_Manual/FeatureServer/0",
+  "timezone": "UTC",
+  "compartment": "water",
+  "columns": {
+    "station": "station",
+    "datetime": "datetime",
+    "latitude": "latitude",
+    "longitude": "longitude"
+  },
+  "parameters": [
+    {
+      "column": "ph",
+      "code": "Ph",
+      "unit": "pH"
+    }
+  ],
+  "metals": [
+    {
+      "column": "iron_dissolved_mg_L",
+      "name": "Fe",
+      "unit": "mg/L",
+      "source_unit": "mg/L"
+    }
+  ],
+  "stations": {
+    "RDO-15": {
+      "body_name": "Rio Doce",
+      "location": "Linhares, ES",
+      "state": "ES",
+      "size_km": 850,
+      "size_source": "Comprimento aproximado total de 850 km, publicado pela ANA: https://www.gov.br/ana/pt-br/assuntos/gestao-das-aguas/planos-de-recursos-hidricos/planos-de-recursos-hidricos-de-bacias-hidrograficas/planos-de-bacias-hidrograficas-interfederativas/doce. Referencia hidrografica BHO6: https://metadados.snirh.gov.br/geonetwork/srv/api/records/32e309da-a8c1-443f-90ac-0cd79ce6a33d. O numero e o comprimento total aproximado informado pela ANA, nao uma medicao local recalculada."
+    }
+  }
+}

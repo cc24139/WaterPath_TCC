@@ -39,7 +39,8 @@ API_IMAGE_PATH = "/api/imagem"
 API_BODY_FIELDS = {"name": "nome", "location": "localizacao", "size_km": "tamanho",
                    "private": "ehPrivado", "user_ids": "userIds"}
 API_COLLECTION_FIELDS = {"body_id": "corpoHidricoId", "datetime": "dataHora", "measurements": "medicoes",
-                         "latitude": "latitude", "longitude": "longitude"}
+                         "latitude": "latitude", "longitude": "longitude", "depth": "profundidadeMetros",
+                         "metals": "metaisPesados"}
 API_MEASUREMENT_FIELDS = {"code": "codigoMedicao", "value": "valor", "unit": "unidade",
                           "censored": "ehCensurado", "limit": "limite"}
 API_IMAGE_FIELDS = {"file": "Imagem", "body_id": "IdCorpoHidrico", "collection_id": "idColeta"}
@@ -47,6 +48,8 @@ API_MEASUREMENTS = {"Temperatura", "Ph", "OxigenioDissolvido", "Turbidez", "Cond
                     "SolidosSuspensosTotais", "Cor", "CarbonoOrganicoTotal", "Dbo5", "DqoPermanganato",
                     "DqoDicromato", "Fosfato", "FosforoTotal", "NitrogenioAmoniacal", "Nitrito", "Nitrato",
                     "NitrogenioTotal", "Iqa"}
+API_METALS = {"Fe": "mg/L", "Mn": "mg/L", "Cr": "µg/L", "Ni": "µg/L", "Cu": "µg/L",
+              "Zn": "µg/L", "Cd": "µg/L", "Pb": "µg/L"}
 
 
 class ImportErrorSafe(Exception):
@@ -212,14 +215,36 @@ def validated_records(headers: list[str], rows: list[dict[str, str]], mapping: d
         if columns.get(optional):
             used.add(columns[optional])
     params = mapping.get("parameters", [])
-    if not isinstance(params, list) or not params:
-        raise ImportErrorSafe("Configure pelo menos um parâmetro medido.")
+    metals = mapping.get("metals", [])
+    if not isinstance(params, list) or not isinstance(metals, list) or not (params or metals):
+        raise ImportErrorSafe("Configure ao menos um parâmetro de água ou metal pesado.")
     for parameter in params:
         if not all(parameter.get(k) for k in ("column", "code", "unit")):
             raise ImportErrorSafe("Cada parâmetro requer column, code e unit.")
         if parameter["code"] not in API_MEASUREMENTS:
             raise ImportErrorSafe(f"Código {parameter['code']!r} não existe no enum de medições da API.")
         used.add(parameter["column"])
+    compartment = mapping.get("compartment", "water")
+    if compartment != "water":
+        raise ImportErrorSafe("O endpoint de coleta representa água; sedimento/elutriato não pode ser importado como água.")
+    if metals and mapping.get("compartment") != "water":
+        raise ImportErrorSafe("Declare explicitamente 'compartment': 'water' ao importar metais.")
+    metal_names: set[str] = set()
+    for metal in metals:
+        if not all(metal.get(k) for k in ("column", "name", "unit")):
+            raise ImportErrorSafe("Cada metal requer column, name e unit de destino.")
+        name = str(metal["name"])
+        if name not in API_METALS:
+            raise ImportErrorSafe(f"Metal {name!r} não existe no contrato da API.")
+        if metal["unit"] != API_METALS[name]:
+            raise ImportErrorSafe(f"Use {API_METALS[name]} para {name}, conforme o contrato da API.")
+        source_unit = str(metal.get("source_unit", metal["unit"]))
+        if source_unit not in {metal["unit"], "µg/L", "mg/L"}:
+            raise ImportErrorSafe(f"Unidade de origem não reconhecida para {name}: {source_unit!r}.")
+        if name in metal_names:
+            raise ImportErrorSafe(f"Metal duplicado na configuração: {name}.")
+        metal_names.add(name)
+        used.add(metal["column"])
     missing = sorted(str(h) for h in used if h not in headers)
     if missing:
         raise ImportErrorSafe("Cabeçalhos não encontrados no CSV: " + ", ".join(missing))
@@ -267,10 +292,31 @@ def validated_records(headers: list[str], rows: list[dict[str, str]], mapping: d
                 raise ImportErrorSafe(f"IQA fora do intervalo 0–100 na linha {line}.")
             if parameter["code"] != "Temperatura" and value < 0:
                 raise ImportErrorSafe(f"Valor negativo não permitido para {parameter['code']} na linha {line}.")
-        if not measurements:
+        metal_measurements = []
+        metal_sources = []
+        for metal in metals:
+            raw = (row.get(metal["column"]) or "").strip()
+            if not raw or raw.lower() in {"na", "n/a", "null", "-"}:
+                continue
+            if raw.startswith(("<", ">")):
+                raise ImportErrorSafe(f"Resultado censurado {raw!r} para {metal['name']} na linha {line}; a API não preserva limites de quantificação.")
+            source_value = finite_number(raw, metal["name"])
+            if source_value < 0:
+                raise ImportErrorSafe(f"Concentração negativa não permitida para {metal['name']} na linha {line}.")
+            source_unit = str(metal.get("source_unit", metal["unit"]))
+            value = source_value
+            if source_unit == "µg/L" and metal["unit"] == "mg/L":
+                value /= 1000
+            elif source_unit == "mg/L" and metal["unit"] == "µg/L":
+                value *= 1000
+            metal_measurements.append({"nome": metal["name"], "concentracao": value, "unidade": metal["unit"]})
+            metal_sources.append({"nome": metal["name"], "valor": source_value, "unidade": source_unit,
+                                  "valor_api": value, "unidade_api": metal["unit"]})
+        if not measurements and not metal_measurements:
             continue
         record: dict[str, Any] = {"source_station": station_key, "signature": f"{station_key}|{source_time}",
                                   "body": station, "dataHora": source_time, "medicoes": measurements,
+                                  "metaisPesados": metal_measurements, "metaisFonte": metal_sources,
                                   "source_url": source_url, "source_name": source_name}
         for key in ("latitude", "longitude"):
             column = columns.get(key)
@@ -444,6 +490,8 @@ def apply_records(base: str, records: list[dict[str, Any]], state_path: Path) ->
         payload = {API_COLLECTION_FIELDS["body_id"]: body_id,
                    API_COLLECTION_FIELDS["datetime"]: timestamp,
                    API_COLLECTION_FIELDS["measurements"]: record["medicoes"]}
+        if record.get("metaisPesados"):
+            payload[API_COLLECTION_FIELDS["metals"]] = record["metaisPesados"]
         if "Latitude" in record:
             payload[API_COLLECTION_FIELDS["latitude"]] = record["Latitude"]
         if "Longitude" in record:
@@ -460,7 +508,9 @@ def apply_records(base: str, records: list[dict[str, Any]], state_path: Path) ->
             raise ImportErrorSafe("API não retornou ID após criar coleta; interrompendo para evitar repetição incerta.")
         state["collections"][signature] = {"id": collection_id, "body_id": body_id, "timestamp": timestamp,
                                             "station": record["source_station"], "body_name": record["body"]["body_name"],
-                                            "source_url": record["source_url"], "source_name": record["source_name"]}
+                                            "source_url": record["source_url"], "source_name": record["source_name"],
+                                            "compartment": "water",
+                                            "metais_fonte": record.get("metaisFonte", [])}
         write_state(state_path, state)
         existing_by_body[body_id].setdefault(timestamp, []).append((record.get("Latitude"), record.get("Longitude")))
         print(f"Importada coleta {collection_id} do ponto {record['source_station']}.")

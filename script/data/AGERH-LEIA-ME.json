@@ -1,0 +1,24 @@
+{
+  "source_name": "AGERH IQA-ES / Programa QualiRios ES",
+  "accessed_on": "2026-10-25",
+  "files": {
+    "dados_iqa-25-10-2026-073333.csv": "CSV original UTF-8, 5,330 linhas, 65 colunas; arquivo preservado sem conversão.",
+    "xml_pontos_de_coleta.xml": "Metadados oficiais dos pontos, incluindo código, município e coordenadas.",
+    "xml_corpos_hidricos.xml": "Metadados oficiais dos nomes de corpos hídricos e bacias.",
+    "xml_bacias_hidrograficas.xml": "Tabela oficial de bacias hidrográficas."
+  },
+  "source_urls": {
+    "page": "https://servicos.agerh.es.gov.br/iqa/home.php",
+    "csv": "https://servicos.agerh.es.gov.br/iqa/dados_iqa-25-10-2026-073333.csv",
+    "sampling_points": "https://servicos.agerh.es.gov.br/iqa/xml_pontos_de_coleta",
+    "water_bodies": "https://servicos.agerh.es.gov.br/iqa/xml_corpos_hidricos",
+    "basins": "https://servicos.agerh.es.gov.br/iqa/xml_bacias_hidrograficas"
+  },
+  "known_constraints": [
+    "O CSV contém datas de coleta sem horário; o importador rejeita data sem hora para não atribuir horário de medição.",
+    "As colunas ferro, chumbo, arsênio e alumínio contêm resultados, mas a exportação CSV não informa as unidades. Não mapear/converter esses metais sem fonte oficial que declare as unidades.",
+    "O importador suporta metais apenas na água, rejeita resultados censurados e não suporta As/Al; chumbo e ferro exigem unidade de origem documentada.",
+    "IQA pode ser mapeado em pontos, mas o importador também exige tamanho do corpo hídrico conferido na BHO para cada estação."
+  ],
+  "measurements": "CSV contém IQA e resultados físico-químicos; os campos de metais ferro, chumbo, arsênio e alumínio estão preenchidos em parte das linhas. Datas em data_da_coleta no formato DD/MM/AAAA. Unidades dos metais não declaradas na exportação."
+}
