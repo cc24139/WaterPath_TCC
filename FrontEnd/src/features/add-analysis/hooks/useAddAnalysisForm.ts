@@ -13,8 +13,9 @@ import { readPrediction } from "../utils/predictionResponse";
 import { restoreCollectionForm } from "../utils/restoreCollection";
 import { clearRequestKey, imageFingerprint, requestKey } from "../utils/idempotencyKeys";
 
-export function useAddAnalysisForm(resumeCollectionId: number | null = null) {
-  const [form, setForm] = useState(initialAddAnalysisForm);
+export function useAddAnalysisForm(resumeCollectionId: number | null = null, fixedWaterBodyId: number | null = null) {
+  const initialForm = () => ({ ...initialAddAnalysisForm, waterBody: fixedWaterBodyId ? String(fixedWaterBodyId) : "" });
+  const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<AddAnalysisErrors>({});
   const [image, setImage] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
@@ -100,7 +101,7 @@ export function useAddAnalysisForm(resumeCollectionId: number | null = null) {
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     objectUrlRef.current = null;
     setImage(null); setImagePreviewUrl("");
-    setForm(initialAddAnalysisForm); setErrors({}); setFeedback(null); setPrediction(null);
+    setForm(initialForm()); setErrors({}); setFeedback(null); setPrediction(null);
     savedIdRef.current = null; setSavedCollectionId(null);
   }
   async function save(withAI: boolean) {
@@ -118,7 +119,7 @@ export function useAddAnalysisForm(resumeCollectionId: number | null = null) {
       return;
     }
     busyRef.current = true;
-    setStatus(savedIdRef.current ? "analyzing" : "saving");
+    setStatus(withAI ? "analyzing" : "saving");
     setFeedback(null);
     try {
       const payload = buildAnalysisPayload(form);

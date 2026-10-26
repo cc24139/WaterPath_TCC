@@ -1,17 +1,19 @@
 import type { MonitoringColetaDTO } from "@/api/dtos/monitoringDTO";
 import { DashboardPanel } from "../../dashboard/components/DashboardPanel";
-import { dashboardMetrics, formatMonitoringDate } from "../../dashboard/utils/dashboardData";
-import { comparableAnalysisValue } from "../utils/analysisData";
+import { formatMonitoringDate } from "../../dashboard/utils/dashboardData";
+import { analysisIndicators, comparableAnalysisValue } from "../utils/analysisData";
 
-const indicators = [
-  { metric: dashboardMetrics[0], color: "#ef4444" },
-  { metric: dashboardMetrics[2], color: "#22a6bf" },
-  { metric: dashboardMetrics[1], color: "#9381ff" },
-] as const;
+const colors = ["#ef4444", "#22a6bf", "#9381ff"] as const;
+const indicators = analysisIndicators.map((metric, index) => ({ metric, color: colors[index] }));
 
-export function AnalysisIndicatorsChart({ collections, until }: { collections: MonitoringColetaDTO[]; until: number | null }) {
+export function AnalysisIndicatorsChart({ collections, until, days = 90, title }: {
+  collections: MonitoringColetaDTO[];
+  until: number | null;
+  days?: 90 | 365;
+  title?: string;
+}) {
   const end = until ?? 0;
-  const start = end - 90 * 86400000;
+  const start = end - days * 86400000;
   const chronological = collections.filter((item) => {
     const time = Date.parse(item.dataHora);
     return Number.isFinite(time) && time >= start && time <= end;
@@ -26,7 +28,7 @@ export function AnalysisIndicatorsChart({ collections, until }: { collections: M
   });
   const hasValues = series.some((item) => item.valid.length > 0);
 
-  return <DashboardPanel title="Evolução dos principais indicadores (últimos 90 dias)" className="h-full">
+  return <DashboardPanel title={title ?? `Evolução dos principais indicadores (últimos ${days === 90 ? "90 dias" : "12 meses"})`} className="h-full">
     <div className="space-y-3">
       <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
         {series.map(({ metric, color, valid, unit }) => <div key={metric.key} className="flex items-center gap-2">
@@ -36,7 +38,7 @@ export function AnalysisIndicatorsChart({ collections, until }: { collections: M
         </div>)}
       </div>
       {hasValues && <p className="text-[11px] text-text-secondary">Eixo vertical: posição relativa (0–100) na escala de cada indicador.</p>}
-      {hasValues ? <div className="overflow-x-auto"><svg viewBox="0 0 860 240" role="img" aria-label="Evolução relativa de pH, oxigênio dissolvido e condutividade elétrica nos últimos 90 dias. Cada linha tem uma escala própria; consulte os valores absolutos na legenda e nos pontos." className="h-52 w-full min-w-[560px] sm:h-60">
+      {hasValues ? <div className="overflow-x-auto"><svg viewBox="0 0 860 240" role="img" aria-label={`Evolução relativa de pH, oxigênio dissolvido e condutividade elétrica nos últimos ${days === 90 ? "90 dias" : "12 meses"}. Cada linha tem uma escala própria; consulte os valores absolutos na legenda e nos pontos.`} className="h-52 w-full min-w-[560px] sm:h-60">
         {[0, 25, 50, 75, 100].map((tick) => { const y = 205 - tick / 100 * 165; return <g key={tick}>
           <line x1="45" x2="815" y1={y} y2={y} stroke="var(--color-placeholder)" strokeDasharray={tick === 0 ? undefined : "3 4"} />
           <text x="38" y={y + 4} textAnchor="end" fontSize="11" fill="var(--color-text-secondary)">{tick}</text>
@@ -55,7 +57,7 @@ export function AnalysisIndicatorsChart({ collections, until }: { collections: M
         })}
         <text x="45" y="232" fontSize="11" fill="var(--color-text-secondary)">{formatMonitoringDate(start)}</text>
         <text x="815" y="232" textAnchor="end" fontSize="11" fill="var(--color-text-secondary)">{formatMonitoringDate(end)}</text>
-      </svg></div> : <p role="status" className="flex min-h-52 items-center justify-center rounded-lg bg-background/50 p-6 text-center text-sm text-text-secondary">Não há medições comparáveis nos últimos 90 dias.</p>}
+      </svg></div> : <p role="status" className="flex min-h-52 items-center justify-center rounded-lg bg-background/50 p-6 text-center text-sm text-text-secondary">Não há medições comparáveis nos últimos {days === 90 ? "90 dias" : "12 meses"}.</p>}
       {hasValues && <p className="text-xs leading-relaxed text-text-secondary">Altura relativa de cada linha (0–100) na sua própria escala: {series.map(({ metric, maximum, unit }) => `${metric.label} 0–${maximum.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} ${unit}`).join(" · ")}. Compare a tendência de cada cor; alturas entre indicadores não representam a mesma concentração. Coletas sem valor válido interrompem a linha.</p>}
     </div>
   </DashboardPanel>;

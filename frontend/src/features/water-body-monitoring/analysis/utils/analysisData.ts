@@ -1,5 +1,7 @@
 import type { MonitoringColetaDTO } from "@/api/dtos/monitoringDTO";
-import { getMeasurement, measurementValue, type DashboardMetric } from "../../dashboard/utils/dashboardData.ts";
+import { dashboardMetrics, getMeasurement, measurementValue, type DashboardMetric } from "../../dashboard/utils/dashboardData.ts";
+
+export const analysisIndicators = [dashboardMetrics[0], dashboardMetrics[2], dashboardMetrics[1]] as const;
 
 export function collectionIqa(collection: MonitoringColetaDTO | undefined): number | null {
   const matches = collection?.medicoes.filter((measurement) => measurement.codigoMedicao === 17

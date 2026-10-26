@@ -20,17 +20,20 @@ import { collectionIqa } from "../utils/analysisData";
 import { RiverConditionCards } from "./RiverConditionCards";
 import { RiverInsightListCard } from "./RiverInsightListCard";
 import { AnalysisIndicatorsChart } from "./AnalysisIndicatorsChart";
+import { RiverOverview } from "./RiverOverview";
 
 export function RiverAnalysis({ waterBodyId }: { waterBodyId: number }) {
   const { status, error, corpoHidrico, collections, collectionsLoading, collectionsError, updatedAt, retry } = useWaterBodyDashboard(waterBodyId);
+  const [activeView, setActiveView] = useState<"panorama" | "individual">("panorama");
   const [selectedCollectionId, setSelectedCollectionId] = useState<number | null>(null);
   const basePath = `/water-bodies/${waterBodyId}`;
   const query = new URLSearchParams({ corpoHidricoId: String(waterBodyId), pagina: "1", tamanhoPagina: "100" });
-  const summaries = useAnalysisSummaries(query.toString(), status === "success");
+  const summaries = useAnalysisSummaries(query.toString(), status === "success" && activeView === "individual");
   const analyzed = summaries.data?.itens.filter((item) => item.predicaoId !== null) ?? [];
   const selected = analyzed.find((item) => item.coletaId === selectedCollectionId) ?? analyzed[0];
   const selectedCollection = collections.find((item) => item.id === selected?.coletaId);
-  const result = useRiverPrediction(selected?.predicaoId ?? null, selected?.coletaId ?? null);
+  const result = useRiverPrediction(activeView === "individual" ? selected?.predicaoId ?? null : null,
+    activeView === "individual" ? selected?.coletaId ?? null : null);
   const riskLevel = result.prediction?.resultado.riskLevel ?? selected?.risco?.level;
   const reasons = result.prediction?.resultado.riskReasons ?? selected?.risco?.reasons ?? [];
   const detections = result.prediction?.resultado.detections ?? [];
@@ -64,11 +67,12 @@ export function RiverAnalysis({ waterBodyId }: { waterBodyId: number }) {
   return <div className="space-y-5">
     <header className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
       <div className="min-w-0">
+        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">Análise da qualidade da água</p>
         <h1 className="break-words font-heading text-2xl font-bold sm:text-3xl">{corpoHidrico.nome}</h1>
         <p className="mt-1 flex items-center gap-1.5 text-xs text-text-secondary"><LuMapPin aria-hidden="true" />{corpoHidrico.localizacao}</p>
       </div>
       <div className="flex flex-wrap items-end gap-3">
-        <div className="min-w-0">
+        {activeView === "individual" && <div className="min-w-0">
           <label htmlFor="analysis-collection" className="mb-1 block text-xs font-medium text-text-secondary">Coleta analisada</label>
           <select id="analysis-collection" value={selected?.coletaId ?? ""} disabled={!analyzed.length}
             onChange={(event) => setSelectedCollectionId(Number(event.target.value))}
@@ -76,15 +80,26 @@ export function RiverAnalysis({ waterBodyId }: { waterBodyId: number }) {
             {!analyzed.length && <option value="">Nenhuma análise disponível</option>}
             {analyzed.map((item) => <option key={item.coletaId} value={item.coletaId}>{formatMonitoringDate(item.dataHora)} · Coleta #{item.coletaId}</option>)}
           </select>
-        </div>
-        <Button variant="outline" onClick={() => { retry(); summaries.retry(); result.retry(); }}><LuRefreshCw aria-hidden="true" />Atualizar dados</Button>
+        </div>}
+        <Button variant="outline" onClick={() => { retry(); if (activeView === "individual") { summaries.retry(); result.retry(); } }}><LuRefreshCw aria-hidden="true" />Atualizar dados</Button>
       </div>
     </header>
 
+    <div role="group" aria-label="Tipo de análise" className="flex w-full flex-wrap gap-2 rounded-xl bg-white p-1.5 shadow-default sm:w-fit">
+      {([{"value": "panorama", "label": "Panorama do rio"}, {"value": "individual", "label": "Coleta individual"}] as const).map((view) =>
+        <button key={view.value} type="button" aria-pressed={activeView === view.value} onClick={() => setActiveView(view.value)}
+          className={`min-h-10 flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-primary sm:flex-none ${activeView === view.value ? "bg-primary text-white" : "text-text-secondary hover:bg-primary/5 hover:text-primary"}`}>
+          {view.label}
+        </button>)}
+    </div>
+
     {collectionsError && <Card role="alert" className="text-sm text-text-secondary">{collectionsError}</Card>}
-    {summaries.error && <Card role="alert" className="text-sm text-text-secondary">{summaries.error}</Card>}
-    {summaries.data && summaries.data.total > summaries.data.itens.length && <p className="text-xs text-text-secondary">A seleção mostra as 100 coletas mais recentes. Consulte o histórico para encontrar coletas anteriores.</p>}
-    {collectionsLoading || summaries.loading ? <MonitoringSkeleton /> : <>
+    {activeView === "individual" && summaries.error && <Card role="alert" className="text-sm text-text-secondary">{summaries.error}</Card>}
+    {activeView === "individual" && summaries.data && summaries.data.total > summaries.data.itens.length && <p className="text-xs text-text-secondary">A seleção mostra as 100 coletas mais recentes. Consulte o histórico para encontrar coletas anteriores.</p>}
+    {activeView === "panorama" ? collectionsLoading ? <MonitoringSkeleton />
+      : collectionsError && !collections.length ? <Card><p className="text-sm text-text-secondary">A consulta não foi concluída. Tente novamente para visualizar o panorama.</p></Card>
+      : <RiverOverview collections={collections} until={updatedAt} basePath={basePath} />
+    : collectionsLoading || summaries.loading ? <MonitoringSkeleton /> : <>
       <Card className="!p-4 sm:!p-5">
         <h2 className="mb-3 font-heading text-sm font-bold">Visualização do rio</h2>
         <div className="flex min-h-56 items-center justify-center overflow-hidden rounded-xl bg-background/60 sm:min-h-72">

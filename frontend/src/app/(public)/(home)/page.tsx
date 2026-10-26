@@ -7,9 +7,7 @@ import {
   LuChartNoAxesCombined,
   LuDatabase,
   LuDroplet,
-  LuMapPin,
   LuMonitorCheck,
-  LuShieldCheck,
 } from "react-icons/lu";
 
 import { Footer } from "@/components/layout/Footer";
@@ -18,68 +16,45 @@ import { Card } from "@/components/ui/Card";
 
 const offers = [
   {
-    title: "Previsão de qualidade da água",
+    title: "Histórico de medições",
     description:
-      "Modelos preditivos que mostram cenários futuros da qualidade dos rios com base em dados reais.",
+      "Consulte as coletas registradas e acompanhe a evolução dos indicadores disponíveis.",
     icon: LuChartNoAxesCombined,
   },
   {
-    title: "Inteligência artificial aplicada",
+    title: "Análise por coleta com IA",
     description:
-      "Algoritmos avançados que analisam padrões e identificam riscos com alta precisão.",
+      "Envie medições e uma imagem para obter a análise integrada de uma coleta.",
     icon: LuBrainCircuit,
   },
   {
-    title: "Monitoramento contínuo",
+    title: "Monitoramento por corpo hídrico",
     description:
-      "Acompanhamento constante dos principais rios para informações sempre atualizadas.",
-    icon: LuShieldCheck,
+      "Veja os indicadores, o histórico e as análises registradas em cada corpo hídrico.",
+    icon: LuMonitorCheck,
   },
 ];
 
 const processSteps = [
   {
-    title: "Coleta de dados",
-    description: "Dados de estações, sensores e fontes confiáveis.",
+    title: "Registro da coleta",
+    description: "As medições são cadastradas para o corpo hídrico selecionado.",
     icon: LuDroplet,
   },
   {
-    title: "Processamento",
-    description: "Tratamento e organização dos dados coletados.",
+    title: "Organização",
+    description: "Os dados ficam reunidos no histórico de medições.",
     icon: LuDatabase,
   },
   {
     title: "Análise com IA",
-    description: "Modelos de inteligência artificial geram previsões.",
+    description: "Uma imagem permite solicitar a análise integrada da coleta.",
     icon: LuBrainCircuit,
   },
   {
-    title: "Resultados",
-    description: "Informações claras para apoiar decisões.",
+    title: "Acompanhamento",
+    description: "Consulte os resultados e compare os registros ao longo do tempo.",
     icon: LuMonitorCheck,
-  },
-];
-
-const stats = [
-  {
-    value: "12",
-    label: "Rios monitorados",
-    icon: LuDroplet,
-  },
-  {
-    value: "300+",
-    label: "Análises realizadas",
-    icon: LuChartNoAxesCombined,
-  },
-  {
-    value: "8",
-    label: "Regiões atendidas",
-    icon: LuMapPin,
-  },
-  {
-    value: "98%",
-    label: "Precisão dos modelos",
-    icon: LuShieldCheck,
   },
 ];
 
@@ -96,8 +71,8 @@ export default function Home() {
             </h1>
 
             <p className="mt-5 max-w-md text-[16px] leading-7 text-text-secondary sm:text-[18px]">
-              Descubra as situações atuais e previsões futuras com dados e
-              inteligência artificial.
+              Explore as medições registradas, acompanhe os rios e consulte as
+              análises disponíveis.
             </p>
 
             <Link
@@ -123,7 +98,7 @@ export default function Home() {
         <section className="mx-auto w-full max-w-7xl px-6 pb-14 pt-6 sm:px-10 lg:px-16 lg:pb-20">
           <SectionHeading
             title="O que o Water Path oferece"
-            subtitle="Tecnologia e dados para decisões mais conscientes sobre nossos recursos hídricos."
+            subtitle="Ferramentas para registrar e consultar informações sobre a qualidade da água."
           />
 
           <div className="mt-9 grid gap-6 md:grid-cols-3">
@@ -137,7 +112,7 @@ export default function Home() {
           <div className="mx-auto w-full max-w-7xl">
             <SectionHeading
               title="Como funciona"
-              subtitle="Um processo completo para transformar dados em informação de qualidade."
+              subtitle="Do registro da coleta à consulta das medições e análises."
             />
 
             <div className="mt-10 grid gap-6 md:grid-cols-4 md:gap-4">
@@ -154,26 +129,15 @@ export default function Home() {
         </section>
 
         <section className="mx-auto w-full max-w-7xl px-6 py-14 sm:px-10 lg:px-16 lg:py-16">
-          <SectionHeading
-            title="Impacto em números"
-            subtitle="Dados que mostram nosso compromisso com a qualidade da água."
-          />
-
-          <div className="mt-10 grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
-            {stats.map((stat) => (
-              <StatItem key={stat.label} {...stat} />
-            ))}
-          </div>
-
-          <section className="relative mt-14 overflow-hidden rounded-2xl bg-[linear-gradient(135deg,var(--color-primary),var(--color-secondary))] px-7 py-8 text-white shadow-default sm:px-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
+          <div className="relative overflow-hidden rounded-2xl bg-[linear-gradient(135deg,var(--color-primary),var(--color-secondary))] px-7 py-8 text-white shadow-default sm:px-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
             <div className="pointer-events-none absolute inset-x-1/3 bottom-0 h-28 rounded-[50%] border border-white/20" />
             <div className="relative max-w-xl">
               <h2 className="font-heading text-[24px] font-extrabold leading-tight">
-                Explore os rios analisados
+                Explore os corpos hídricos
               </h2>
               <p className="mt-3 text-[15px] leading-7 text-white/95">
-                Acesse informações detalhadas, gráficos interativos e previsões
-                para cada rio monitorado.
+                Acesse as medições, os gráficos e as análises disponíveis para
+                cada corpo hídrico cadastrado.
               </p>
             </div>
 
@@ -181,10 +145,10 @@ export default function Home() {
               href="/water-bodies"
               className="relative mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-white px-7 font-heading text-[16px] font-bold text-primary shadow-[0_10px_18px_rgba(0,0,0,0.12)] transition-transform hover:-translate-y-0.5 lg:mt-0"
             >
-              Ver todos os rios
+              Ver corpos hídricos
               <LuArrowRight className="h-5 w-5" />
             </Link>
-          </section>
+          </div>
         </section>
       </main>
 
@@ -266,30 +230,6 @@ function ProcessStep({
       <p className="mt-2 max-w-[220px] text-[14px] leading-6 text-text-secondary">
         {description}
       </p>
-    </div>
-  );
-}
-
-function StatItem({
-  value,
-  label,
-  icon: Icon,
-}: {
-  value: string;
-  label: string;
-  icon: IconType;
-}) {
-  return (
-    <div className="flex items-center justify-center gap-4 border-placeholder text-center lg:border-r lg:last:border-r-0">
-      <Icon className="h-11 w-11 shrink-0 text-primary" />
-      <div className="text-left">
-        <strong className="block font-heading text-[32px] font-extrabold leading-none text-text-primary">
-          {value}
-        </strong>
-        <span className="mt-2 block text-[14px] text-text-secondary">
-          {label}
-        </span>
-      </div>
     </div>
   );
 }
