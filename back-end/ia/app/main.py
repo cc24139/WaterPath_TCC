@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 @app.exception_handler(Exception)
 async def inference_error(request, error):
     logger.exception("Falha na análise da IA", exc_info=error)
-    return JSONResponse(status_code=503, content={"detail": "O serviço de IA não conseguiu realizar a análise"})
+    return JSONResponse(status_code=503, content={f"detail": "O serviço de IA não conseguiu realizar a análise " + str(error)})
 
 
 def parse_sample(data):

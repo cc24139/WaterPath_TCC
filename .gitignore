@@ -3,6 +3,7 @@ back-end/api/.env
 back-end/api/testing/*.local.json
 back-end/api/bin/
 back-end/api/obj/
+back-end/contracts/ia
 .venv-training/
 .venv-ia/
 **/__pycache__/
