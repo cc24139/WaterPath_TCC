@@ -8,6 +8,7 @@ namespace Infrastructure.Data
     using back_end.src.Domain.Qualidade;
     using back_end.src.Domain.QualidadeFutura;
     using back_end.src.Medicoes.Domain;
+    using back_end.src.ValidacaoSintetica.Domain;
     using Domain.User;
     using Infrastructure.Data.Tables;
     using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,7 @@ namespace Infrastructure.Data
 
         public DbSet<MedicoesEntity> Medicoes { get; set; }
         public DbSet<back_end.src.IA.Domain.PredicaoIAEntity> PredicoesIA { get; set; }
+        public DbSet<ComparacaoEsperadaEntity> ComparacoesEsperadas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -43,6 +45,7 @@ namespace Infrastructure.Data
 
             modelBuilder.ApplyConfiguration(new MedicoesTableConfigure());
             modelBuilder.ApplyConfiguration(new PredicaoIATableConfigure());
+            modelBuilder.ApplyConfiguration(new ComparacaoEsperadaTableConfigure());
 
             base.OnModelCreating(modelBuilder);
         }

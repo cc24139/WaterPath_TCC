@@ -1,5 +1,35 @@
 # Importação pública do IQA-ES para WaterPath
 
+## CSV local WaterPath (`script.py`)
+
+`script/script.py` aceita apenas CSV UTF-8 no esquema longo documentado abaixo. A ordem e os nomes do cabeçalho são fixos; o importador não tenta adivinhar tabelas, colunas ou comandos SQL. Cada linha é um parâmetro da amostra, e os metadados da amostra se repetem em todas as suas linhas.
+
+Campos obrigatórios: `amostra_id` (chave estável), `origem`, `sintetico` (`true`/`false`), `corpo_hidrico`, `ponto`, `data_hora` (ISO-8601 com fuso), `latitude`, `longitude`, `profundidade_m`, `papel`, `destino`, `parametro`, `valor`, `unidade`. Coordenadas e profundidade são graus decimais e metros; números precisam ser finitos. Valores com vírgula decimal são aceitos em CSV com delimitador ponto e vírgula. O arquivo inteiro é validado antes de qualquer requisição de escrita. Erros indicam linha e coluna.
+
+`papel=feature` exige `destino=operacional`; os parâmetros admitidos são `Ph` (`pH`), `OxigenioDissolvido` (`mg/L`), `Turbidez` (`NTU`) e `Iqa` (`pontos`). São gravados na coleta operacional. No contrato metals_v2, apenas pH e oxigênio dissolvido dentre esses exemplos fazem parte das features: entradas obrigatórias adicionais são temperatura e condutividade elétrica, ausentes neste exemplo; turbidez e IQA não são enviadas ao modelo como features.
+
+`papel=target` exige `destino=comparacao`; são aceitos apenas parâmetros de saída do modelo de metais: Fe (`mg/L`), Mn (`mg/L`), Cr/Ni/Cu/Zn/Cd/Pb (`µg/L`). Os valores são gravados como **esperados**, associados à mesma coleta e `amostra_id`, por `/api/comparacoes-esperadas`. Não são previsões; `ValorPrevisto` continua ausente e o importador não executa inferência. Não há conversões implícitas: valor/unidade têm de corresponder exatamente ao parâmetro.
+
+As duas amostras sintéticas estão em [`sinteticos.csv`](sinteticos.csv). Cada uma tem quatro features operacionais (pH, oxigênio, turbidez e IQA) e dois alvos esperados (Fe/Pb). Os valores, unidades, profundidade, local e identificação sintética foram transpostos da proposta JSON; observações reais de referência e a referência de catálogo Sentinel não foram incluídas. O CSV não usa os 850 km do JSON. A rota atual exige um tamanho do corpo hídrico; para este corpo sintético o importador usa **0,01 km fictício**, apenas para satisfazer o contrato operacional, sem pretensão de representar o trecho RDO-15.
+
+Prévia, a partir da raiz do projeto:
+
+```powershell
+python script/script.py --csv script/sinteticos.csv
+```
+
+Inserção explícita requer API acessível, migrações aplicadas e credenciais no ambiente (`WATERPATH_API_URL`, `WATERPATH_EMAIL`, `WATERPATH_PASSWORD`):
+
+```powershell
+python script/script.py --csv script/sinteticos.csv --apply
+```
+
+O modo padrão não escreve. O estado local em `script/.waterpath-csv-import-state.json` registra IDs confirmados. Em caso de falha após criar uma coleta, a retomada procura data e coordenadas na API; os alvos existentes são consultados pela coleta e chave `(amostra_id, parametro)`, evitando repetição. Uma colisão com valor/unidade diferentes interrompe a execução. Mantenha esse estado local junto do fluxo de retomada; não o publique com credenciais.
+
+O importador AGERH existente continua disponível em [`import_agerh_iqa.py`](import_agerh_iqa.py), com seu contrato de mapeamento próprio e compatibilidade preservada.
+
+Os dados são determinísticos e sintéticos, apenas para testar importação, unidades e vínculos. Não são evidência de desempenho ou validação científica.
+
 O importador busca o CSV público cujo link é publicado na [página oficial IQA-ES da AGERH](https://servicos.agerh.es.gov.br/iqa/home.php). O nome e o endereço do arquivo podem mudar. Esta implementação está intencionalmente limitada ao **Espírito Santo**, conforme o escopo aprovado.
 
 A AGERH informa que o sistema divulga dados históricos e atuais do Programa QualiRios ES e fornece download CSV em UTF-8. O esquema real do arquivo não é presumido pelo script. O importador não usa o webservice XML nem exige credencial de acesso da ANA.

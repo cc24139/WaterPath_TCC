@@ -128,18 +128,18 @@ namespace back_end.Migrations
 
             modelBuilder.Entity("back_end.src.Domain.Coleta.ColetaEntity", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
                     b.Property<string>("CadastroRequestHash")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
                     b.Property<Guid?>("CadastroRequestKey")
                         .HasColumnType("uuid");
-
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CorpoHidricoId")
                         .HasColumnType("integer");
@@ -164,10 +164,10 @@ namespace back_end.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CorpoHidricoId");
-
                     b.HasIndex("CadastroRequestKey")
                         .IsUnique();
+
+                    b.HasIndex("CorpoHidricoId");
 
                     b.ToTable("Coletas", "waterPath");
                 });
@@ -363,18 +363,18 @@ namespace back_end.Migrations
 
             modelBuilder.Entity("back_end.src.IA.Domain.PredicaoIAEntity", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
                     b.Property<string>("AnaliseRequestHash")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
                     b.Property<Guid?>("AnaliseRequestKey")
                         .HasColumnType("uuid");
-
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ColetaId")
                         .HasColumnType("integer");
@@ -423,10 +423,10 @@ namespace back_end.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ColetaId", "CriadaEm");
-
                     b.HasIndex("AnaliseRequestKey")
                         .IsUnique();
+
+                    b.HasIndex("ColetaId", "CriadaEm");
 
                     b.ToTable("PredicoesIA", "waterPath");
                 });
@@ -476,11 +476,63 @@ namespace back_end.Migrations
                     b.HasIndex("QualidadeId", "codigoMedicao")
                         .HasDatabaseName("IX_Medicoes_QualidadeId_codigoMedicao");
 
-                    b.ToTable("Medicoes", "waterPath", t => t.HasCheckConstraint(
-                        "CK_Medicoes_ExactlyOneOwner",
-                        "(\"ColetaId\" IS NOT NULL AND \"QualidadeId\" IS NULL AND \"QualidadeFuturaId\" IS NULL) OR " +
-                        "(\"ColetaId\" IS NULL AND \"QualidadeId\" IS NOT NULL AND \"QualidadeFuturaId\" IS NULL) OR " +
-                        "(\"ColetaId\" IS NULL AND \"QualidadeId\" IS NULL AND \"QualidadeFuturaId\" IS NOT NULL)"));
+                    b.ToTable("Medicoes", "waterPath", t =>
+                        {
+                            t.HasCheckConstraint("CK_Medicoes_ExactlyOneOwner", "(\"ColetaId\" IS NOT NULL AND \"QualidadeId\" IS NULL AND \"QualidadeFuturaId\" IS NULL) OR (\"ColetaId\" IS NULL AND \"QualidadeId\" IS NOT NULL AND \"QualidadeFuturaId\" IS NULL) OR (\"ColetaId\" IS NULL AND \"QualidadeId\" IS NULL AND \"QualidadeFuturaId\" IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("back_end.src.ValidacaoSintetica.Domain.ComparacaoEsperadaEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AmostraId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<int>("ColetaId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Origem")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Parametro")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("Sintetico")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Unidade")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<double>("ValorEsperado")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("ValorPrevisto")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ColetaId");
+
+                    b.HasIndex("AmostraId", "Parametro")
+                        .IsUnique();
+
+                    b.ToTable("ComparacoesEsperadas", "waterPath");
                 });
 
             modelBuilder.Entity("QualidadeCianoBacterias", b =>
@@ -639,14 +691,14 @@ namespace back_end.Migrations
                         .HasForeignKey("ColetaId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("back_end.src.Domain.Qualidade.QualidadeEntity", "Qualidade")
-                        .WithMany("Medicoes")
-                        .HasForeignKey("QualidadeId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("back_end.src.Domain.QualidadeFutura.QualidadeFuturaEntity", "QualidadeFutura")
                         .WithMany("Medicoes")
                         .HasForeignKey("QualidadeFuturaId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("back_end.src.Domain.Qualidade.QualidadeEntity", "Qualidade")
+                        .WithMany("Medicoes")
+                        .HasForeignKey("QualidadeId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Coleta");
@@ -654,6 +706,17 @@ namespace back_end.Migrations
                     b.Navigation("Qualidade");
 
                     b.Navigation("QualidadeFutura");
+                });
+
+            modelBuilder.Entity("back_end.src.ValidacaoSintetica.Domain.ComparacaoEsperadaEntity", b =>
+                {
+                    b.HasOne("back_end.src.Domain.Coleta.ColetaEntity", "Coleta")
+                        .WithMany()
+                        .HasForeignKey("ColetaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Coleta");
                 });
 
             modelBuilder.Entity("back_end.src.Domain.Coleta.ColetaEntity", b =>
@@ -674,17 +737,22 @@ namespace back_end.Migrations
                     b.Navigation("Imagens");
                 });
 
+            modelBuilder.Entity("back_end.src.Domain.Qualidade.QualidadeEntity", b =>
+                {
+                    b.Navigation("Medicoes");
+                });
+
             modelBuilder.Entity("back_end.src.Domain.QualidadeFutura.QualidadeFuturaEntity", b =>
                 {
                     b.Navigation("CianoBacterias");
 
                     b.Navigation("Imagens");
 
+                    b.Navigation("Medicoes");
+
                     b.Navigation("MetaisPesados");
 
                     b.Navigation("Qualidade");
-
-                    b.Navigation("Medicoes");
                 });
 #pragma warning restore 612, 618
         }

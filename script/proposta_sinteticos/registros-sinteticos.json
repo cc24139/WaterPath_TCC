@@ -1,0 +1,79 @@
+{
+  "aviso": "TODOS OS REGISTROS ABAIXO SÃO SINTÉTICOS. Não são medições reais nem resultados laboratoriais.",
+  "formato": "Proposta no formato de ColetaCadastroInput da API; corpo hídrico não cadastrado e IDs intencionalmente nulos.",
+  "corpo_hidrico": {
+    "nome": "SINTETICO-Rio Doce",
+    "nome_oficial_referenciado": "Rio Doce",
+    "localizacao": "Linhares, Espírito Santo; estação oficial RDO-15",
+    "tamanho_km": 850,
+    "fonte_tamanho": "ANA informa comprimento aproximado total; não é medida local do trecho RDO-15.",
+    "fonte_tamanho_url": "https://www.gov.br/ana/pt-br/assuntos/gestao-das-aguas/planos-de-recursos-hidricos/planos-de-recursos-hidricos-de-bacias-hidrograficas/planos-de-bacias-hidrograficas-interfederativas/doce",
+    "ehPrivado": false
+  },
+  "ponto": {
+    "codigo": "RDO-15",
+    "latitude": -19.41011,
+    "longitude": -40.05896,
+    "fonte_coordenadas": "Serviço FeatureServer PMQQS, metadados do projeto; ponto descrito como ponte sobre o Rio Doce na BR-101, Linhares/ES."
+  },
+  "coletas": [
+    {
+      "chave_teste": "SINTETICO-Rio Doce|RDO-15|2025-06-24T12:00:00-03:00",
+      "corpoHidricoId": null,
+      "dataHora": "2025-06-24T12:00:00-03:00",
+      "latitude": -19.41011,
+      "longitude": -40.05896,
+      "profundidadeMetros": 0.3,
+      "medicoes": [
+        { "codigoMedicao": "Ph", "valor": 7.2, "unidade": "pH", "ehCensurado": false, "limite": null },
+        { "codigoMedicao": "OxigenioDissolvido", "valor": 6.1, "unidade": "mg/L", "ehCensurado": false, "limite": null },
+        { "codigoMedicao": "Turbidez", "valor": 12.0, "unidade": "NTU", "ehCensurado": false, "limite": null },
+        { "codigoMedicao": "Iqa", "valor": 72.0, "unidade": "pontos", "ehCensurado": false, "limite": null }
+      ],
+      "metaisPesados": [
+        { "nome": "Fe", "concentracao": 0.12, "unidade": "mg/L" },
+        { "nome": "Pb", "concentracao": 3.0, "unidade": "µg/L" }
+      ],
+      "imagem_referencia": {
+        "catalogo": "INPE STAC Browser / Sentinel-2 MSI L2A",
+        "url": "https://data.inpe.br/stac/browser/collections/S2_L2A-1/items/S2C_MSIL2A_20250625T150741_N0511_R082_T19LBJ_20250625T194417",
+        "produto": "S2C_MSIL2A_20250625T150741_N0511_R082_T19LBJ_20250625T194417",
+        "data_aquisicao": "2025-06-25T15:07:41Z",
+        "relacao_com_coleta": "Aquisição 1 dia depois da data sintética; não é imagem da data da coleta.",
+        "verificacao": "Produto Sentinel-2 L2A identificado no catálogo STAC do INPE. Disponibilidade de cobertura na estação é indicada pelo tile MGRS T19LBJ; nuvens/visibilidade do canal do rio no pixel e download do ativo não foram verificados.",
+        "url_para_registro_na_tabela_Imagens": null
+      }
+    },
+    {
+      "chave_teste": "SINTETICO-Rio Doce|RDO-15|2025-06-26T12:00:00-03:00",
+      "corpoHidricoId": null,
+      "dataHora": "2025-06-26T12:00:00-03:00",
+      "latitude": -19.41011,
+      "longitude": -40.05896,
+      "profundidadeMetros": 0.3,
+      "medicoes": [
+        { "codigoMedicao": "Ph", "valor": 7.5, "unidade": "pH", "ehCensurado": false, "limite": null },
+        { "codigoMedicao": "OxigenioDissolvido", "valor": 5.8, "unidade": "mg/L", "ehCensurado": false, "limite": null },
+        { "codigoMedicao": "Turbidez", "valor": 18.0, "unidade": "NTU", "ehCensurado": false, "limite": null },
+        { "codigoMedicao": "Iqa", "valor": 68.0, "unidade": "pontos", "ehCensurado": false, "limite": null }
+      ],
+      "metaisPesados": [
+        { "nome": "Fe", "concentracao": 0.16, "unidade": "mg/L" },
+        { "nome": "Pb", "concentracao": 4.0, "unidade": "µg/L" }
+      ],
+      "imagem_referencia": {
+        "catalogo": "INPE STAC Browser / Sentinel-2 MSI L2A",
+        "url": "https://data.inpe.br/stac/browser/collections/S2_L2A-1/items/S2C_MSIL2A_20250625T150741_N0511_R082_T19LBJ_20250625T194417",
+        "produto": "S2C_MSIL2A_20250625T150741_N0511_R082_T19LBJ_20250625T194417",
+        "data_aquisicao": "2025-06-25T15:07:41Z",
+        "relacao_com_coleta": "Aquisição 1 dia antes da data sintética; não é imagem da data da coleta.",
+        "verificacao": "Produto Sentinel-2 L2A identificado no catálogo STAC do INPE. Disponibilidade de cobertura na estação é indicada pelo tile MGRS T19LBJ; nuvens/visibilidade do canal do rio no pixel e download do ativo não foram verificados.",
+        "url_para_registro_na_tabela_Imagens": null
+      }
+    }
+  ],
+  "observacoes_reais_de_referencia_nao_incluidas_como_sinteticas": [
+    { "fonte": "PMQQS, ponto RDO-15, amostra superficial, Fe dissolvido", "data_local": "2026-06-16T10:56:00-03:00", "valor": 0.1869, "unidade": "mg/L", "campo": "iron_dissolved_mg_L", "status": 1 },
+    { "fonte": "PMQQS, ponto RDO-15, amostra superficial, pH de laboratório", "data_local": "2026-06-16T10:56:00-03:00", "valor": 7.38, "unidade": "pH", "campo": "ph", "status": null }
+  ]
+}

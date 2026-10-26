@@ -1,0 +1,13 @@
+amostra_id,origem,sintetico,corpo_hidrico,ponto,data_hora,latitude,longitude,profundidade_m,papel,destino,parametro,valor,unidade
+SINTETICO-RioDoce-RDO15-20250624,Proposta sintética local,true,SINTETICO-Rio Doce,RDO-15,2025-06-24T12:00:00-03:00,-19.41011,-40.05896,0.3,feature,operacional,Ph,7.2,pH
+SINTETICO-RioDoce-RDO15-20250624,Proposta sintética local,true,SINTETICO-Rio Doce,RDO-15,2025-06-24T12:00:00-03:00,-19.41011,-40.05896,0.3,feature,operacional,OxigenioDissolvido,6.1,mg/L
+SINTETICO-RioDoce-RDO15-20250624,Proposta sintética local,true,SINTETICO-Rio Doce,RDO-15,2025-06-24T12:00:00-03:00,-19.41011,-40.05896,0.3,feature,operacional,Turbidez,12.0,NTU
+SINTETICO-RioDoce-RDO15-20250624,Proposta sintética local,true,SINTETICO-Rio Doce,RDO-15,2025-06-24T12:00:00-03:00,-19.41011,-40.05896,0.3,feature,operacional,Iqa,72.0,pontos
+SINTETICO-RioDoce-RDO15-20250624,Proposta sintética local,true,SINTETICO-Rio Doce,RDO-15,2025-06-24T12:00:00-03:00,-19.41011,-40.05896,0.3,target,comparacao,Fe,0.12,mg/L
+SINTETICO-RioDoce-RDO15-20250624,Proposta sintética local,true,SINTETICO-Rio Doce,RDO-15,2025-06-24T12:00:00-03:00,-19.41011,-40.05896,0.3,target,comparacao,Pb,3.0,µg/L
+SINTETICO-RioDoce-RDO15-20250626,Proposta sintética local,true,SINTETICO-Rio Doce,RDO-15,2025-06-26T12:00:00-03:00,-19.41011,-40.05896,0.3,feature,operacional,Ph,7.5,pH
+SINTETICO-RioDoce-RDO15-20250626,Proposta sintética local,true,SINTETICO-Rio Doce,RDO-15,2025-06-26T12:00:00-03:00,-19.41011,-40.05896,0.3,feature,operacional,OxigenioDissolvido,5.8,mg/L
+SINTETICO-RioDoce-RDO15-20250626,Proposta sintética local,true,SINTETICO-Rio Doce,RDO-15,2025-06-26T12:00:00-03:00,-19.41011,-40.05896,0.3,feature,operacional,Turbidez,18.0,NTU
+SINTETICO-RioDoce-RDO15-20250626,Proposta sintética local,true,SINTETICO-Rio Doce,RDO-15,2025-06-26T12:00:00-03:00,-19.41011,-40.05896,0.3,feature,operacional,Iqa,68.0,pontos
+SINTETICO-RioDoce-RDO15-20250626,Proposta sintética local,true,SINTETICO-Rio Doce,RDO-15,2025-06-26T12:00:00-03:00,-19.41011,-40.05896,0.3,target,comparacao,Fe,0.16,mg/L
+SINTETICO-RioDoce-RDO15-20250626,Proposta sintética local,true,SINTETICO-Rio Doce,RDO-15,2025-06-26T12:00:00-03:00,-19.41011,-40.05896,0.3,target,comparacao,Pb,4.0,µg/L
