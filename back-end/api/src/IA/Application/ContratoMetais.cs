@@ -69,20 +69,27 @@ public static class ContratoMetais
     {
         var reference = sample.TryGetProperty("referencia_metais_pesados", out var supplied) ? supplied : default;
         var hasExplicitReference = reference.ValueKind == JsonValueKind.Object;
-        var current = hasExplicitReference ? Medicoes(sample) : Predicoes(result);
+        var source = result.TryGetProperty("metalVariation", out var sourceVariation)
+            ? Texto(sourceVariation, "source") : null;
+        var usesHistoricalPredictions = source == "predicoes_modelo_historico";
+        if (source is not null && !usesHistoricalPredictions) return false;
+        var current = usesHistoricalPredictions ? Predicoes(result) : Medicoes(sample);
         var previous = hasExplicitReference ? Medicoes(reference) : new Dictionary<string, JsonElement>();
         // Respostas persistidas antigas continuam válidas quando a entrada não usa a extensão.
         if (!result.TryGetProperty("metalVariation", out var variation))
             return hasExplicitReference ? false : Medicoes(sample).Count == 0;
         var currentDate = Texto(sample, "data");
-        var previousDate = hasExplicitReference ? Texto(reference, "data") : Texto(variation, "referenceDate");
+        var previousDate = usesHistoricalPredictions || !hasExplicitReference
+            ? Texto(variation, "referenceDate") : Texto(reference, "data");
         if (Texto(variation, "currentDate") != currentDate
-            || (hasExplicitReference && Texto(variation, "referenceDate") != previousDate)
+            || (!usesHistoricalPredictions && hasExplicitReference
+                && Texto(variation, "referenceDate") != previousDate)
             || string.IsNullOrWhiteSpace(Texto(variation, "message"))) return false;
 
-        if (!hasExplicitReference && previousDate is not null
+        if (usesHistoricalPredictions && (collectionContext is null || !HasHistory(collectionContext))) return false;
+        if ((usesHistoricalPredictions || !hasExplicitReference) && previousDate is not null
             && !HistoricalDateExists(collectionContext, previousDate, currentDate)) return false;
-        if (!hasExplicitReference && previousDate is null && collectionContext is not null
+        if ((usesHistoricalPredictions || !hasExplicitReference) && previousDate is null && collectionContext is not null
             && HasPredictableHistory(collectionContext, currentDate)) return false;
 
         var items = variation.GetProperty("metals").EnumerateArray().ToArray();
@@ -93,8 +100,9 @@ public static class ContratoMetais
             if (name is null || !Nomes.Contains(name) || actualPrevious.ContainsKey(name)) return false;
             actualPrevious[name] = (Numero(item, "previousValue"), Texto(item, "previousUnit"));
         }
-        var names = current.Keys.Union(previous.Keys).Union(actualPrevious
-            .Where(p => p.Value.Value is not null).Select(p => p.Key)).Order(StringComparer.Ordinal).ToArray();
+        var names = current.Keys.Union(previous.Keys).Union(usesHistoricalPredictions
+            ? actualPrevious.Where(p => p.Value.Value is not null).Select(p => p.Key)
+            : Enumerable.Empty<string>()).Order(StringComparer.Ordinal).ToArray();
         if (items.Length != names.Length) return false;
         var comparable = 0;
         for (var i = 0; i < items.Length; i++)
@@ -104,11 +112,11 @@ public static class ContratoMetais
             var now = current.GetValueOrDefault(names[i]);
             var before = previous.GetValueOrDefault(names[i]);
             double? nowValue = current.ContainsKey(names[i]) ? Numero(now, "value") : null;
-            double? previousValue = hasExplicitReference && before.ValueKind == JsonValueKind.Object
-                ? Numero(before, "value") : actualPrevious[names[i]].Value;
+            double? previousValue = usesHistoricalPredictions ? actualPrevious[names[i]].Value
+                : hasExplicitReference && before.ValueKind == JsonValueKind.Object ? Numero(before, "value") : null;
             var nowUnit = current.ContainsKey(names[i]) ? Texto(now, "unit") : null;
-            var previousUnit = hasExplicitReference && before.ValueKind == JsonValueKind.Object
-                ? Texto(before, "unit") : actualPrevious[names[i]].Unit;
+            var previousUnit = usesHistoricalPredictions ? actualPrevious[names[i]].Unit
+                : hasExplicitReference && before.ValueKind == JsonValueKind.Object ? Texto(before, "unit") : null;
             if (Numero(item, "currentValue") != nowValue || Numero(item, "previousValue") != previousValue
                 || Texto(item, "currentUnit") != nowUnit || Texto(item, "previousUnit") != previousUnit
                 || Texto(item, "unit") != nowUnit) return false;
@@ -134,9 +142,28 @@ public static class ContratoMetais
                     || state == "estabilidade" && delta == 0)) return false;
                 comparable++;
             }
+            if (usesHistoricalPredictions)
+            {
+                if (!string.Equals(nowUnit, names[i] is "Fe" or "Mn" ? "mg/L" : "µg/L", StringComparison.Ordinal)
+                    || (previousDate is null
+                        ? previousValue is not null || previousUnit is not null
+                        : previousValue is null || !string.Equals(previousUnit,
+                            names[i] is "Fe" or "Mn" ? "mg/L" : "µg/L", StringComparison.Ordinal))) return false;
+            }
         }
         return Texto(variation, "status") == (comparable == 0 ? "indeterminada"
             : comparable == items.Length ? "completa" : "parcial");
+    }
+
+    private static bool HasHistory(string contextJson)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(contextJson);
+            return document.RootElement.TryGetProperty("history", out var history)
+                && history.ValueKind == JsonValueKind.Array && history.GetArrayLength() > 0;
+        }
+        catch (JsonException) { return false; }
     }
 
     private static Dictionary<string, JsonElement> Predicoes(JsonElement result)
