@@ -122,7 +122,7 @@ public class IaClient
                 || !root.TryGetProperty("annotatedImageContentType", out var type) || type.GetString() != "image/jpeg"
                 || !root.TryGetProperty("annotatedImage", out var annotated) || annotated.ValueKind != JsonValueKind.String)
                 throw new JsonException();
-            if (data is not null && !ContratoRisco.Valido(data, json, history)) throw new JsonException();
+            if (data is not null && !ContratoRisco.Valido(data, json, history, collectionContext)) throw new JsonException();
             if (collectionContext is not null)
             {
                 if (!root.TryGetProperty("metalModelVersion", out var metalVersion)

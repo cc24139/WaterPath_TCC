@@ -1,10 +1,14 @@
-"""Variação temporal de observações, sem acrescentar limites ou regras de risco."""
+"""Variação temporal de observações ou estimativas, sem alterar regras de risco."""
 from datetime import datetime
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 import math
 import joblib
+
+from DTOs.Amostra import Amostra
+from DTOs.MetaisPesados import MedicaoMetal
+from services import metals as metal_service
 # Unidades de concentração já usadas pelo projeto. Não presume equivalência de ppm.
 UNIT_FACTORS = {"mg/l": Decimal("1"), "ug/l": Decimal("0.001")}
 
@@ -40,11 +44,89 @@ def instant(value):
         return None
 
 
-def analyze_metal_variation(sample, history=None):
-    current = {item.name: item for item in sample.metais_pesados or []}
+_HISTORY_FEATURES = {
+    "Temperatura": ("temperatura", "°c"),
+    "Ph": ("ph", "ph"),
+    "CondutividadeEletrica": ("condutividade_eletrica", "us/cm"),
+    "OxigenioDissolvido": ("oxigenio_dissolvido", "mg/l"),
+    "SolidosSuspensosTotais": ("solidos_suspensos_totais", "mg/l"),
+    "CarbonoOrganicoTotal": ("carbono_organico_total", "mg/l"),
+    "FosforoTotal": ("fosforo_total", "ug/l"),
+}
+_REQUIRED_HISTORY_FEATURES = {"temperatura", "ph", "condutividade_eletrica", "oxigenio_dissolvido"}
+
+
+def _historical_sample(record):
+    """Build the model input from the measurements retained in collection_context."""
+    fields = {"data": record["collectedAt"]}
+    present = set()
+    for measurement in record["measurements"]:
+        mapping = _HISTORY_FEATURES.get(measurement["code"])
+        if mapping is None or measurement["censored"] or measurement["value"] is None:
+            continue
+        field, expected_unit = mapping
+        unit = measurement["unit"].strip().lower().replace("µ", "u").replace("μ", "u")
+        value = measurement["value"]
+        if field == "fosforo_total" and unit == "mg/l":
+            value *= 1000
+        elif unit != expected_unit:
+            continue
+        fields[field] = value
+        present.add(field)
+    if not _REQUIRED_HISTORY_FEATURES.issubset(present):
+        return None
+    try:
+        return Amostra.model_validate(fields)
+    except (TypeError, ValueError):
+        return None
+
+
+def _observations(predicted):
+    return [MedicaoMetal(name=item.codigo, value=item.valor, unit=item.unidadeMedida)
+            for item in predicted]
+
+
+def _predicted_history_reference(sample, collection_context):
+    if not collection_context:
+        return None, None
+    current_time = instant(sample.data)
+    if current_time is None:
+        return None, None
+    predictions = []
+    # Predict each historical collection with usable required measurements; the
+    # latest usable collection before the current sample becomes the reference.
+    for record in collection_context.get("history", []):
+        date = record.get("collectedAt")
+        collected_at = instant(date)
+        if collected_at is None or collected_at >= current_time:
+            continue
+        historical_sample = _historical_sample(record)
+        if historical_sample is None:
+            continue
+        try:
+            predicted = metal_service.predict_metals(historical_sample)
+        except (ValueError, TypeError, KeyError):
+            continue
+        predictions.append((collected_at, record["collectionId"], date, _observations(predicted)))
+    if not predictions:
+        return None, None
+    _, _, reference_date, reference_metals = max(predictions, key=lambda item: (item[0], item[1]))
+    return reference_date, reference_metals
+
+
+def analyze_metal_variation(sample, history=None, collection_context=None, predicted_current=None):
     reference = sample.referencia_metais_pesados
-    previous = {item.name: item for item in reference.metais_pesados} if reference else {}
-    reference_date = reference.data if reference else None
+    if reference is not None:
+        current_source = sample.metais_pesados
+        previous_source = reference.metais_pesados
+        reference_date = reference.data
+    else:
+        # Without an explicit reference, compare like with like: model outputs
+        # on both dates, never a measured current value against an estimate.
+        current_source = _observations(predicted_current) if predicted_current is not None else None
+        reference_date, previous_source = _predicted_history_reference(sample, collection_context)
+    current = {item.name: item for item in current_source or []}
+    previous = {item.name: item for item in previous_source or []}
     current_time, previous_time = instant(sample.data), instant(reference_date)
     items = []
     for name in sorted(current.keys() | previous.keys()):

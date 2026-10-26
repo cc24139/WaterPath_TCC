@@ -65,33 +65,50 @@ public static class ContratoMetais
             || value.LastIndexOf('-') > value.IndexOf('T'))
         && DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : null;
 
-    public static bool RespostaValida(JsonElement sample, JsonElement result)
+    public static bool RespostaValida(JsonElement sample, JsonElement result, string? collectionContext = null)
     {
-        var current = Medicoes(sample);
         var reference = sample.TryGetProperty("referencia_metais_pesados", out var supplied) ? supplied : default;
-        var previous = Medicoes(reference);
+        var hasExplicitReference = reference.ValueKind == JsonValueKind.Object;
+        var current = hasExplicitReference ? Medicoes(sample) : Predicoes(result);
+        var previous = hasExplicitReference ? Medicoes(reference) : new Dictionary<string, JsonElement>();
         // Respostas persistidas antigas continuam válidas quando a entrada não usa a extensão.
         if (!result.TryGetProperty("metalVariation", out var variation))
-            return current.Count == 0 && previous.Count == 0
-                && (!sample.TryGetProperty("referencia_metais_pesados", out var r) || r.ValueKind == JsonValueKind.Null);
+            return hasExplicitReference ? false : Medicoes(sample).Count == 0;
         var currentDate = Texto(sample, "data");
-        var previousDate = reference.ValueKind == JsonValueKind.Object ? Texto(reference, "data") : null;
-        if (Texto(variation, "currentDate") != currentDate || Texto(variation, "referenceDate") != previousDate
-            || string.IsNullOrWhiteSpace(variation.GetProperty("message").GetString())) return false;
-        var names = current.Keys.Union(previous.Keys).Order(StringComparer.Ordinal).ToArray();
+        var previousDate = hasExplicitReference ? Texto(reference, "data") : Texto(variation, "referenceDate");
+        if (Texto(variation, "currentDate") != currentDate
+            || (hasExplicitReference && Texto(variation, "referenceDate") != previousDate)
+            || string.IsNullOrWhiteSpace(Texto(variation, "message"))) return false;
+
+        if (!hasExplicitReference && previousDate is not null
+            && !HistoricalDateExists(collectionContext, previousDate, currentDate)) return false;
+        if (!hasExplicitReference && previousDate is null && collectionContext is not null
+            && HasPredictableHistory(collectionContext, currentDate)) return false;
+
         var items = variation.GetProperty("metals").EnumerateArray().ToArray();
+        var actualPrevious = new Dictionary<string, (double? Value, string? Unit)>();
+        foreach (var item in items)
+        {
+            var name = Texto(item, "name");
+            if (name is null || !Nomes.Contains(name) || actualPrevious.ContainsKey(name)) return false;
+            actualPrevious[name] = (Numero(item, "previousValue"), Texto(item, "previousUnit"));
+        }
+        var names = current.Keys.Union(previous.Keys).Union(actualPrevious
+            .Where(p => p.Value.Value is not null).Select(p => p.Key)).Order(StringComparer.Ordinal).ToArray();
         if (items.Length != names.Length) return false;
         var comparable = 0;
         for (var i = 0; i < items.Length; i++)
         {
             var item = items[i];
-            if (item.GetProperty("name").GetString() != names[i]) return false;
+            if (Texto(item, "name") != names[i]) return false;
             var now = current.GetValueOrDefault(names[i]);
             var before = previous.GetValueOrDefault(names[i]);
-            double? nowValue = now.ValueKind == JsonValueKind.Object ? Numero(now, "value") : null;
-            double? previousValue = before.ValueKind == JsonValueKind.Object ? Numero(before, "value") : null;
-            var nowUnit = now.ValueKind == JsonValueKind.Object ? Texto(now, "unit") : null;
-            var previousUnit = before.ValueKind == JsonValueKind.Object ? Texto(before, "unit") : null;
+            double? nowValue = current.ContainsKey(names[i]) ? Numero(now, "value") : null;
+            double? previousValue = hasExplicitReference && before.ValueKind == JsonValueKind.Object
+                ? Numero(before, "value") : actualPrevious[names[i]].Value;
+            var nowUnit = current.ContainsKey(names[i]) ? Texto(now, "unit") : null;
+            var previousUnit = hasExplicitReference && before.ValueKind == JsonValueKind.Object
+                ? Texto(before, "unit") : actualPrevious[names[i]].Unit;
             if (Numero(item, "currentValue") != nowValue || Numero(item, "previousValue") != previousValue
                 || Texto(item, "currentUnit") != nowUnit || Texto(item, "previousUnit") != previousUnit
                 || Texto(item, "unit") != nowUnit) return false;
@@ -109,6 +126,10 @@ public static class ContratoMetais
                 if (nowValue is null || previousValue is null || !UnidadeCompativel(nowUnit)
                     || !UnidadeCompativel(previousUnit) || date is null || earlier is null || earlier >= date
                     || reason is not null || delta is null || !double.IsFinite(delta.Value)) return false;
+                var expectedDelta = (nowValue.Value * Fator(nowUnit!) - previousValue.Value * Fator(previousUnit!))
+                    / Fator(nowUnit!);
+                if (!double.IsFinite(expectedDelta) || Math.Abs(delta.Value - expectedDelta) >
+                    Math.Max(1e-12, Math.Abs(expectedDelta) * 1e-9)) return false;
                 if (!(state == "aumento" && delta > 0 || state == "reducao" && delta < 0
                     || state == "estabilidade" && delta == 0)) return false;
                 comparable++;
@@ -116,5 +137,81 @@ public static class ContratoMetais
         }
         return Texto(variation, "status") == (comparable == 0 ? "indeterminada"
             : comparable == items.Length ? "completa" : "parcial");
+    }
+
+    private static Dictionary<string, JsonElement> Predicoes(JsonElement result)
+    {
+        if (!result.TryGetProperty("metalPredictions", out var metals) || metals.ValueKind != JsonValueKind.Array)
+            return [];
+        return metals.EnumerateArray().ToDictionary(m => m.GetProperty("name").GetString()!, m => m);
+    }
+
+    private static double Fator(string unit) => unit.Trim().ToLowerInvariant()
+        .Replace('µ', 'u').Replace('μ', 'u') == "mg/l" ? 1 : 0.001;
+
+    private static bool HistoricalDateExists(string? contextJson, string referenceDate, string? currentDate)
+    {
+        if (contextJson is null) return false;
+        try
+        {
+            using var document = JsonDocument.Parse(contextJson);
+            if (!document.RootElement.TryGetProperty("history", out var history)
+                || history.ValueKind != JsonValueKind.Array) return false;
+            return history.EnumerateArray().Any(record => Texto(record, "collectedAt") == referenceDate
+                && Instante(referenceDate) is { } prior && Instante(currentDate) is { } current && prior < current);
+        }
+        catch (JsonException) { return false; }
+    }
+
+    private static bool HasPredictableHistory(string contextJson, string? currentDate)
+    {
+        if (currentDate is null) return false;
+        try
+        {
+            using var document = JsonDocument.Parse(contextJson);
+            if (!document.RootElement.TryGetProperty("history", out var history)
+                || history.ValueKind != JsonValueKind.Array) return false;
+            foreach (var record in history.EnumerateArray())
+            {
+                if (Instante(Texto(record, "collectedAt")) is not { } date
+                    || Instante(currentDate) is not { } current || date >= current
+                    || !record.TryGetProperty("measurements", out var measurements)
+                    || measurements.ValueKind != JsonValueKind.Array) continue;
+                var required = new HashSet<string>(StringComparer.Ordinal);
+                var invalidFeature = false;
+                foreach (var measurement in measurements.EnumerateArray())
+                {
+                    var code = Texto(measurement, "code");
+                    var expected = code switch
+                    {
+                        "Temperatura" => "°c", "Ph" => "ph", "CondutividadeEletrica" => "us/cm",
+                        "OxigenioDissolvido" or "SolidosSuspensosTotais" or "CarbonoOrganicoTotal" => "mg/l",
+                        "FosforoTotal" => "ug/l", _ => null,
+                    };
+                    if (code is null || expected is null || measurement.GetProperty("censored").GetBoolean()) continue;
+                    var value = Numero(measurement, "value");
+                    if (value is null) continue;
+                    var unit = Texto(measurement, "unit")?.Trim().ToLowerInvariant()
+                        .Replace('µ', 'u').Replace('μ', 'u');
+                    var acceptedUnit = unit == expected || code == "FosforoTotal" && unit == "mg/l";
+                    if (!acceptedUnit) continue;
+                    var nonNegativeRequired = code is "Ph" or "CondutividadeEletrica" or "OxigenioDissolvido";
+                    var optionalFeature = code is "SolidosSuspensosTotais" or "CarbonoOrganicoTotal" or "FosforoTotal";
+                    if (!double.IsFinite(value.Value)
+                        || (nonNegativeRequired && (value.Value < 0 || code == "Ph" && value.Value > 14))
+                        || (optionalFeature && value.Value < 0))
+                    {
+                        invalidFeature = true;
+                        break;
+                    }
+                    if (code is "Temperatura" or "Ph" or "CondutividadeEletrica" or "OxigenioDissolvido")
+                        required.Add(code);
+                }
+                if (!invalidFeature && required.Count == 4) return true;
+            }
+            return false;
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException or KeyNotFoundException)
+        { return false; }
     }
 }

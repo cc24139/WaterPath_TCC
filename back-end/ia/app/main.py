@@ -63,7 +63,7 @@ def analyze_image(image, data=None, include_annotation=False, history="[]", coll
         if context is not None:
             result["collectionContext"] = context
         if sample is not None:
-            result.update(classify_risk(images, sample, previous_samples))
+            result.update(classify_risk(images, sample, previous_samples, context, predicted_metals))
         result["visionModelVersion"] = vision.model_version()
         if sample is not None:
             result["metalModelVersion"] = metals.model_metadata()["version"]

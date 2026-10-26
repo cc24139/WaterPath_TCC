@@ -37,12 +37,8 @@ public class PredicaoIAService
             .OrderBy(c => c.DataHora).ThenBy(c => c.Id).ToListAsync(cancellationToken);
         var atual = coletas.LastOrDefault();
         if (atual is null) throw new IaException(422, "Corpo hídrico sem coletas para analisar.");
-        var collectionContext = JsonSerializer.Serialize(new
-        {
-            waterBodyId = corpoHidricoId, currentCollectionId = atual.Id,
-            currentCollectedAt = atual.DataHora.ToUniversalTime().ToString("O"),
-            history = coletas.Where(c => c.DataHora < atual.DataHora).Select(AmostraDaColeta.Retrato),
-        });
+        var collectionContext = SerializarContextoColetas(corpoHidricoId, atual.Id, atual.DataHora,
+            coletas.Where(c => c.DataHora < atual.DataHora));
         return await ProcessarAsync(atual.Id, image, AmostraDaColeta.Montar(atual), cancellationToken, collectionContext, atual);
     }
 
@@ -75,6 +71,9 @@ public class PredicaoIAService
         if (coleta.DataHora == default || coleta.DataHora > DateTimeOffset.UtcNow)
             throw new IaException(422, "A análise atual exige uma coleta com instante válido e não futuro.");
         if (data is not null) data = ContratoAmostra.ReferenciarColeta(data, coleta.DataHora);
+        if (data is not null && collectionContext is null)
+            collectionContext = await BuscarContextoColetasAsync(coletaId, coleta.CorpoHidricoId,
+                coleta.DataHora, cancellationToken);
 
         using var stream = new MemoryStream();
         await image.CopyToAsync(stream, cancellationToken);
@@ -152,4 +151,28 @@ public class PredicaoIAService
         }
         return JsonSerializer.Serialize(history);
     }
+
+    private async Task<string> BuscarContextoColetasAsync(int currentCollectionId, int waterBodyId,
+        DateTimeOffset collectedAt, CancellationToken cancellationToken)
+    {
+        var previousCollections = await context.Coletas.AsNoTracking()
+            .Where(c => c.CorpoHidricoId == waterBodyId && c.Id != currentCollectionId && c.DataHora < collectedAt)
+            .Include(c => c.Medicoes).Include(c => c.MetaisPesados)
+            .AsSingleQuery()
+            .OrderBy(c => c.DataHora).ThenBy(c => c.Id)
+            .ToListAsync(cancellationToken);
+        return SerializarContextoColetas(waterBodyId, currentCollectionId, collectedAt, previousCollections);
+    }
+
+    private static string SerializarContextoColetas(int waterBodyId, int currentCollectionId,
+        DateTimeOffset currentCollectedAt, IEnumerable<ColetaEntity> history) => JsonSerializer.Serialize(new
+    {
+        waterBodyId,
+        currentCollectionId,
+        currentCollectedAt = currentCollectedAt.ToUniversalTime().ToString("O"),
+        history = history.Where(c => c.CorpoHidricoId == waterBodyId && c.Id != currentCollectionId
+                && c.DataHora < currentCollectedAt)
+            .OrderBy(c => c.DataHora).ThenBy(c => c.Id)
+            .Select(AmostraDaColeta.Retrato),
+    });
 }

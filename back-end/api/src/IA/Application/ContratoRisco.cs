@@ -5,7 +5,8 @@ namespace back_end.src.IA.Application;
 public static class ContratoRisco
 {
     // Confere a resposta pela regra existente; a classificação continua na IA.
-    public static bool Valido(string? entrada, string resultado, string? historicoEnviado = null)
+    public static bool Valido(string? entrada, string resultado, string? historicoEnviado = null,
+        string? contextoColetas = null)
     {
         if (entrada is null) return false;
         try
@@ -14,7 +15,7 @@ public static class ContratoRisco
             using var document = JsonDocument.Parse(resultado);
             var root = document.RootElement;
             if (root.GetProperty("riskRuleVersion").GetString() != PredicaoIAService.VersaoRegraRisco) return false;
-            if (!ContratoMetais.RespostaValida(sample, root)) return false;
+            if (!ContratoMetais.RespostaValida(sample, root, contextoColetas)) return false;
             var inputs = root.GetProperty("riskInputs");
             var ph = sample.GetProperty("ph").GetDouble();
             var oxygen = sample.GetProperty("oxigenio_dissolvido").GetDouble();
