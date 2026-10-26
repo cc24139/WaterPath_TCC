@@ -42,6 +42,7 @@ public class AnaliseLagoInput
 [Route("api/ia/predicoes")]
 public class ControllerIA(WaterPathDbContext context, PredicaoIAService service,
     ResourceAuthorizationService authorization) : ControllerBase
+
 {
     private int UsuarioId()
     {
@@ -63,6 +64,7 @@ public class ControllerIA(WaterPathDbContext context, PredicaoIAService service,
             throw new IaException(403, IaErrorCodes.Forbidden,
                 "Você não tem permissão para analisar este corpo hídrico.");
     }
+
 
     [HttpPost("corpo-hidrico/{corpoHidricoId:int}")]
     [Consumes("multipart/form-data")]
