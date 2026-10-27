@@ -71,7 +71,7 @@ public static class ContratoMetais
         var hasExplicitReference = reference.ValueKind == JsonValueKind.Object;
         var source = result.TryGetProperty("metalVariation", out var sourceVariation)
             ? Texto(sourceVariation, "source") : null;
-        var usesHistoricalPredictions = source == "predicoes_modelo_historico";
+        var usesHistoricalPredictions = source is "predicoes_modelo_historico" or "medicoes_e_modelo";
         if (source is not null && !usesHistoricalPredictions) return false;
         var current = usesHistoricalPredictions ? Predicoes(result) : Medicoes(sample);
         var previous = hasExplicitReference ? Medicoes(reference) : new Dictionary<string, JsonElement>();

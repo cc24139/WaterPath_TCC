@@ -87,33 +87,45 @@ public class PredicaoIAService
             .Select(i => new { i.Url, i.Id }).ToListAsync(cancellationToken);
         foreach (var candidate in vinculadas.Concat(doCorpo).DistinctBy(i => i.Id))
         {
-            var path = ResolverCaminhoImagem(candidate.Url);
-            try
+            foreach (var path in ResolverCaminhosImagem(candidate.Url))
             {
-                if (new FileInfo(path).Length > LimiteImagem)
-                    throw new IaException(413, "A imagem armazenada deve ter até 10 MB.");
-                var bytes = await File.ReadAllBytesAsync(path, cancellationToken);
-                if (bytes.Length == 0) continue;
-                var contentType = IaClient.DetectarContentType(bytes);
-                if (contentType is null) continue;
-                return new ImagePayload(bytes, Path.GetFileName(path));
+                try
+                {
+                    if (new FileInfo(path).Length > LimiteImagem)
+                        throw new IaException(413, "A imagem armazenada deve ter até 10 MB.");
+                    var bytes = await File.ReadAllBytesAsync(path, cancellationToken);
+                    if (bytes.Length == 0) continue;
+                    var contentType = IaClient.DetectarContentType(bytes);
+                    if (contentType is null) continue;
+                    return new ImagePayload(bytes, Path.GetFileName(path));
+                }
+                catch (FileNotFoundException) { }
+                catch (DirectoryNotFoundException) { }
+                catch (UnauthorizedAccessException) { }
             }
-            catch (FileNotFoundException) { }
-            catch (DirectoryNotFoundException) { }
-            catch (UnauthorizedAccessException) { }
         }
         throw new IaException(422, "Nenhuma imagem JPEG ou PNG disponível para a coleta ou seu corpo hídrico.");
     }
 
-    private string ResolverCaminhoImagem(string url)
+    private IEnumerable<string> ResolverCaminhosImagem(string url)
     {
-        var root = Path.GetFullPath(environment?.ContentRootPath ?? Directory.GetCurrentDirectory());
-        var path = Path.GetFullPath(url, root);
-        var relative = Path.GetRelativePath(root, path);
-        if (Path.IsPathRooted(relative) || relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar,
-                StringComparison.Ordinal))
-            throw new IaException(422, "O caminho da imagem armazenada é inválido.");
-        return path;
+        // O upload legado usa caminhos relativos ao diretório atual; o host pode
+        // configurar um ContentRoot diferente, então tenta os dois locais.
+        var roots = new[] { Directory.GetCurrentDirectory(), environment?.ContentRootPath }
+            .Where(root => !string.IsNullOrWhiteSpace(root))
+            .Select(root => Path.GetFullPath(root!))
+            .Distinct(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+        var paths = new List<string>();
+        foreach (var root in roots)
+        {
+            var path = Path.GetFullPath(url, root);
+            var relative = Path.GetRelativePath(root, path);
+            if (Path.IsPathRooted(relative) || relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar,
+                    StringComparison.Ordinal)) continue;
+            paths.Add(path);
+        }
+        if (paths.Count == 0) throw new IaException(422, "O caminho da imagem armazenada é inválido.");
+        return paths;
     }
 
     private async Task<PredicaoIAEntity> ProcessarAsync(int coletaId, ImagePayload image, string? data,
