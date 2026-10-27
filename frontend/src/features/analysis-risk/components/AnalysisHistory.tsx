@@ -7,7 +7,21 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { formatMonitoringDate } from "@/features/water-body-monitoring/dashboard/utils/dashboardData";
 import { useAnalysisSummaries } from "../hooks/useAnalysisSummaries";
+import type { AnalysisMetal } from "../utils/analysisRisk";
 import { RiskBadge } from "./RiskBadge";
+
+const metalLabels: Record<string, string> = {
+  Fe: "Ferro", Mn: "Manganês", Cr: "Cromo", Ni: "Níquel",
+  Cu: "Cobre", Zn: "Zinco", Cd: "Cádmio", Pb: "Chumbo",
+};
+const concentration = (value: number) => new Intl.NumberFormat("pt-BR", { maximumSignificantDigits: 5 }).format(value);
+function variationLabel(metal: AnalysisMetal) {
+  if (!metal.variation || metal.variation === "indeterminada") return "Sem comparação";
+  const labels = { aumento: "Aumento", reducao: "Redução", estabilidade: "Estável" } as const;
+  if (metal.delta === null) return labels[metal.variation];
+  const sign = metal.delta > 0 ? "+" : "";
+  return `${labels[metal.variation]} (${sign}${concentration(metal.delta)} ${metal.unit})`;
+}
 
 export function AnalysisHistory({ waterBodyId }: { waterBodyId?: number }) {
   const [search, setSearch] = useState("");
@@ -51,6 +65,18 @@ export function AnalysisHistory({ waterBodyId }: { waterBodyId?: number }) {
             {item.predicaoId ? <p className="mt-2 text-xs text-text-secondary">Análise #{item.predicaoId}{item.analisadaEm ? ` · ${formatMonitoringDate(item.analisadaEm)}` : ""}</p> : <p className="mt-2 text-xs text-text-secondary">Coleta salva, ainda sem resultado de risco da IA.</p>}
             {!waterBodyId && !item.predicaoId && <Link href={`/add-analysis?coletaId=${item.coletaId}`} className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4">Concluir análise com IA</Link>}
             {!!item.risco?.reasons.length && <details className="mt-3 text-sm"><summary className="w-fit cursor-pointer font-semibold text-primary">Motivos da classificação</summary><ul className="mt-2 list-disc space-y-1 pl-5 text-text-secondary">{item.risco.reasons.map((reason, index) => <li key={index}>{reason}</li>)}</ul></details>}
+            {!!item.metais?.length && <details className="mt-3 text-sm"><summary className="w-fit cursor-pointer font-semibold text-primary">Metais pesados · {item.metais.length}</summary>
+              <div className="mt-2 overflow-x-auto"><table className="w-full min-w-[620px] border-collapse text-left text-xs">
+                <thead><tr className="border-b border-placeholder text-text-secondary"><th scope="col" className="px-2 py-2">Metal</th><th scope="col" className="px-2 py-2">Valor atual</th><th scope="col" className="px-2 py-2">Variação</th><th scope="col" className="px-2 py-2">Limite recomendado</th></tr></thead>
+                <tbody>{item.metais.map(metal => <tr key={metal.name} className="border-b border-placeholder last:border-0">
+                  <th scope="row" className="px-2 py-2 font-semibold">{metalLabels[metal.name] ?? metal.name} ({metal.name})</th>
+                  <td className="px-2 py-2">{metal.value === null ? "Sem valor" : `${concentration(metal.value)} ${metal.unit}`}{metal.source && <span className="ml-1 text-text-secondary">· {metal.source}</span>}</td>
+                  <td className="px-2 py-2">{variationLabel(metal)}</td>
+                  <td className="px-2 py-2">{concentration(metal.limit)} {metal.limitUnit}</td>
+                </tr>)}</tbody>
+              </table></div>
+              <p className="mt-2 text-xs text-text-secondary">Limites de referência atualmente configurados no modelo.</p>
+            </details>}
           </li>)}</ul>}
         <nav aria-label="Paginação das análises" className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-placeholder pt-4">
           <Button variant="outline" disabled={page === 1} onClick={() => setPage(value => value - 1)}><LuChevronLeft aria-hidden="true" />Anterior</Button>
