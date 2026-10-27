@@ -13,8 +13,13 @@ public record AnalysisSummaryItem(int ColetaId, int CorpoHidricoId, string Corpo
     [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] AnalysisRisk? Risco,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] AnalysisMetalSummary[]? Metais);
 
-public record AnalysisMetalSummary(string Name, double? Value, string Unit, double? Delta,
-    string? Variation, double Limit, string LimitUnit, string? Source);
+public record AnalysisMetalSummary(string Name,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] double? Value,
+    string Unit,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] double? Delta,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] string? Variation,
+    double Limit, string LimitUnit,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] string? Source);
 
 public record AnalysisRisk(int Level, string[] Reasons)
 {

@@ -45,11 +45,11 @@ export function readAnalysisSummaries(value: unknown): AnalysisSummaryPage {
       const metalNames = new Set<string>();
       if (!Array.isArray(item.metais) || item.metais.length > 8 || item.metais.some(metal => {
         if (!metal || typeof metal.name !== "string" || !["Fe", "Mn", "Cr", "Ni", "Cu", "Zn", "Cd", "Pb"].includes(metal.name)
-          || metalNames.has(metal.name) || (metal.value !== null && (typeof metal.value !== "number" || !Number.isFinite(metal.value)))
-          || typeof metal.unit !== "string" || (metal.delta !== null && (typeof metal.delta !== "number" || !Number.isFinite(metal.delta)))
-          || (metal.variation !== null && !["aumento", "reducao", "estabilidade", "indeterminada"].includes(metal.variation))
+          || metalNames.has(metal.name) || (metal.value != null && (typeof metal.value !== "number" || !Number.isFinite(metal.value)))
+          || typeof metal.unit !== "string" || (metal.delta != null && (typeof metal.delta !== "number" || !Number.isFinite(metal.delta)))
+          || (metal.variation != null && !["aumento", "reducao", "estabilidade", "indeterminada"].includes(metal.variation))
           || typeof metal.limit !== "number" || !Number.isFinite(metal.limit) || metal.limit < 0
-          || typeof metal.limitUnit !== "string" || (metal.source !== null && !["medido", "estimado"].includes(metal.source))) return true;
+          || typeof metal.limitUnit !== "string" || (metal.source != null && !["medido", "estimado"].includes(metal.source))) return true;
         metalNames.add(metal.name);
         return false;
       })) throw new Error("Metais do resumo inválidos.");
@@ -57,6 +57,8 @@ export function readAnalysisSummaries(value: unknown): AnalysisSummaryPage {
     ids.add(item.coletaId);
   }
   return { ...page, itens: page.itens.map(item => ({ ...item,
+    metais: item.metais?.map(metal => ({ ...metal, value: metal.value ?? null, delta: metal.delta ?? null,
+      variation: metal.variation ?? null, source: metal.source ?? null })),
     // Resultado inválido nunca é convertido em risco baixo nem derruba as demais linhas.
     risco: item.predicaoId && item.analisadaEm && item.risco && isRiskLevel(item.risco.level)
       && Array.isArray(item.risco.reasons) && item.risco.reasons.every(reason => typeof reason === "string") ? item.risco : null,
