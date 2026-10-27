@@ -37,7 +37,7 @@ test("collection payload maps canonical units and preserves zeros and optional m
   assert.equal(collection.medicoes.length, 4);
   const full = buildAnalysisPayload({ ...validForm(), fosforo_total: "0", metals: { Fe: "0,123456789", Pb: "0" } });
   assert.deepEqual(full.collection.metaisPesados, [{ nome: "Fe", concentracao: 0.123456789, unidade: "mg/L" }, { nome: "Pb", concentracao: 0, unidade: "µg/L" }]);
-  assert.equal(full.collection.medicoes.at(-1).unidade, "µg P/L");
+  assert.equal(full.collection.medicoes.at(-1).unidade, "µg/L");
 });
 
 test("selected metals require values, but removing a metal allows saving", () => {

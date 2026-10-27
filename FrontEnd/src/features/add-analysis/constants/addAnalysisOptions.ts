@@ -7,7 +7,7 @@ export const indicatorFields: AnalysisFieldConfig[] = [
   { name: "oxigenio_dissolvido", label: "Oxigênio dissolvido", unit: "mg/L", measurementCode: "OxigenioDissolvido", numericCode: 2, placeholder: "Ex.: 6,5", required: true },
   { name: "solidos_suspensos_totais", label: "Sólidos suspensos totais", unit: "mg/L", measurementCode: "SolidosSuspensosTotais", numericCode: 5, placeholder: "Ex.: 12", required: false },
   { name: "carbono_organico_total", label: "Carbono orgânico total", unit: "mg/L", measurementCode: "CarbonoOrganicoTotal", numericCode: 7, placeholder: "Ex.: 3,5", required: false },
-  { name: "fosforo_total", label: "Fósforo total", unit: "µg P/L", measurementCode: "FosforoTotal", numericCode: 12, placeholder: "Ex.: 25", required: false },
+  { name: "fosforo_total", label: "Fósforo total", unit: "µg/L", measurementCode: "FosforoTotal", numericCode: 12, placeholder: "Ex.: 25", required: false },
 ];
 
 export const metalOptions: { symbol: MetalSymbol; label: string; unit: string }[] = [

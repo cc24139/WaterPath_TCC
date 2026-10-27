@@ -133,11 +133,11 @@ export function useAddAnalysisForm(resumeCollectionId: number | null = null, fix
           return created.id!;
         },
         onCollectionSaved: (id) => { savedIdRef.current = id; setSavedCollectionId(id); },
-        analyze: async (id, file) => {
+        analyze: async (id, file, sample) => {
           setStatus("analyzing");
           const scope = `predicao:${getAuthSession()!.id}:${id}`;
-          const key = requestKey(scope, await imageFingerprint(file));
-          const result = await readSubmissionResponse(await predicaoServices.create(id, file, key));
+          const key = requestKey(scope, `${await imageFingerprint(file)}:${JSON.stringify(sample)}`);
+          const result = await readSubmissionResponse(await predicaoServices.create(id, file, sample, key));
           const prediction = readPrediction(result, id);
           clearRequestKey(scope, key);
           return prediction;

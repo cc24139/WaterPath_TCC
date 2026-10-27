@@ -1,6 +1,7 @@
 import { indicatorFields, metalOptions } from "../constants/addAnalysisOptions.ts";
 import type { AddAnalysisErrors, AddAnalysisFormState } from "../types/addAnalysis";
 import type { ColetaCadastroDTO } from "../../../api/dtos/coletaDTO";
+import type { AmostraDTO } from "../../../api/dtos/predicaoDTO";
 
 export function parseDecimal(value: string): number | null {
   const normalized = value.trim().replace(",", ".");
@@ -43,14 +44,21 @@ export function validateImage(file: Pick<File, "size" | "type">): string | undef
   if (!file.size || file.size > 5 * 1024 * 1024) return "A imagem deve ter conteúdo e no máximo 5 MB.";
 }
 
-export function buildAnalysisPayload(form: AddAnalysisFormState): { collection: ColetaCadastroDTO } {
+export function buildAnalysisPayload(form: AddAnalysisFormState): { collection: ColetaCadastroDTO; sample: AmostraDTO } {
   if (Object.keys(validateAnalysis(form)).length) throw new Error("Revise os campos antes de salvar.");
+  const sample: AmostraDTO = {
+    temperatura: parseDecimal(form.temperatura)!,
+    ph: parseDecimal(form.ph)!,
+    condutividade_eletrica: parseDecimal(form.condutividade_eletrica)!,
+    oxigenio_dissolvido: parseDecimal(form.oxigenio_dissolvido)!,
+  };
   const collection: ColetaCadastroDTO = {
     corpoHidricoId: Number(form.waterBody), dataHora: new Date(form.analysisDate).toISOString(), medicoes: [],
   };
   for (const field of indicatorFields) {
     const value = parseDecimal(form[field.name]);
     if (value === null) continue;
+    if (!field.required) sample[field.name] = value;
     collection.medicoes.push({ codigoMedicao: field.measurementCode, valor: value, unidade: field.unit });
   }
   const metals = metalOptions.flatMap((metal) => {
@@ -58,7 +66,8 @@ export function buildAnalysisPayload(form: AddAnalysisFormState): { collection: 
     return raw === undefined ? [] : [{ name: metal.symbol, value: parseDecimal(raw)!, unit: metal.unit }];
   });
   if (metals.length) {
+    sample.metais_pesados = metals;
     collection.metaisPesados = metals.map(({ name, value, unit }) => ({ nome: name, concentracao: value, unidade: unit }));
   }
-  return { collection };
+  return { collection, sample };
 }

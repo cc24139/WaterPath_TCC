@@ -26,7 +26,7 @@ A página mantém a sidebar, os cards, a tipografia, as cores e os componentes d
 
 - Dados gerais: corpo hídrico conectado à API, data e horário local da coleta e responsável identificado pela conta conectada.
 - Indicadores obrigatórios: temperatura (°C), pH, condutividade elétrica (µS/cm) e oxigênio dissolvido (mg/L).
-- Indicadores complementares opcionais: sólidos suspensos totais (mg/L), carbono orgânico total (mg/L) e fósforo total (µg P/L).
+- Indicadores complementares opcionais: sólidos suspensos totais (mg/L), carbono orgânico total (mg/L) e fósforo total (µg/L).
 - Observações, condição visual, diagnóstico manual e o campo único de metais foram removidos desse formulário.
 - Metais pesados: seleção de ferro (Fe), manganês (Mn), cromo (Cr), níquel (Ni), cobre (Cu), zinco (Zn), cádmio (Cd) e chumbo (Pb). Somente os selecionados abrem campos de concentração.
 - Fe e Mn usam mg/L; os outros seis usam µg/L. As unidades são fixas no formulário.
