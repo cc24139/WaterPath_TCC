@@ -1,5 +1,8 @@
 using System.Text.Json;
 using back_end.src.Domain.Coleta;
+using back_end.src.Domain.Imagem;
+using back_end.src.Domain.QualidadeFutura;
+using back_end.src.Medicoes.Domain;
 using back_end.src.IA.Domain;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -12,13 +15,15 @@ public class PredicaoIAService
     private readonly WaterPathDbContext context;
     private readonly IaClient client;
     private readonly ILogger<PredicaoIAService> logger;
+    private readonly IWebHostEnvironment? environment;
 
     public PredicaoIAService(WaterPathDbContext context, IaClient client,
-        ILogger<PredicaoIAService>? logger = null)
+        ILogger<PredicaoIAService>? logger = null, IWebHostEnvironment? environment = null)
     {
         this.context = context;
         this.client = client;
         this.logger = logger ?? NullLogger<PredicaoIAService>.Instance;
+        this.environment = environment;
     }
 
     public const long LimiteImagem = 10 * 1024 * 1024;
@@ -39,20 +44,85 @@ public class PredicaoIAService
         if (atual is null) throw new IaException(422, "Corpo hídrico sem coletas para analisar.");
         var collectionContext = SerializarContextoColetas(corpoHidricoId, atual.Id, atual.DataHora,
             coletas.Where(c => c.DataHora < atual.DataHora));
-        return await ProcessarAsync(atual.Id, image, AmostraDaColeta.Montar(atual), cancellationToken, collectionContext, atual);
+        return await ProcessarAsync(atual.Id, await LerUploadAsync(image, cancellationToken),
+            AmostraDaColeta.Montar(atual), cancellationToken, collectionContext, atual);
     }
 
-    public Task<PredicaoIAEntity> CriarAsync(int coletaId, IFormFile image, string? data,
-        CancellationToken cancellationToken, Guid? requestKey = null, string? requestHash = null) =>
-        ProcessarAsync(coletaId, image, data, cancellationToken, requestKey: requestKey, requestHash: requestHash);
-
-    private async Task<PredicaoIAEntity> ProcessarAsync(int coletaId, IFormFile image, string? data,
-        CancellationToken cancellationToken, string? collectionContext = null, ColetaEntity? coletaSnapshot = null,
-        Guid? requestKey = null, string? requestHash = null)
+    public async Task<PredicaoIAEntity> CriarAsync(int coletaId, IFormFile? image,
+        CancellationToken cancellationToken, Guid? requestKey = null, string? requestHash = null)
     {
         if (coletaId <= 0) throw new IaException(400, "Informe uma coleta válida.");
-        if (image is null || image.Length == 0) throw new IaException(400, "Informe uma imagem.");
+        var coleta = await context.Coletas.AsNoTracking().Where(c => c.Id == coletaId)
+            .Include(c => c.Medicoes).Include(c => c.MetaisPesados).SingleOrDefaultAsync(cancellationToken);
+        if (coleta is null) throw new IaException(404, "Coleta não encontrada.");
+        var data = AmostraDaColeta.Montar(coleta);
+        var payload = image is null
+            ? await ObterImagemDaColetaAsync(coleta, cancellationToken)
+            : await LerUploadAsync(image, cancellationToken);
+        return await ProcessarAsync(coletaId, payload, data, cancellationToken,
+            coletaSnapshot: coleta, requestKey: requestKey, requestHash: requestHash, salvarQualidadeFutura: true);
+    }
+
+    private sealed record ImagePayload(byte[] Bytes, string FileName);
+
+    private static async Task<ImagePayload> LerUploadAsync(IFormFile image, CancellationToken cancellationToken)
+    {
+        if (image is null || image.Length == 0) throw new IaException(400, "A imagem enviada está vazia.");
         if (image.Length > LimiteImagem) throw new IaException(413, "A imagem deve ter até 10 MB.");
+        using var stream = new MemoryStream();
+        await image.CopyToAsync(stream, cancellationToken);
+        var name = Path.GetFileName(image.FileName);
+        return new ImagePayload(stream.ToArray(), string.IsNullOrWhiteSpace(name) ? "imagem" : name);
+    }
+
+    private async Task<ImagePayload> ObterImagemDaColetaAsync(ColetaEntity coleta, CancellationToken cancellationToken)
+    {
+        var vinculadas = await context.Imagens.AsNoTracking()
+            .Where(i => i.Coleta != null && i.Coleta.Id == coleta.Id && i.CorpoHidrico.Id == coleta.CorpoHidricoId)
+            .OrderByDescending(i => i.DataUpload).ThenByDescending(i => i.Id)
+            .Select(i => new { i.Url, i.Id }).ToListAsync(cancellationToken);
+        var doCorpo = await context.Imagens.AsNoTracking()
+            .Where(i => i.CorpoHidrico.Id == coleta.CorpoHidricoId)
+            .OrderByDescending(i => i.DataUpload).ThenByDescending(i => i.Id)
+            .Select(i => new { i.Url, i.Id }).ToListAsync(cancellationToken);
+        foreach (var candidate in vinculadas.Concat(doCorpo).DistinctBy(i => i.Id))
+        {
+            var path = ResolverCaminhoImagem(candidate.Url);
+            try
+            {
+                if (new FileInfo(path).Length > LimiteImagem)
+                    throw new IaException(413, "A imagem armazenada deve ter até 10 MB.");
+                var bytes = await File.ReadAllBytesAsync(path, cancellationToken);
+                if (bytes.Length == 0) continue;
+                var contentType = IaClient.DetectarContentType(bytes);
+                if (contentType is null) continue;
+                return new ImagePayload(bytes, Path.GetFileName(path));
+            }
+            catch (FileNotFoundException) { }
+            catch (DirectoryNotFoundException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+        throw new IaException(422, "Nenhuma imagem JPEG ou PNG disponível para a coleta ou seu corpo hídrico.");
+    }
+
+    private string ResolverCaminhoImagem(string url)
+    {
+        var root = Path.GetFullPath(environment?.ContentRootPath ?? Directory.GetCurrentDirectory());
+        var path = Path.GetFullPath(url, root);
+        var relative = Path.GetRelativePath(root, path);
+        if (Path.IsPathRooted(relative) || relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar,
+                StringComparison.Ordinal))
+            throw new IaException(422, "O caminho da imagem armazenada é inválido.");
+        return path;
+    }
+
+    private async Task<PredicaoIAEntity> ProcessarAsync(int coletaId, ImagePayload image, string? data,
+        CancellationToken cancellationToken, string? collectionContext = null, ColetaEntity? coletaSnapshot = null,
+        Guid? requestKey = null, string? requestHash = null, bool salvarQualidadeFutura = false)
+    {
+        if (coletaId <= 0) throw new IaException(400, "Informe uma coleta válida.");
+        if (image.Bytes.Length == 0) throw new IaException(400, "Informe uma imagem.");
+        if (image.Bytes.Length > LimiteImagem) throw new IaException(413, "A imagem deve ter até 10 MB.");
         if (data is not null)
         {
             try
@@ -75,12 +145,10 @@ public class PredicaoIAService
             collectionContext = await BuscarContextoColetasAsync(coletaId, coleta.CorpoHidricoId,
                 coleta.DataHora, cancellationToken);
 
-        using var stream = new MemoryStream();
-        await image.CopyToAsync(stream, cancellationToken);
-        var original = stream.ToArray();
+        var original = image.Bytes;
         var contentType = IaClient.DetectarContentType(original);
         if (contentType is null) throw new IaException(400, "Envie uma imagem JPEG ou PNG válida.");
-        var name = Path.GetFileName(image.FileName);
+        var name = image.FileName;
         if (string.IsNullOrWhiteSpace(name)) name = contentType == "image/png" ? "imagem.png" : "imagem.jpg";
         var history = data is null ? "[]"
             : await BuscarHistoricoAsync(coleta.CorpoHidricoId, coleta.DataHora, cancellationToken);
@@ -96,12 +164,35 @@ public class PredicaoIAService
             NomeArquivo = name, ContentTypeOriginal = contentType, ImagemOriginal = original,
             ContentTypeResultado = "image/jpeg", ImagemResultado = analise.Imagem,
         };
+        QualidadeFuturaEntity? qualidadeFutura = null;
+        if (salvarQualidadeFutura)
+        {
+            using var resultado = JsonDocument.Parse(analise.ResultadoJson);
+            var root = resultado.RootElement;
+            var qualityFields = new[]
+            {
+                "detections", "totalObjects", "metalPredictions", "measuredMetals", "estimatedMetals",
+                "riskLevel", "riskLabel", "riskReasons", "metalVariation",
+            }.Where(name => root.TryGetProperty(name, out _))
+                .ToDictionary(name => name, name => root.GetProperty(name).Clone());
+            var collectionDate = coletaSnapshot!.DataHora;
+            qualidadeFutura = new QualidadeFuturaEntity
+            {
+                CorpoHidricoId = coletaSnapshot.CorpoHidricoId,
+                ColetaId = coletaSnapshot.Id,
+                DataReferencia = DateOnly.FromDateTime(collectionDate.UtcDateTime),
+                ResultadoJson = JsonSerializer.Serialize(qualityFields),
+                CriadaEm = DateTime.UtcNow,
+            };
+        }
         // Grava imagem e resultado juntos somente após a análise ter sucesso.
         context.PredicoesIA.Add(predicao);
+        if (qualidadeFutura is not null) context.QualidadesFuturas.Add(qualidadeFutura);
         try { await context.SaveChangesAsync(cancellationToken); }
         catch (DbUpdateException) when (requestKey.HasValue)
         {
             context.Entry(predicao).State = EntityState.Detached;
+            if (qualidadeFutura is not null) context.Entry(qualidadeFutura).State = EntityState.Detached;
             var prior = await context.PredicoesIA.AsNoTracking()
                 .SingleOrDefaultAsync(p => p.AnaliseRequestKey == requestKey.Value, cancellationToken);
             if (prior is not null && prior.ColetaId == coletaId && prior.AnaliseRequestHash == requestHash)
@@ -114,11 +205,13 @@ public class PredicaoIAService
         {
             // Impede que uma gravação posterior no mesmo contexto tente salvar esta análise falha.
             context.Entry(predicao).State = EntityState.Detached;
+            if (qualidadeFutura is not null) context.Entry(qualidadeFutura).State = EntityState.Detached;
             throw new IaException(500, IaErrorCodes.Persistence, "Não foi possível salvar a análise.");
         }
         catch (OperationCanceledException)
         {
             context.Entry(predicao).State = EntityState.Detached;
+            if (qualidadeFutura is not null) context.Entry(qualidadeFutura).State = EntityState.Detached;
             throw;
         }
         logger.LogInformation(

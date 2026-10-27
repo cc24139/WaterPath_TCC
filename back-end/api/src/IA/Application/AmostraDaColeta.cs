@@ -22,7 +22,19 @@ public static class AmostraDaColeta
         Adicionar(coleta, sample, Medicao.FosforoTotal, "fosforo_total", "ug/l", required: false);
         if (coleta.MetaisPesados.Count > 0)
             sample["metais_pesados"] = coleta.MetaisPesados.OrderBy(m => m.Id)
-                .Select(m => new { name = m.Nome, value = m.Concentracao, unit = m.Unidade }).ToArray();
+                .Select(m =>
+                {
+                    var expectedUnit = m.Nome switch
+                    {
+                        "Fe" or "Mn" => "mg/l",
+                        "Cr" or "Ni" or "Cu" or "Zn" or "Cd" or "Pb" => "ug/l",
+                        _ => throw new IaException(422, $"Metal inválido na coleta: {m.Nome}.")
+                    };
+                    var actualUnit = m.Unidade.Trim().ToLowerInvariant().Replace('µ', 'u').Replace('μ', 'u');
+                    if (actualUnit != expectedUnit)
+                        throw new IaException(422, $"Unidade incompatível para o metal {m.Nome}: {m.Unidade}.");
+                    return new { name = m.Nome, value = m.Concentracao, unit = m.Unidade };
+                }).ToArray();
         try { return ContratoAmostra.Ler(JsonSerializer.Serialize(sample)).GetRawText(); }
         catch (Exception ex) when (ex is JsonException or ArgumentException)
         { throw new IaException(422, "As medições salvas da coleta não atendem ao contrato da IA."); }

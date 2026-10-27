@@ -41,7 +41,7 @@ export function useAddAnalysisForm(resumeCollectionId: number | null = null, fix
           setForm(restored);
           savedIdRef.current = resumeCollectionId;
           setSavedCollectionId(resumeCollectionId);
-          setFeedback({ type: "success", message: `Coleta #${resumeCollectionId} recuperada. Anexe uma imagem para concluir a análise.` });
+          setFeedback({ type: "success", message: `Coleta #${resumeCollectionId} recuperada. Você pode concluir a análise com a imagem salva no corpo hídrico ou anexar outra.` });
         }
       } catch (error) {
         if (!controller.signal.aborted) setFeedback({ type: "error", message: error instanceof Error ? error.message : "Não foi possível recuperar a coleta." });
@@ -111,7 +111,6 @@ export function useAddAnalysisForm(resumeCollectionId: number | null = null, fix
       return;
     }
     const nextErrors = validateAnalysis(form);
-    if (withAI && !image) nextErrors.image = "Anexe uma imagem para analisar com IA.";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
       setFeedback({ type: "error", message: "Revise os campos destacados antes de continuar." });
@@ -123,7 +122,7 @@ export function useAddAnalysisForm(resumeCollectionId: number | null = null, fix
     setFeedback(null);
     try {
       const payload = buildAnalysisPayload(form);
-      const result = await submitAnalysis({ ...payload, savedCollectionId: savedIdRef.current, image: withAI ? image : null }, {
+      const result = await submitAnalysis({ ...payload, savedCollectionId: savedIdRef.current, image: withAI ? image : null, analyzeWithAI: withAI }, {
         createCollection: async (data) => {
           const scope = `coleta:${getAuthSession()!.id}`;
           const key = requestKey(scope, JSON.stringify(data));
@@ -134,18 +133,18 @@ export function useAddAnalysisForm(resumeCollectionId: number | null = null, fix
           return created.id!;
         },
         onCollectionSaved: (id) => { savedIdRef.current = id; setSavedCollectionId(id); },
-        analyze: async (id, file, sample) => {
+        analyze: async (id, file) => {
           setStatus("analyzing");
           const scope = `predicao:${getAuthSession()!.id}:${id}`;
-          const key = requestKey(scope, await imageFingerprint(file, sample));
-          const result = await readSubmissionResponse(await predicaoServices.create(id, file, sample, key));
+          const key = requestKey(scope, await imageFingerprint(file));
+          const result = await readSubmissionResponse(await predicaoServices.create(id, file, key));
           const prediction = readPrediction(result, id);
           clearRequestKey(scope, key);
           return prediction;
         },
       });
       setPrediction(result);
-      setFeedback({ type: "success", message: result ? "Coleta salva e análise com IA concluída." : "Coleta salva com sucesso. Você pode anexar uma imagem e analisar com IA." });
+      setFeedback({ type: "success", message: result ? "Coleta salva e análise com IA concluída." : "Coleta salva com sucesso. Você pode analisar com IA quando quiser." });
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Não foi possível conectar ao servidor.";
       setFeedback({ type: "error", message: savedIdRef.current ? `A coleta #${savedIdRef.current} está salva, mas a análise com IA não foi concluída. Tente novamente. ${detail}` : detail });

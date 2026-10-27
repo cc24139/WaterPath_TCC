@@ -17,6 +17,7 @@ from services.integration import build_visual_report, structured_metals
 from services.Infos.objetos import create_images
 from services.Predict.schema import TARGETS
 from services.risk.classification import classify_risk, parse_history
+from services.risk.metal_variation import estimate_historical_metals
 from services.PredictGeral.predictor import prever
 
 app = FastAPI(title="API de IA", description="API para predição com YOLO e regressão de metais", version="2.0.0")
@@ -53,18 +54,32 @@ def analyze_image(image, data=None, include_annotation=False, history="[]", coll
     predictions = vision.predict_image(img, model)
     names = vision.class_names(model)
     images = create_images(predictions, names)
-    predicted_metals = metals.predict_metals(sample) if sample is not None else []
-    report = build_visual_report(images, predicted_metals, img.shape)
+    measured_metals, estimated_metals = [], []
+    historical_estimates = []
+    if sample is not None:
+        try:
+            combined_metals, measured_metals, estimated_metals, predicted_metals = metals.predict_and_merge_metals(sample)
+        except metals.InvalidMetalMeasurement as exc:
+            raise HTTPException(status_code=422, detail="Unidade inválida para um metal medido") from exc
+    else:
+        combined_metals = predicted_metals = []
+    report = build_visual_report(images, combined_metals, img.shape)
     result = {
         "detections": report["detections"],
         "totalObjects": sum(item["count"] for item in report["detections"]),
         "metalPredictions": structured_metals(predicted_metals),
     }
+    if sample is not None:
+        result["measuredMetals"] = measured_metals
+        result["estimatedMetals"] = estimated_metals
+        historical_estimates = estimate_historical_metals(context)
+        result["historicalMetalEstimates"] = historical_estimates
     if include_annotation:
         if context is not None:
             result["collectionContext"] = context
         if sample is not None:
-            result.update(classify_risk(images, sample, previous_samples, context, predicted_metals))
+            result.update(classify_risk(images, sample, previous_samples, context, combined_metals,
+                                        historical_estimates))
         result["visionModelVersion"] = vision.model_version()
         if sample is not None:
             result["metalModelVersion"] = metals.model_metadata()["version"]

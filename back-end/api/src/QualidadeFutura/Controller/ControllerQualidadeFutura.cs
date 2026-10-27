@@ -58,7 +58,7 @@ namespace back_end.src.Controllers.QualidadeFutura
 
         private static object Representar(QualidadeFuturaEntity previsao) => new
         {
-            previsao.Id, previsao.CorpoHidricoId, previsao.DataReferencia,
+            previsao.Id, previsao.CorpoHidricoId, previsao.ColetaId, previsao.DataReferencia,
             previsao.DataAlvo, previsao.HorizonteDias, previsao.Ponto,
             previsao.Profundidade, previsao.CriadaEm,
             Resultado = JsonDocument.Parse(previsao.ResultadoJson!).RootElement.Clone(),

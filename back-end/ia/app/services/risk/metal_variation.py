@@ -86,6 +86,40 @@ def _observations(predicted):
             for item in predicted]
 
 
+def estimate_historical_metals(collection_context):
+    """Estimate missing metals from historical measurements without running vision."""
+    if not collection_context:
+        return []
+    estimates = []
+    for record in collection_context.get("history", []):
+        observed = record.get("metals", [])
+        measured = {item["name"] for item in observed if item.get("value") is not None and item.get("unit")}
+        predicted = []
+        if len(measured) < len(metal_service.model_metadata()["targets"]):
+            sample = _historical_sample(record)
+            if sample is not None:
+                try:
+                    predicted = _observations(metal_service.predict_metals(sample))
+                except (ValueError, TypeError, KeyError):
+                    predicted = []
+        merged = {item["name"]: item for item in observed if item["value"] is not None and item["unit"]}
+        estimated = []
+        for item in predicted:
+            estimate = item.model_dump()
+            if item.name not in merged:
+                merged[item.name] = estimate
+                estimated.append(estimate)
+        if not merged:
+            continue
+        estimates.append({
+            "collectionId": record["collectionId"],
+            "metals": list(merged.values()),
+            "measuredMetals": observed,
+            "estimatedMetals": estimated,
+        })
+    return estimates
+
+
 def _predicted_history_reference(sample, collection_context):
     if not collection_context:
         return None, None
@@ -164,13 +198,14 @@ def _compare_metal_sets(sample, current_source, previous_source, reference_date)
     }
 
 
-def analyze_metal_variation(sample, history=None, collection_context=None, predicted_current=None):
+def analyze_metal_variation(sample, history=None, collection_context=None, predicted_current=None,
+                            historical_estimates=None):
     reference = sample.referencia_metais_pesados
     observed_current = sample.metais_pesados
     observed_previous = reference.metais_pesados if reference else None
     observed_reference_date = reference.data if reference else None
     observed = _compare_metal_sets(sample, observed_current, observed_previous, observed_reference_date)
-    if observed["status"] != "indeterminada":
+    if observed["status"] == "completa":
         return observed
 
     # Only attempt model-based comparison when the API actually sent history.
@@ -179,14 +214,29 @@ def analyze_metal_variation(sample, history=None, collection_context=None, predi
     if not records or predicted_current is None:
         return observed
 
-    reference_date, historical_prediction = _predicted_history_reference(sample, collection_context)
+    if historical_estimates is not None:
+        current_time = instant(sample.data)
+        previous = []
+        for record in historical_estimates:
+            source = next((item for item in collection_context["history"]
+                           if item["collectionId"] == record["collectionId"]), None)
+            collected_at = instant(source["collectedAt"]) if source else None
+            if collected_at is not None and current_time is not None and collected_at < current_time:
+                previous.append((collected_at, record["collectionId"], source["collectedAt"],
+                                 [MedicaoMetal.model_validate(item) for item in record["metals"]]))
+        if previous:
+            _, _, reference_date, historical_prediction = max(previous, key=lambda item: (item[0], item[1]))
+        else:
+            reference_date, historical_prediction = None, None
+    else:
+        reference_date, historical_prediction = _predicted_history_reference(sample, collection_context)
     estimated = _compare_metal_sets(
         sample,
         _observations(predicted_current),
         historical_prediction,
         reference_date,
     )
-    estimated["source"] = "predicoes_modelo_historico"
+    estimated["source"] = "medicoes_e_modelo"
     if reference_date is None:
         estimated["message"] = (
             "A variação permaneceu indeterminada: o histórico foi recebido, mas nenhuma coleta anterior "

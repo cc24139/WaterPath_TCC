@@ -35,7 +35,8 @@ def _count_alert_collections(history):
     return sum(item.base_risk_level >= 2 for item in history)
 
 
-def classify_risk(images, sample, history, collection_context=None, predicted_metals=None):
+def classify_risk(images, sample, history, collection_context=None, predicted_metals=None,
+                  historical_metal_estimates=None):
     print("classify_risk called with images:", images, "sample:", sample, "history:", history)
     visual_classes = sorted({image.name for image in images if image.indica_risco()})
     reasons = []
@@ -63,7 +64,8 @@ def classify_risk(images, sample, history, collection_context=None, predicted_me
         "visualClasses": visual_classes,
     }
     result["metalVariation"] = analyze_metal_variation(
-        sample, collection_context=collection_context, predicted_current=predicted_metals)
+        sample, collection_context=collection_context, predicted_current=predicted_metals,
+        historical_estimates=historical_metal_estimates)
     return result
     
     

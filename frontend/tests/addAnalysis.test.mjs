@@ -30,18 +30,13 @@ test("required indicators, date and body are validated; zero and negative temper
   for (const patch of [{ ph: "14,1" }, { oxigenio_dissolvido: "-1" }, { carbono_organico_total: "abc" }, { analysisDate: "2026-02-30T12:00" }, { analysisDate: "2999-01-01T10:00" }, { waterBody: "2147483648" }]) assert.ok(Object.keys(validateAnalysis({ ...form, ...patch })).length);
 });
 
-test("payload maps canonical units, preserves zeros and omits missing optional indicators and metals", () => {
-  const { collection, sample } = buildAnalysisPayload(validForm());
+test("collection payload maps canonical units and preserves zeros and optional metals", () => {
+  const { collection } = buildAnalysisPayload(validForm());
   assert.equal(collection.corpoHidricoId, 12);
   assert.equal(collection.dataHora, new Date("2026-01-02T10:30").toISOString());
   assert.equal(collection.medicoes.length, 4);
-  assert.equal(sample.temperatura, 24.3);
-  assert.equal("fosforo_total" in sample, false);
-  assert.equal("metais_pesados" in sample, false);
   const full = buildAnalysisPayload({ ...validForm(), fosforo_total: "0", metals: { Fe: "0,123456789", Pb: "0" } });
-  assert.deepEqual(full.sample.metais_pesados, [{ name: "Fe", value: 0.123456789, unit: "mg/L" }, { name: "Pb", value: 0, unit: "µg/L" }]);
   assert.deepEqual(full.collection.metaisPesados, [{ nome: "Fe", concentracao: 0.123456789, unidade: "mg/L" }, { nome: "Pb", concentracao: 0, unidade: "µg/L" }]);
-  assert.equal(full.sample.fosforo_total, 0);
   assert.equal(full.collection.medicoes.at(-1).unidade, "µg P/L");
 });
 
@@ -69,6 +64,17 @@ test("saving without image creates a collection without calling IA", async () =>
   assert.equal(result, null);
 });
 
+test("analysis without an uploaded image uses the saved collection ID", async () => {
+  let analyzed;
+  const result = await submitAnalysis({ ...buildAnalysisPayload(validForm()), savedCollectionId: 41, image: null, analyzeWithAI: true }, {
+    createCollection: async () => assert.fail("Saved collection must be reused"),
+    onCollectionSaved: id => assert.equal(id, 41),
+    analyze: async (id, image) => { analyzed = { id, image }; return { id: 9, coletaId: id }; },
+  });
+  assert.deepEqual(analyzed, { id: 41, image: null });
+  assert.equal(result.id, 9);
+});
+
 test("IA retry reuses the persisted collection and exact measured values", async () => {
   const payload = buildAnalysisPayload({ ...validForm(), metals: { Pb: "5,25" } });
   let savedCollectionId = null;
@@ -83,8 +89,8 @@ test("IA retry reuses the persisted collection and exact measured values", async
   assert.equal(savedCollectionId, 42);
   const result = await submitAnalysis({ ...payload, savedCollectionId, image }, {
     ...operations,
-    analyze: async (id, file, sample) => {
-      assert.equal(id, 42); assert.equal(file, image); assert.deepEqual(sample, payload.sample);
+    analyze: async (id, file) => {
+      assert.equal(id, 42); assert.equal(file, image);
       return { id: 9, coletaId: id };
     },
   });
@@ -125,10 +131,9 @@ test("saved collection can restore a locked form with measured metals and zero",
     { codigoMedicao: 2, valor: 6, unidade: "mg/L", censurado: false },
   ], metaisPesados: [{ nome: "Pb", concentracao: 0, unidade: "µg/L" }] };
   const form = restoreCollectionForm(collection, 42);
-  const { collection: rebuilt, sample } = buildAnalysisPayload(form);
+  const { collection: rebuilt } = buildAnalysisPayload(form);
   assert.equal(rebuilt.corpoHidricoId, 12);
   assert.equal(rebuilt.medicoes.find(item => item.codigoMedicao === "CondutividadeEletrica").valor, 0);
-  assert.deepEqual(sample.metais_pesados, [{ name: "Pb", value: 0, unit: "µg/L" }]);
   assert.throws(() => restoreCollectionForm(collection, 43));
   assert.throws(() => restoreCollectionForm({ ...collection, medicoes: collection.medicoes.slice(1) }, 42));
 });

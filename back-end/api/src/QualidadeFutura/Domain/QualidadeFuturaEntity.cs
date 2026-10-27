@@ -7,6 +7,7 @@ using back_end.src.Domain.CorpoHidrico;
 using back_end.src.Domain.Imagem;
 using back_end.src.Domain.MetalPesado;
 using back_end.src.Domain.Qualidade;
+using back_end.src.Domain.Coleta;
 using back_end.src.Medicoes.Domain;
 
 namespace back_end.src.Domain.QualidadeFutura
@@ -25,6 +26,8 @@ namespace back_end.src.Domain.QualidadeFutura
         public bool? EscherichiaColi { get; private set; }
 
         public int CorpoHidricoId { get; set; }
+        public int? ColetaId { get; set; }
+        public ColetaEntity? Coleta { get; set; }
         public DateOnly? DataReferencia { get; set; }
         public DateOnly? DataAlvo { get; set; }
         public int? HorizonteDias { get; set; }

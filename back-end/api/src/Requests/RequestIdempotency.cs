@@ -17,11 +17,15 @@ public static class RequestIdempotency
 
     public static string HashJson<T>(T value) => Hash(JsonSerializer.Serialize(value));
 
-    public static async Task<string> HashAnalysisAsync(IFormFile image, string sample, CancellationToken cancellationToken)
+    public static async Task<string> HashAnalysisAsync(int coletaId, IFormFile? image, CancellationToken cancellationToken)
     {
-        using var stream = image.OpenReadStream();
-        var imageHash = Convert.ToHexString(await SHA256.HashDataAsync(stream, cancellationToken));
-        return Hash(sample + ":" + imageHash);
+        var imageHash = "server-image";
+        if (image is not null)
+        {
+            using var stream = image.OpenReadStream();
+            imageHash = Convert.ToHexString(await SHA256.HashDataAsync(stream, cancellationToken));
+        }
+        return Hash($"{coletaId}:{imageHash}");
     }
 
     private static string Hash(string value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));

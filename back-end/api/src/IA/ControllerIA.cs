@@ -13,22 +13,7 @@ namespace back_end.src.IA;
 public class PredicaoIAInput
 {
     [Range(1, int.MaxValue)] public int ColetaId { get; set; }
-    [Required] public IFormFile Image { get; set; } = null!;
-    [FromForm(Name = "amostra")] public string? Amostra { get; set; }
-    // Compatibilidade temporária com clientes anteriores. Novos clientes usam "amostra".
-    [FromForm(Name = "data")] public string? Data { get; set; }
-
-    public string ObterAmostra()
-    {
-        if (!string.IsNullOrWhiteSpace(Amostra) && !string.IsNullOrWhiteSpace(Data)
-            && !string.Equals(Amostra, Data, StringComparison.Ordinal))
-            throw new IaException(400, IaErrorCodes.InvalidInput,
-                "Envie a amostra uma única vez.");
-        return !string.IsNullOrWhiteSpace(Amostra) ? Amostra
-            : !string.IsNullOrWhiteSpace(Data) ? Data
-            : throw new IaException(400, IaErrorCodes.InvalidInput,
-                "Informe os dados da amostra.");
-    }
+    public IFormFile? Image { get; set; }
 }
 
 public class AnaliseLagoInput
@@ -88,10 +73,11 @@ public class ControllerIA(WaterPathDbContext context, PredicaoIAService service,
     public async Task<IActionResult> Predizer([FromForm] PredicaoIAInput input, CancellationToken cancellationToken,
         [FromHeader(Name = "Idempotency-Key")] string? requestKey = null)
     {
+        if (!await context.Coletas.AsNoTracking().AnyAsync(c => c.Id == input.ColetaId, cancellationToken))
+            throw new IaException(404, "Coleta não encontrada.");
         await GarantirAcessoColetaAsync(input.ColetaId, cancellationToken);
         if (!RequestIdempotency.TryParse(requestKey, out var key)) return BadRequest("Idempotency-Key deve ser um UUID válido.");
-        var sample = input.ObterAmostra();
-        var hash = key.HasValue ? await RequestIdempotency.HashAnalysisAsync(input.Image, sample, cancellationToken) : null;
+        var hash = key.HasValue ? await RequestIdempotency.HashAnalysisAsync(input.ColetaId, input.Image, cancellationToken) : null;
         if (key.HasValue)
         {
             var prior = await context.PredicoesIA.AsNoTracking()
@@ -101,7 +87,7 @@ public class ControllerIA(WaterPathDbContext context, PredicaoIAService service,
                     ? RespostaCriada(prior)
                     : Conflict("Esta chave de requisição já foi usada com outros dados.");
         }
-        var result = await service.CriarAsync(input.ColetaId, input.Image, sample, cancellationToken, key, hash);
+        var result = await service.CriarAsync(input.ColetaId, input.Image, cancellationToken, key, hash);
         return RespostaCriada(result);
     }
 

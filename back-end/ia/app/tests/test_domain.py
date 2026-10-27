@@ -21,9 +21,40 @@ from services.Infos.objetos.Urbano import Urbano
 from services.Infos.objetos.turbidez import Turbidez
 from services.integration import build_visual_report, interpretation, structured_metals
 from services.risk.classification import classify_risk
+from services import metals as metal_service
 
 
 class DomainTests(unittest.TestCase):
+    def test_metal_estimates_fill_only_missing_values_and_keep_observations(self):
+        sample = Amostra(temperatura=22, ph=7, condutividade_eletrica=100, oxigenio_dissolvido=6,
+                         metais_pesados=[{"name": "Pb", "value": 0.02, "unit": "mg/L"}])
+        predicted = create_metals({
+            "Fe, mg/L": 0.1, "Mn, mg/L": 0.2, "Cr, µg/L": 3, "Ni, µg/L": 4,
+            "Cu, µg/L": 5, "Zn, µg/L": 6, "Cd, µg/L": 7, "Pb, µg/L": 8,
+        })
+        with patch.object(metal_service, "predict_metals", return_value=predicted) as inference:
+            combined, measured, estimated, predictions = metal_service.predict_and_merge_metals(sample)
+        inference.assert_called_once_with(sample)
+        self.assertEqual(len(combined), 8)
+        self.assertEqual(measured, [{"name": "Pb", "value": 0.02, "unit": "mg/L"}])
+        self.assertEqual(len(estimated), 7)
+        self.assertEqual(len(predictions), 7)
+        self.assertEqual(next(item for item in combined if item.codigo == "Pb").valor, 20)
+
+    def test_complete_measured_metals_skip_model_and_preserve_all_values(self):
+        values = [
+            ("Fe", 1, "mg/L"), ("Mn", 2, "mg/L"), ("Cr", 3, "µg/L"), ("Ni", 4, "µg/L"),
+            ("Cu", 5, "µg/L"), ("Zn", 6, "µg/L"), ("Cd", 7, "µg/L"), ("Pb", 8, "µg/L"),
+        ]
+        sample = Amostra(temperatura=22, ph=7, condutividade_eletrica=100, oxigenio_dissolvido=6,
+                         metais_pesados=[{"name": name, "value": value, "unit": unit} for name, value, unit in values])
+        with patch.object(metal_service, "predict_metals", side_effect=AssertionError("All metals measured")):
+            combined, measured, estimated, predictions = metal_service.predict_and_merge_metals(sample)
+        self.assertEqual(len(combined), 8)
+        self.assertEqual(len(measured), 8)
+        self.assertEqual(estimated, [])
+        self.assertEqual(predictions, [])
+
     def test_all_metals_keep_historical_references_and_boundaries(self):
         references = [
             ("Fe, mg/L", Ferro, "Ferro", 0.3),

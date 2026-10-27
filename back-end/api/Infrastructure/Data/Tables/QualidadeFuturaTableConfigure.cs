@@ -13,11 +13,17 @@ public class QualidadeFuturaTableConfigure : IEntityTypeConfiguration<QualidadeF
 
         builder.Property(e => e.ResultadoJson).HasColumnType("jsonb");
         builder.HasIndex(e => new { e.CorpoHidricoId, e.DataAlvo, e.CriadaEm });
+        builder.HasIndex(e => e.ColetaId);
 
         builder
             .HasOne(e => e.CorpoHidrico)
             .WithMany()
             .HasForeignKey(e => e.CorpoHidricoId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(e => e.Coleta)
+            .WithMany()
+            .HasForeignKey(e => e.ColetaId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

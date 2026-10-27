@@ -19,7 +19,7 @@ export function AnalysisImageCard({
     <ImageUploadCard
       inputId="add-analysis-image"
       error={error}
-      description="Anexe uma foto da coleta para a análise integrada."
+      description="Opcional: anexe uma foto. Sem arquivo, a API procura a imagem mais recente salva para este corpo hídrico."
       title="Imagem da análise"
       imageName={imageName}
       imagePreviewUrl={imagePreviewUrl}

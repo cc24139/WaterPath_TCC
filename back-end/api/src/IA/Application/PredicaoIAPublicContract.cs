@@ -9,7 +9,7 @@ public static class PredicaoIAPublicContract
     // entradas internas, contexto e evidências usadas pela regra ficam no servidor.
     private static readonly HashSet<string> ResultadoPermitido =
     [
-        "detections", "totalObjects", "metalPredictions", "baseRiskLevel",
+        "detections", "totalObjects", "metalPredictions", "measuredMetals", "estimatedMetals", "baseRiskLevel",
         "riskLevel", "riskLabel", "riskReasons", "metalVariation",
     ];
 

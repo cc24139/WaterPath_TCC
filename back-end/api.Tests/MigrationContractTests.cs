@@ -14,11 +14,13 @@ public class MigrationContractTests
         using var db = new WaterPathDbContext(new DbContextOptionsBuilder<WaterPathDbContext>()
             .UseNpgsql("Host=localhost;Database=waterpath_contract_test").Options);
         var sql = db.GetService<IMigrator>().GenerateScript("20261017021850_EvoluirQualidadeFuturaPredicaoGeral",
-            "20261024120000_AnalysisIdempotency");
+            "20261027001634_LinkQualidadeFuturaToColeta");
         Assert.Contains("ADD \"CadastroRequestKey\" uuid", sql);
         Assert.Contains("ADD \"AnaliseRequestKey\" uuid", sql);
         Assert.Contains("CREATE UNIQUE INDEX \"IX_Coletas_CadastroRequestKey\"", sql);
         Assert.Contains("CREATE UNIQUE INDEX \"IX_PredicoesIA_AnaliseRequestKey\"", sql);
+        Assert.Contains("ADD \"ColetaId\" integer", sql);
+        Assert.Contains("FK_QualidadesFuturas_Coletas_ColetaId", sql);
         Assert.DoesNotContain("DROP TABLE", sql);
         Assert.False(db.Database.HasPendingModelChanges());
     }

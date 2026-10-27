@@ -306,6 +306,9 @@ namespace back_end.Migrations
                     b.Property<float?>("CloroResidual")
                         .HasColumnType("real");
 
+                    b.Property<int?>("ColetaId")
+                        .HasColumnType("integer");
+
                     b.Property<float?>("ColiformesTotais")
                         .HasColumnType("real");
 
@@ -355,6 +358,8 @@ namespace back_end.Migrations
                         .HasColumnType("real");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ColetaId");
 
                     b.HasIndex("CorpoHidricoId", "DataAlvo", "CriadaEm");
 
@@ -664,11 +669,18 @@ namespace back_end.Migrations
 
             modelBuilder.Entity("back_end.src.Domain.QualidadeFutura.QualidadeFuturaEntity", b =>
                 {
+                    b.HasOne("back_end.src.Domain.Coleta.ColetaEntity", "Coleta")
+                        .WithMany()
+                        .HasForeignKey("ColetaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("back_end.src.Domain.CorpoHidrico.CorpoHidricoEntity", "CorpoHidrico")
                         .WithMany()
                         .HasForeignKey("CorpoHidricoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Coleta");
 
                     b.Navigation("CorpoHidrico");
                 });

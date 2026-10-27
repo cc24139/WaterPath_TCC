@@ -75,11 +75,10 @@ async function createCollection(body) {
   return (await response.json()).id;
 }
 
-async function analyze(id, file, sample, base = api) {
+async function analyze(id, file, base = api) {
   const body = new FormData();
   body.set("coletaId", String(id));
-  body.set("image", file);
-  body.set("amostra", JSON.stringify(sample));
+  if (file) body.set("image", file);
   const response = await request("/ia/predicoes", { method: "POST", body, base });
   return { status: response.status, data: await readSubmissionResponse(response) };
 }
@@ -104,8 +103,8 @@ const partial = payload({ Fe: "0,123456789", Pb: "0" });
 let partialId;
 const prediction = await submitAnalysis({ ...partial, savedCollectionId: null, image }, {
   createCollection, onCollectionSaved: id => { partialId = id; },
-  analyze: async (id, file, sample) => {
-    const response = await analyze(id, file, sample);
+  analyze: async (id, file) => {
+    const response = await analyze(id, file);
     assert.equal(response.status, 201);
     return readPrediction(response.data, id);
   },
@@ -144,9 +143,9 @@ const retry = payload();
 const operations = {
   createCollection: async body => { creations++; return createCollection(body); },
   onCollectionSaved: id => { retryId = id; },
-  analyze: async (id, file, sample) => {
+  analyze: async (id, file) => {
     const body = new FormData();
-    body.set("coletaId", String(id)); body.set("image", file); body.set("amostra", JSON.stringify(sample));
+    body.set("coletaId", String(id)); if (file) body.set("image", file);
     const response = await request("/ia/predicoes", { method: "POST", body, base: offlineApi });
     failureStatus = response.status;
     return readSubmissionResponse(response);
@@ -159,8 +158,8 @@ assert.equal((await json(`/ia/predicoes?coletaId=${retryId}`)).total, 0);
 assert.equal((await json(`/coleta/${retryId}`)).id, retryId);
 const beforeCount = (await json(`/coleta/corpo-hidrico/${river.id}`)).length;
 const retried = await submitAnalysis({ ...retry, savedCollectionId: retryId, image }, {
-  ...operations, analyze: async (id, file, sample) => {
-    const response = await analyze(id, file, sample);
+  ...operations, analyze: async (id, file) => {
+    const response = await analyze(id, file);
     assert.equal(response.status, 201);
     return readPrediction(response.data, id);
   },

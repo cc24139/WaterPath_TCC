@@ -6,6 +6,46 @@
       "collection_id": 14,
       "body_id": 22,
       "timestamp": "2025-06-24T15:00:00Z"
+    },
+    "SINTETICO-Rio-Azul-P01-20250115": {
+      "collection_id": 16,
+      "body_id": 23,
+      "timestamp": "2025-01-15T12:00:00Z"
+    },
+    "SINTETICO-Rio-Azul-P01-20250415": {
+      "collection_id": 17,
+      "body_id": 23,
+      "timestamp": "2025-04-15T12:00:00Z"
+    },
+    "SINTETICO-Rio-Azul-P01-20250715": {
+      "collection_id": 18,
+      "body_id": 23,
+      "timestamp": "2025-07-15T12:00:00Z"
+    },
+    "SINTETICO-Rio-Azul-P01-20251015": {
+      "collection_id": 19,
+      "body_id": 23,
+      "timestamp": "2025-10-15T12:00:00Z"
+    },
+    "SINTETICO-Rio-Azul-P01-20260115": {
+      "collection_id": 20,
+      "body_id": 23,
+      "timestamp": "2026-01-15T12:00:00Z"
+    },
+    "SINTETICO-Rio-Azul-P01-20260415": {
+      "collection_id": 21,
+      "body_id": 23,
+      "timestamp": "2026-04-15T12:00:00Z"
+    },
+    "SINTETICO-Rio-Azul-P01-20260715": {
+      "collection_id": 22,
+      "body_id": 23,
+      "timestamp": "2026-07-15T12:00:00Z"
+    },
+    "SINTETICO-Rio-Azul-P01-20261015": {
+      "collection_id": 23,
+      "body_id": 23,
+      "timestamp": "2026-10-15T12:00:00Z"
     }
   }
 }

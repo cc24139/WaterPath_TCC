@@ -74,8 +74,11 @@ class IntegrationTests(unittest.TestCase):
         result = response.json()
         self.assertEqual(result["metalVariation"]["metals"][0]["variation"], "aumento")
         self.assertEqual(result["metalVariation"]["metals"][0]["delta"], 5)
-        for key in ("metalPredictions", "riskInputs", "riskLevel", "baseRiskLevel", "riskReasons"):
+        for key in ("riskInputs", "riskLevel", "baseRiskLevel", "riskReasons"):
             self.assertEqual(result[key], baseline[key])
+        self.assertEqual(len(result["metalPredictions"]), 7)
+        self.assertEqual(result["estimatedMetals"], result["metalPredictions"])
+        self.assertEqual(result["measuredMetals"], [{"name": "Pb", "value": 10, "unit": "µg/L"}])
 
     def test_http_invalid_metal_payload_rejected_before_inference(self):
         with patch.object(vision, "load_model", side_effect=AssertionError("Entrada inválida")):

@@ -48,13 +48,13 @@ A página mantém a sidebar, os cards, a tipografia, as cores e os componentes d
 
 1. **Salvar coleta:** envia `POST /api/coleta` com `corpoHidricoId`, `dataHora`, `medicoes` e, se preenchidos, `metaisPesados`.
 2. O backend grava coleta, indicadores e metais juntos em um `SaveChanges`. Uma falha de persistência desfaz a operação.
-3. **Salvar e analisar com IA:** após confirmar o ID da coleta, envia `POST /api/ia/predicoes` como multipart, com `coletaId`, arquivo `image` e `amostra` contendo o JSON de domínio.
-4. O mesmo mapeamento produz os valores do cadastro e da IA. `metais_pesados` recebe somente os metais medidos, no formato `{ name, value, unit }`.
+3. **Salvar e analisar com IA:** após confirmar o ID da coleta, envia `POST /api/ia/predicoes` como multipart, com `coletaId` obrigatório e `image` opcional. Sem imagem no formulário, a API usa primeiro uma imagem vinculada à coleta e depois a mais recente do corpo hídrico.
+4. A API principal monta a amostra e o histórico a partir da coleta e das coletas anteriores do mesmo corpo hídrico. O cliente não envia `amostra`, `data` ou histórico.
 5. Se a IA falhar, a coleta permanece salva e a repetição usa seu ID, sem recriar a coleta durante essa sessão da tela.
 6. Após salvar, os dados medidos ficam bloqueados para manter correspondência com o registro. A imagem pode ser corrigida antes de concluir a IA. “Nova análise” inicia outro cadastro.
 7. O usuário pode abrir o monitoramento do corpo hídrico, que consulta novamente as coletas persistidas. A navegação também solicita atualização da rota.
 
-A imagem é enviada apenas ao executar a IA. Salvar somente a coleta não persiste a imagem escolhida. A IA continua exigindo imagem e os quatro indicadores obrigatórios. Esta tela também exige esses indicadores no cadastro sem IA.
+A imagem selecionada é enviada apenas ao executar a IA. Salvar somente a coleta não persiste a imagem escolhida. A análise exige os quatro indicadores obrigatórios; se faltar algum, a API responde `422`. Esta tela também exige esses indicadores no cadastro sem IA.
 
 ## Organização do código
 

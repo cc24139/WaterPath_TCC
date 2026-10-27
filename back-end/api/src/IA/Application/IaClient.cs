@@ -127,7 +127,7 @@ public class IaClient
             {
                 if (!root.TryGetProperty("metalModelVersion", out var metalVersion)
                     || metalVersion.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(metalVersion.GetString())
-                    || metals.GetArrayLength() != 8) throw new JsonException();
+                    || metals.GetArrayLength() > 8) throw new JsonException();
                 var names = new HashSet<string>();
                 foreach (var metal in metals.EnumerateArray())
                 {
@@ -138,6 +138,30 @@ public class IaClient
                         || metal.GetProperty("unit").GetString() != (symbol is "Fe" or "Mn" ? "mg/L" : "µg/L"))
                         throw new JsonException();
                 }
+                if (!root.TryGetProperty("measuredMetals", out var measuredMetals)
+                    || measuredMetals.ValueKind != JsonValueKind.Array
+                    || !root.TryGetProperty("estimatedMetals", out var estimatedMetals)
+                    || estimatedMetals.ValueKind != JsonValueKind.Array
+                    || !root.TryGetProperty("historicalMetalEstimates", out var historicalEstimates)
+                    || historicalEstimates.ValueKind != JsonValueKind.Array)
+                    throw new JsonException();
+                var sourceNames = new HashSet<string>();
+                foreach (var array in new[] { measuredMetals, estimatedMetals })
+                foreach (var metal in array.EnumerateArray())
+                {
+                    if (metal.ValueKind != JsonValueKind.Object
+                        || !metal.TryGetProperty("name", out var sourceName) || sourceName.ValueKind != JsonValueKind.String
+                        || !metal.TryGetProperty("value", out var value) || value.ValueKind != JsonValueKind.Number
+                        || !value.TryGetDouble(out var number) || !double.IsFinite(number) || number < 0
+                        || !metal.TryGetProperty("unit", out var unit) || unit.ValueKind != JsonValueKind.String
+                        || sourceName.GetString() is not ("Fe" or "Mn" or "Cr" or "Ni" or "Cu" or "Zn" or "Cd" or "Pb")
+                        || unit.GetString()!.Trim().ToLowerInvariant().Replace("µ", "u").Replace("μ", "u") is not ("mg/l" or "ug/l")
+                        || !sourceNames.Add(sourceName.GetString()!)) throw new JsonException();
+                }
+                if (sourceNames.Count != 8) throw new JsonException();
+                var estimatedNames = estimatedMetals.EnumerateArray()
+                    .Select(m => m.GetProperty("name").GetString()).ToHashSet();
+                if (!names.SetEquals(estimatedNames)) throw new JsonException();
                 using var sent = JsonDocument.Parse(collectionContext);
                 if (!root.TryGetProperty("collectionContext", out var received)
                     || !System.Text.Json.Nodes.JsonNode.DeepEquals(

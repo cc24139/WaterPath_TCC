@@ -19,8 +19,9 @@ export function clearRequestKey(scope: string, key: string): void {
   } catch { /* Storage is optional. */ }
 }
 
-export async function imageFingerprint(image: File, sample: unknown): Promise<string> {
+export async function imageFingerprint(image: File | null): Promise<string> {
+  if (!image) return "stored-image";
   const digest = await crypto.subtle.digest("SHA-256", await image.arrayBuffer());
   const hex = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
-  return `${JSON.stringify(sample)}:${hex}`;
+  return hex;
 }

@@ -7,6 +7,9 @@ using back_end.src.Domain.Coleta;
 using back_end.src.Domain.CorpoHidrico;
 using back_end.src.IA;
 using back_end.src.IA.Application;
+using back_end.src.Domain.Imagem;
+using back_end.src.Domain.MetalPesado;
+using back_end.src.Medicoes.Domain;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Builder;
@@ -16,6 +19,7 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -40,6 +44,7 @@ public class PredicaoIATests : IAsyncLifetime
         await db.SaveChangesAsync();
         var collection = new ColetaEntity { CorpoHidricoId = river.Id, DataHora = DateTimeOffset.UtcNow };
         collection.RegistrarResponsavel(TestJwt.UserId, "Usuário de teste");
+        AddRequiredMeasurements(collection);
         db.Coletas.Add(collection);
         await db.SaveChangesAsync();
         coletaId = collection.Id;
@@ -57,10 +62,29 @@ public class PredicaoIATests : IAsyncLifetime
         return new FormFile(new MemoryStream(bytes), 0, bytes.Length, "image", "rio.jpg");
     }
 
+    private static void AddRequiredMeasurements(ColetaEntity collection, double oxygen = 6)
+    {
+        collection.AdicionarMedicao(new MedicoesEntity(Medicao.Temperatura, 22, "°C", false, null));
+        collection.AdicionarMedicao(new MedicoesEntity(Medicao.Ph, 7, "pH", false, null));
+        collection.AdicionarMedicao(new MedicoesEntity(Medicao.CondutividadeEletrica, 100, "uS/cm", false, null));
+        collection.AdicionarMedicao(new MedicoesEntity(Medicao.OxigenioDissolvido, oxygen, "mg/L", false, null));
+    }
+
     private static string ValidResponse(string history = "[]") => RiskFixture.Result(history: history);
 
-    private PredicaoIAService Service(Handler handler) => new(db,
-        new IaClient(new HttpClient(handler) { BaseAddress = new Uri("http://ia.test/") }));
+    private PredicaoIAService Service(Handler handler, string? contentRoot = null) => new(db,
+        new IaClient(new HttpClient(handler) { BaseAddress = new Uri("http://ia.test/") }),
+        environment: contentRoot is null ? null : new TestEnvironment(contentRoot));
+
+    private sealed class TestEnvironment(string root) : IWebHostEnvironment
+    {
+        public string ApplicationName { get; set; } = "WaterPath.Api.Tests";
+        public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
+        public string WebRootPath { get; set; } = root;
+        public string EnvironmentName { get; set; } = "Testing";
+        public string ContentRootPath { get; set; } = root;
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+    }
 
     private ControllerIA Controller(Handler handler)
     {
@@ -95,7 +119,6 @@ public class PredicaoIATests : IAsyncLifetime
         {
             var form = new MultipartFormDataContent();
             form.Add(new StringContent(collectionId.ToString()), "coletaId");
-            form.Add(new StringContent(Sample), "amostra");
             form.Add(new ByteArrayContent(Jpeg), "image", "rio.jpg");
             return form;
         }
@@ -135,31 +158,19 @@ public class PredicaoIATests : IAsyncLifetime
         Assert.False(json.TryGetProperty("entrada", out _));
     }
 
-    [Theory]
-    [InlineData("{}")]
-    [InlineData("{\"temperatura\":22,\"ph\":null,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6}")]
-    [InlineData("{\"temperatura\":22,\"ph\":\"7\",\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6}")]
-    [InlineData("{\"temperatura\":22,\"ph\":true,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6}")]
-    [InlineData("{\"temperatura\":22,\"ph\":15,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6}")]
-    [InlineData("{\"temperatura\":22,\"ph\":7,\"ph\":8,\"condutividade_eletrica\":100,\"oxigenio_dissolvido\":6}")]
-    public async Task AmostraIncompletaOuComTiposInvalidosNaoChamaIa(string sample)
+    [Fact]
+    public async Task ColetaSemMedicaoObrigatoriaRetorna422SemChamarIa()
     {
+        var collection = new ColetaEntity { CorpoHidricoId = (await db.Coletas.SingleAsync()).CorpoHidricoId,
+            DataHora = DateTimeOffset.UtcNow.AddMinutes(-1) };
+        collection.RegistrarResponsavel(TestJwt.UserId, "Usuário de teste");
+        db.Coletas.Add(collection);
+        await db.SaveChangesAsync();
         var handler = new Handler(_ => throw new Exception("Entrada inválida não deve chamar IA"));
-        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), sample, default));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(collection.Id, Upload(), default));
         Assert.Equal(422, error.StatusCode);
         Assert.Equal(0, handler.Calls);
         Assert.Empty(await db.PredicoesIA.ToListAsync());
-    }
-
-    [Fact]
-    public async Task CamposDesconhecidosENumerosNaoFinitosSaoRejeitados()
-    {
-        foreach (var suffix in new[] { ",\"oxigenioDissolvido\":6}", ",\"nitrogenio_total\":1}", ",\"fosforo_total\":1e400}" })
-        {
-            var handler = new Handler(_ => throw new Exception("Não deve chamar IA"));
-            var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), Sample[..^1] + suffix, default));
-            Assert.Equal(422, error.StatusCode);
-        }
     }
 
     [Fact]
@@ -167,13 +178,10 @@ public class PredicaoIATests : IAsyncLifetime
     {
         var handler = new Handler(_ => throw new Exception("Não deve chamar IA"));
         var service = Service(handler);
-        var error = await Assert.ThrowsAsync<IaException>(() => service.CriarAsync(coletaId, Upload(),
-            Sample[..^1] + ",\"data\":\"2000-01-01T00:00:00Z\"}", default));
-        Assert.Equal(422, error.StatusCode);
         var coleta = await db.Coletas.SingleAsync();
         coleta.DataHora = DateTimeOffset.UtcNow.AddDays(1);
         await db.SaveChangesAsync();
-        error = await Assert.ThrowsAsync<IaException>(() => service.CriarAsync(coletaId, Upload(), Sample, default));
+        var error = await Assert.ThrowsAsync<IaException>(() => service.CriarAsync(coletaId, Upload(), default));
         Assert.Equal(422, error.StatusCode);
         Assert.Equal(0, handler.Calls);
         Assert.Empty(await db.PredicoesIA.ToListAsync());
@@ -192,15 +200,14 @@ public class PredicaoIATests : IAsyncLifetime
         fields[field] = JsonSerializer.Deserialize<JsonElement>(value);
         var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             { Content = new StringContent(JsonSerializer.Serialize(fields)) }));
-        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), Sample, default));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), default));
         Assert.Equal(502, error.StatusCode);
         Assert.Empty(await db.PredicoesIA.ToListAsync());
     }
 
     [Fact]
-    public async Task OpcionaisNulosEUnidadesDoContratoSaoPreservadosNaEntrada()
+    public async Task AmostraEHistoricoSaoMontadosPelaApiPrincipal()
     {
-        var sample = Sample[..^1] + ",\"solidos_suspensos_totais\":null,\"carbono_organico_total\":1.5,\"fosforo_total\":18.39}";
         string? sent = null;
         var handler = new Handler(async request =>
         {
@@ -208,11 +215,12 @@ public class PredicaoIATests : IAsyncLifetime
                 .Single(p => p.Headers.ContentDisposition!.Name == "data").ReadAsStringAsync();
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(ValidResponse()) };
         });
-        var saved = await Service(handler).CriarAsync(coletaId, Upload(), sample, default);
+        var saved = await Service(handler).CriarAsync(coletaId, Upload(), default);
         Assert.Equal(sent, saved.EntradaJson);
         using var json = JsonDocument.Parse(saved.EntradaJson!);
-        Assert.Equal(JsonValueKind.Null, json.RootElement.GetProperty("solidos_suspensos_totais").ValueKind);
-        Assert.Equal(18.39, json.RootElement.GetProperty("fosforo_total").GetDouble());
+        Assert.Equal(22, json.RootElement.GetProperty("temperatura").GetDouble());
+        Assert.Equal(7, json.RootElement.GetProperty("ph").GetDouble());
+        Assert.Equal(100, json.RootElement.GetProperty("condutividade_eletrica").GetDouble());
         using var result = JsonDocument.Parse(saved.ResultadoJson!);
         Assert.Equal(6, result.RootElement.GetProperty("riskInputs").GetProperty("oxigenio_dissolvido").GetDouble());
     }
@@ -225,7 +233,7 @@ public class PredicaoIATests : IAsyncLifetime
             Assert.Equal("/analyze", request.RequestUri!.AbsolutePath);
             var multipart = Assert.IsType<MultipartFormDataContent>(request.Content);
             var parts = multipart.ToArray();
-            Assert.Equal(3, parts.Length);
+            Assert.Equal(4, parts.Length);
             var sent = await parts.Single(p => p.Headers.ContentDisposition!.Name == "data").ReadAsStringAsync();
             Assert.Equal(7, ContratoAmostra.Ler(sent).GetProperty("ph").GetDouble());
             Assert.True(ContratoAmostra.Ler(sent).TryGetProperty("data", out _));
@@ -235,7 +243,7 @@ public class PredicaoIATests : IAsyncLifetime
         });
         var controller = Controller(handler);
         var response = Assert.IsType<CreatedAtActionResult>(await controller.Predizer(
-            new PredicaoIAInput { ColetaId = coletaId, Image = Upload(), Data = Sample }, default));
+            new PredicaoIAInput { ColetaId = coletaId, Image = Upload() }, default));
         Assert.Equal(201, response.StatusCode);
         db.ChangeTracker.Clear();
         var saved = await db.PredicoesIA.SingleAsync();
@@ -256,6 +264,107 @@ public class PredicaoIATests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task RequisicaoComSomenteColetaIdUsaImagemVinculadaEPersisteQualidadeFutura()
+    {
+        var root = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            var linkedPath = Path.Combine(root, "linked.jpg");
+            var bodyPath = Path.Combine(root, "body-latest.jpg");
+            var linkedBytes = new byte[] { 0xff, 0xd8, 0xff, 1 };
+            var bodyBytes = new byte[] { 0xff, 0xd8, 0xff, 2 };
+            await File.WriteAllBytesAsync(linkedPath, linkedBytes);
+            await File.WriteAllBytesAsync(bodyPath, bodyBytes);
+            var collection = await db.Coletas.SingleAsync(c => c.Id == coletaId);
+            var river = await db.CorposHidricos.SingleAsync(c => c.Id == collection.CorpoHidricoId);
+            db.Imagens.AddRange(
+                new ImagemEntity { Url = "linked.jpg", Coleta = collection, CorpoHidrico = river, DataUpload = DateTime.UtcNow.AddDays(-1) },
+                new ImagemEntity { Url = "body-latest.jpg", CorpoHidrico = river, DataUpload = DateTime.UtcNow });
+            await db.SaveChangesAsync();
+
+            byte[]? sentImage = null;
+            var handler = new Handler(async request =>
+            {
+                var parts = Assert.IsType<MultipartFormDataContent>(request.Content).ToArray();
+                var sentData = await parts.Single(p => p.Headers.ContentDisposition!.Name == "data").ReadAsStringAsync();
+                Assert.Equal(22, ContratoAmostra.Ler(sentData).GetProperty("temperatura").GetDouble());
+                sentImage = await parts.Single(p => p.Headers.ContentDisposition!.Name == "image").ReadAsByteArrayAsync();
+                return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(ValidResponse()) };
+            });
+            var service = Service(handler, root);
+            var controller = new ControllerIA(db, service, new ResourceAuthorizationService(db));
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = TestJwt.Principal() },
+            };
+            Assert.IsType<CreatedAtActionResult>(await controller.Predizer(
+                new PredicaoIAInput { ColetaId = coletaId }, default));
+            var saved = await db.PredicoesIA.SingleAsync();
+
+            Assert.Equal(linkedBytes, sentImage);
+            Assert.Equal(linkedBytes, saved.ImagemOriginal);
+            Assert.Equal(coletaId, saved.ColetaId);
+            var quality = await db.QualidadesFuturas.SingleAsync();
+            Assert.Equal(coletaId, quality.ColetaId);
+            Assert.Equal(collection.CorpoHidricoId, quality.CorpoHidricoId);
+            Assert.Equal(DateOnly.FromDateTime(collection.DataHora.UtcDateTime), quality.DataReferencia);
+            using var result = JsonDocument.Parse(quality.ResultadoJson!);
+            Assert.Equal(2, result.RootElement.GetProperty("riskLevel").GetInt32());
+            Assert.Equal(8, result.RootElement.GetProperty("metalPredictions").GetArrayLength());
+            Assert.Equal(1, handler.Calls);
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    [Fact]
+    public async Task ImagemDoCorpoHidricoEscolhidaPorDataUploadENaoPorId()
+    {
+        var root = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            var newerPath = Path.Combine(root, "newer.jpg");
+            var olderPath = Path.Combine(root, "older.jpg");
+            var newer = new byte[] { 0xff, 0xd8, 0xff, 3 };
+            var older = new byte[] { 0xff, 0xd8, 0xff, 4 };
+            await File.WriteAllBytesAsync(newerPath, newer);
+            await File.WriteAllBytesAsync(olderPath, older);
+            var collection = await db.Coletas.SingleAsync(c => c.Id == coletaId);
+            var river = await db.CorposHidricos.SingleAsync(c => c.Id == collection.CorpoHidricoId);
+            var uploadedAt = DateTime.UtcNow;
+            db.Imagens.AddRange(
+                new ImagemEntity { Url = "newer.jpg", CorpoHidrico = river, DataUpload = uploadedAt },
+                new ImagemEntity { Url = "older.jpg", CorpoHidrico = river, DataUpload = uploadedAt.AddDays(-1) });
+            await db.SaveChangesAsync();
+            byte[]? sentImage = null;
+            var handler = new Handler(async request =>
+            {
+                var parts = Assert.IsType<MultipartFormDataContent>(request.Content).ToArray();
+                sentImage = await parts.Single(p => p.Headers.ContentDisposition!.Name == "image").ReadAsByteArrayAsync();
+                return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(ValidResponse()) };
+            });
+
+            var saved = await Service(handler, root).CriarAsync(coletaId, null, default);
+
+            Assert.Equal(newer, sentImage);
+            Assert.Equal(newer, saved.ImagemOriginal);
+            Assert.Single(await db.QualidadesFuturas.ToListAsync());
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    [Fact]
+    public async Task SemImagemDisponivelRetornaErroSemChamarIaNemPersistir()
+    {
+        var handler = new Handler(_ => throw new Exception("Sem imagem, não chama a IA"));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, null, default));
+        Assert.Equal(422, error.StatusCode);
+        Assert.Contains("Nenhuma imagem", error.Message);
+        Assert.Equal(0, handler.Calls);
+        Assert.Empty(await db.PredicoesIA.ToListAsync());
+        Assert.Empty(await db.QualidadesFuturas.ToListAsync());
+    }
+
+    [Fact]
     public async Task RepetirAnaliseComMesmaChaveNaoChamaIaNovamente()
     {
         var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
@@ -263,16 +372,17 @@ public class PredicaoIATests : IAsyncLifetime
         var controller = Controller(handler);
         var key = Guid.NewGuid().ToString();
         var first = Assert.IsType<CreatedAtActionResult>(await controller.Predizer(
-            new PredicaoIAInput { ColetaId = coletaId, Image = Upload(), Amostra = Sample }, default, key));
+            new PredicaoIAInput { ColetaId = coletaId, Image = Upload() }, default, key));
         var repeated = Assert.IsType<CreatedAtActionResult>(await controller.Predizer(
-            new PredicaoIAInput { ColetaId = coletaId, Image = Upload(), Amostra = Sample }, default, key));
+            new PredicaoIAInput { ColetaId = coletaId, Image = Upload() }, default, key));
         Assert.Equal(JsonSerializer.SerializeToElement(first.Value).GetProperty("Id").GetInt32(),
             JsonSerializer.SerializeToElement(repeated.Value).GetProperty("Id").GetInt32());
         Assert.Equal(1, handler.Calls);
         Assert.Equal(1, await db.PredicoesIA.CountAsync());
+        Assert.Equal(1, await db.QualidadesFuturas.CountAsync());
 
         Assert.IsType<ConflictObjectResult>(await controller.Predizer(
-            new PredicaoIAInput { ColetaId = coletaId, Image = Upload(), Amostra = Sample.Replace("\"ph\":7", "\"ph\":8") },
+            new PredicaoIAInput { ColetaId = coletaId, Image = Upload(Encoding.UTF8.GetBytes("different")) },
             default, key));
         Assert.Equal(1, handler.Calls);
     }
@@ -287,14 +397,17 @@ public class PredicaoIATests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task AnaliseVisualTambemSalvaDeteccoesSemFabricarMetais()
+    public async Task AnaliseDaColetaSempreValidaMedicoesAntesDaVisao()
     {
-        var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-        { Content = new StringContent(ValidResponse()) }));
-        var result = await Service(handler).CriarAsync(coletaId, Upload(), null, default);
-        Assert.Equal("vision", result.Tipo);
-        Assert.Null(result.EntradaJson);
-        Assert.NotNull(result.ResultadoJson);
+        var collection = new ColetaEntity { CorpoHidricoId = (await db.Coletas.SingleAsync()).CorpoHidricoId,
+            DataHora = DateTimeOffset.UtcNow.AddMinutes(-1) };
+        collection.RegistrarResponsavel(TestJwt.UserId, "Usuário de teste");
+        db.Coletas.Add(collection);
+        await db.SaveChangesAsync();
+        var handler = new Handler(_ => throw new Exception("Não deve executar visão"));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(collection.Id, Upload(), default));
+        Assert.Equal(422, error.StatusCode);
+        Assert.Equal(0, handler.Calls);
     }
 
     [Theory]
@@ -306,9 +419,10 @@ public class PredicaoIATests : IAsyncLifetime
     public async Task FalhaDaIaNaoDeixaRegistroParcial(int upstream, int expected)
     {
         var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage((HttpStatusCode)upstream)));
-        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), Sample, default));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), default));
         Assert.Equal(expected, error.StatusCode);
         Assert.Empty(await db.PredicoesIA.ToListAsync());
+        Assert.Empty(await db.QualidadesFuturas.ToListAsync());
     }
 
     [Theory]
@@ -317,9 +431,25 @@ public class PredicaoIATests : IAsyncLifetime
     public async Task ConexaoOuTimeoutNaoGravam(bool timeout, int expected)
     {
         var handler = new Handler(_ => throw (timeout ? new TaskCanceledException() : new HttpRequestException()));
-        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), Sample, default));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), default));
         Assert.Equal(expected, error.StatusCode);
         Assert.Empty(await db.PredicoesIA.ToListAsync());
+        Assert.Empty(await db.QualidadesFuturas.ToListAsync());
+    }
+
+    [Fact]
+    public async Task FalhaAoSalvarQualidadeFuturaRevertePredicaoEImagens()
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            "CREATE TRIGGER falha_qualidade_futura BEFORE INSERT ON QualidadesFuturas BEGIN SELECT RAISE(ABORT, 'falha simulada'); END;");
+        var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            { Content = new StringContent(ValidResponse()) }));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), default));
+        Assert.Equal(500, error.StatusCode);
+        Assert.Empty(await db.PredicoesIA.ToListAsync());
+        Assert.Empty(await db.QualidadesFuturas.ToListAsync());
+        Assert.DoesNotContain(db.ChangeTracker.Entries<back_end.src.IA.Domain.PredicaoIAEntity>(), e => e.State == EntityState.Added);
+        Assert.DoesNotContain(db.ChangeTracker.Entries<back_end.src.Domain.QualidadeFutura.QualidadeFuturaEntity>(), e => e.State == EntityState.Added);
     }
 
     [Theory]
@@ -329,7 +459,7 @@ public class PredicaoIATests : IAsyncLifetime
     public async Task RespostaInvalidaNaoGrava(string body)
     {
         var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) }));
-        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), Sample, default));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), default));
         Assert.Equal(502, error.StatusCode);
         Assert.Empty(await db.PredicoesIA.ToListAsync());
     }
@@ -338,7 +468,7 @@ public class PredicaoIATests : IAsyncLifetime
     public async Task ArquivoInvalidoNaoChamaIa()
     {
         var handler = new Handler(_ => throw new Exception("A IA não deve ser chamada"));
-        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(Encoding.UTF8.GetBytes("texto")), Sample, default));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(Encoding.UTF8.GetBytes("texto")), default));
         Assert.Equal(400, error.StatusCode);
         Assert.Equal(0, handler.Calls);
         Assert.Empty(await db.PredicoesIA.ToListAsync());
@@ -355,9 +485,10 @@ public class PredicaoIATests : IAsyncLifetime
         for (var days = 3; days >= 1; days--)
         {
             var previous = new ColetaEntity { CorpoHidricoId = collection.CorpoHidricoId, DataHora = collection.DataHora.AddDays(-days) };
+            AddRequiredMeasurements(previous, oxygen: 4);
             db.Coletas.Add(previous);
             await db.SaveChangesAsync();
-            var previousPrediction = await service.CriarAsync(previous.Id, Upload(bytes), Sample.Replace("\"oxigenio_dissolvido\":6", "\"oxigenio_dissolvido\":4"), default);
+            var previousPrediction = await service.CriarAsync(previous.Id, Upload(bytes), default);
             using var analysis = JsonDocument.Parse(previousPrediction.ResultadoJson!);
             Assert.InRange(analysis.RootElement.GetProperty("baseRiskLevel").GetInt32(), 2, 3);
         }
@@ -367,7 +498,6 @@ public class PredicaoIATests : IAsyncLifetime
         api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TestJwt.Token());
         using var form = new MultipartFormDataContent();
         form.Add(new StringContent(coletaId.ToString()), "coletaId");
-        form.Add(new StringContent(Sample), "data");
         form.Add(new ByteArrayContent(bytes), "image", "rio.jpg");
         var response = await api.PostAsync("/api/ia/predicoes", form);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -396,7 +526,6 @@ public class PredicaoIATests : IAsyncLifetime
         Assert.Equal(4, await db.PredicoesIA.CountAsync());
         using var invalid = new MultipartFormDataContent();
         invalid.Add(new StringContent(coletaId.ToString()), "coletaId");
-        invalid.Add(new StringContent(Sample), "data");
         invalid.Add(new ByteArrayContent(Jpeg), "image", "invalida.jpg");
         Assert.Equal(HttpStatusCode.BadRequest, (await api.PostAsync("/api/ia/predicoes", invalid)).StatusCode);
         Assert.Equal(4, await db.PredicoesIA.CountAsync());
@@ -461,107 +590,38 @@ public class PredicaoIATests : IAsyncLifetime
             Assert.All(samples, s => Assert.Equal(1, s.GetProperty("baseRiskLevel").GetInt32()));
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(ValidResponse(json)) };
         });
-        await Service(handler).CriarAsync(coletaId, Upload(), Sample, default);
+        await Service(handler).CriarAsync(coletaId, Upload(), default);
         Assert.Equal(1, handler.Calls);
     }
 
     [Fact]
-    public async Task MetaisEReferenciaSeguemNoMultipartEPersistemNoRiscoAtual()
+    public async Task UnidadeDeMetalMedidoForaDoContratoRetorna422()
     {
-        await using var host = await HttpHost(new IaClient(new HttpClient(new Handler(async request =>
-        {
-            var multipart = Assert.IsType<MultipartFormDataContent>(request.Content);
-            var data = await multipart.Single(p => p.Headers.ContentDisposition!.Name == "data").ReadAsStringAsync();
-            using var sent = JsonDocument.Parse(data);
-            Assert.Equal(10, sent.RootElement.GetProperty("metais_pesados")[0].GetProperty("value").GetDouble());
-            Assert.Equal("µg/L", sent.RootElement.GetProperty("metais_pesados")[0].GetProperty("unit").GetString());
-            Assert.Equal(5, sent.RootElement.GetProperty("referencia_metais_pesados")
-                .GetProperty("metais_pesados")[0].GetProperty("value").GetDouble());
-            Assert.Equal("[]", await multipart.Single(p => p.Headers.ContentDisposition!.Name == "history").ReadAsStringAsync());
-            var fields = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(RiskFixture.Result(sample: data))!;
-            fields["metalVariation"] = JsonSerializer.SerializeToElement(new
-            {
-                status = "completa", currentDate = sent.RootElement.GetProperty("data").GetString(),
-                referenceDate = "2026-01-01T12:00:00Z", message = "Variação determinada para todos os metais informados.",
-                metals = new[] { new { name = "Pb", currentValue = 10, currentUnit = "µg/L", previousValue = 5,
-                    previousUnit = "µg/L", variation = "aumento", delta = 5, unit = "µg/L", reason = (string?)null } },
-            });
-            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(fields)) };
-        })) { BaseAddress = new Uri("http://ia.test/") }));
-        var address = host.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
-        using var api = new HttpClient { BaseAddress = new Uri(address) };
-        api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TestJwt.Token());
-        using var form = new MultipartFormDataContent();
-        form.Add(new StringContent(coletaId.ToString()), "coletaId");
-        form.Add(new ByteArrayContent(Jpeg), "image", "rio.jpg");
-        var sample = Sample[..^1] + """
-            ,"metais_pesados":[{"name":"Pb","value":10,"unit":"µg/L"}],
-            "referencia_metais_pesados":{"data":"2026-01-01T12:00:00Z",
-              "metais_pesados":[{"name":"Pb","value":5,"unit":"µg/L"}]}}
-            """;
-        form.Add(new StringContent(sample), "data");
-        var response = await api.PostAsync("/api/ia/predicoes", form);
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        using var created = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.Equal("aumento", created.RootElement.GetProperty("resultado").GetProperty("metalVariation")
-            .GetProperty("metals")[0].GetProperty("variation").GetString());
-        var saved = await db.PredicoesIA.SingleAsync();
-        using var input = JsonDocument.Parse(saved.EntradaJson!);
-        Assert.Equal(10, input.RootElement.GetProperty("metais_pesados")[0].GetProperty("value").GetDouble());
-        api.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TestJwt.Token());
-        var riverId = (await db.Coletas.SingleAsync()).CorpoHidricoId;
-        var riskResponse = await api.GetAsync($"/api/corpohidrico/{riverId}/risco-atual");
-        Assert.Equal(HttpStatusCode.OK, riskResponse.StatusCode);
-        using var risk = JsonDocument.Parse(await riskResponse.Content.ReadAsStringAsync());
-        Assert.Equal("aumento", risk.RootElement.GetProperty("variacaoMetais").GetProperty("metals")[0].GetProperty("variation").GetString());
-        Assert.Equal(2, risk.RootElement.GetProperty("nivelRisco").GetInt32());
-        Assert.Equal(1, await db.PredicoesIA.CountAsync());
-    }
-
-    [Theory]
-    [InlineData("[{\"name\":\"Pb\",\"value\":-1}]")]
-    [InlineData("[{\"name\":\"Pb\",\"value\":true}]")]
-    [InlineData("[{\"name\":\"Pb\",\"value\":\"1\"}]")]
-    [InlineData("[{\"name\":\"Pb\",\"value\":1e400}]")]
-    [InlineData("[{\"name\":\"Pb\"},{\"name\":\"Pb\"}]")]
-    [InlineData("[{\"name\":\"Pb\",\"value\":1,\"value\":2}]")]
-    [InlineData("[{\"name\":\"Pb\",\"unknown\":1}]")]
-    [InlineData("[{\"name\":\"unknown\"}]")]
-    [InlineData("[{\"name\":\"Pb\",\"unit\":\"\"}]")]
-    [InlineData("{}")]
-    public async Task MetaisInvalidosNaoChamamIa(string metals)
-    {
-        foreach (var extension in new[] { $",\"metais_pesados\":{metals}}}",
-            $",\"referencia_metais_pesados\":{{\"metais_pesados\":{metals}}}}}" })
-        {
-            var handler = new Handler(_ => throw new Exception("Não deve chamar IA"));
-            var error = await Assert.ThrowsAsync<IaException>(() => Service(handler)
-                .CriarAsync(coletaId, Upload(), Sample[..^1] + extension, default));
-            Assert.Equal(422, error.StatusCode);
-            Assert.Equal(0, handler.Calls);
-        }
-        Assert.Empty(await db.PredicoesIA.ToListAsync());
-    }
-
-    [Fact]
-    public async Task IaAntigaNaoPodeIgnorarMetaisEnviados()
-    {
-        var sample = Sample[..^1] + """, "metais_pesados":[{"name":"Pb","value":10,"unit":"µg/L"}]}""";
-        var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-            { Content = new StringContent(ValidResponse()) }));
-        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), sample, default));
-        Assert.Equal(502, error.StatusCode);
-        Assert.Empty(await db.PredicoesIA.ToListAsync());
+        var collection = await db.Coletas.SingleAsync(c => c.Id == coletaId);
+        db.MetaisPesados.Add(new MetalPesadoEntity("Pb", 1, "ppm", collection));
+        await db.SaveChangesAsync();
+        var handler = new Handler(_ => throw new Exception("A IA não deve ser chamada"));
+        var error = await Assert.ThrowsAsync<IaException>(() => Service(handler).CriarAsync(coletaId, Upload(), default));
+        Assert.Equal(422, error.StatusCode);
+        Assert.Equal(0, handler.Calls);
     }
 
     private static void MedicoesSalvas(ColetaEntity collection)
     {
-        collection.AdicionarMedicao(new(back_end.src.Medicoes.Domain.Medicao.Temperatura, 25, "°C", false, null));
-        collection.AdicionarMedicao(new(back_end.src.Medicoes.Domain.Medicao.Ph, 7, "pH", false, null));
-        collection.AdicionarMedicao(new(back_end.src.Medicoes.Domain.Medicao.OxigenioDissolvido, 6, "mg/L", false, null));
-        collection.AdicionarMedicao(new(back_end.src.Medicoes.Domain.Medicao.CondutividadeEletrica, 123, "µS/cm", false, null));
-        collection.AdicionarMedicao(new(back_end.src.Medicoes.Domain.Medicao.FosforoTotal, 0.02, "mg/L", false, null));
-        collection.AdicionarMedicao(new(back_end.src.Medicoes.Domain.Medicao.SolidosSuspensosTotais, null, "mg/L", true, 0.1));
+        Adicionar(back_end.src.Medicoes.Domain.Medicao.Temperatura, 25, "°C");
+        Adicionar(back_end.src.Medicoes.Domain.Medicao.Ph, 7, "pH");
+        Adicionar(back_end.src.Medicoes.Domain.Medicao.OxigenioDissolvido, 6, "mg/L");
+        Adicionar(back_end.src.Medicoes.Domain.Medicao.CondutividadeEletrica, 123, "µS/cm");
+        Adicionar(back_end.src.Medicoes.Domain.Medicao.FosforoTotal, 0.02, "mg/L");
+        Adicionar(back_end.src.Medicoes.Domain.Medicao.SolidosSuspensosTotais, null, "mg/L", true, 0.1);
+
+        void Adicionar(back_end.src.Medicoes.Domain.Medicao code, double? value, string unit,
+            bool censored = false, double? limit = null)
+        {
+            var existing = collection.Medicoes.SingleOrDefault(m => m.codigoMedicao == code);
+            if (existing is null) collection.AdicionarMedicao(new(code, value, unit, censored, limit));
+            else existing.Atualizar(code, value, unit, censored, limit);
+        }
     }
 
     private static async Task<HttpResponseMessage> EcoAnalise(HttpRequestMessage request, bool echoContext = true)
@@ -646,6 +706,7 @@ public class PredicaoIATests : IAsyncLifetime
         var riverId = current.CorpoHidricoId;
         if (situation == "inexistente") riverId = int.MaxValue;
         if (situation == "sem-coletas") db.Coletas.Remove(current);
+        if (situation == "sem-medicoes") db.Medicoes.RemoveRange(current.Medicoes);
         if (situation is "unidade" or "censurada" or "futura")
         {
             MedicoesSalvas(current);
@@ -692,7 +753,7 @@ public class PredicaoIATests : IAsyncLifetime
                 response.Content = new StringContent(JsonSerializer.Serialize(fields));
             }
             return response;
-        });
+        }, echoContext: situation != "contexto-ausente");
         var controller = Controller(handler);
         if (situation == "sucesso")
         {
@@ -851,13 +912,32 @@ public class PredicaoIATests : IAsyncLifetime
         }
     }
 
-    private sealed class Handler(Func<HttpRequestMessage, Task<HttpResponseMessage>> respond) : HttpMessageHandler
+    private sealed class Handler(Func<HttpRequestMessage, Task<HttpResponseMessage>> respond, bool echoContext = true) : HttpMessageHandler
     {
         public int Calls { get; private set; }
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Calls++;
-            return respond(request);
+            var response = await respond(request);
+            if (echoContext && response.IsSuccessStatusCode && request.Content is MultipartFormDataContent multipart)
+            {
+                var contextPart = multipart.FirstOrDefault(part => part.Headers.ContentDisposition?.Name == "collectionContext");
+                if (contextPart is not null)
+                {
+                    try
+                    {
+                        var responseNode = System.Text.Json.Nodes.JsonNode.Parse(await response.Content.ReadAsStringAsync(cancellationToken))?.AsObject();
+                        if (responseNode is not null && responseNode["collectionContext"] is null)
+                        {
+                            responseNode["collectionContext"] = System.Text.Json.Nodes.JsonNode.Parse(
+                                await contextPart.ReadAsStringAsync(cancellationToken));
+                            response.Content = new StringContent(responseNode.ToJsonString(), Encoding.UTF8, "application/json");
+                        }
+                    }
+                    catch (JsonException) { }
+                }
+            }
+            return response;
         }
     }
 }

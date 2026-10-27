@@ -56,15 +56,15 @@ export function AddAnalysisPage({ resumeCollectionId = null, waterBodyId = null 
               {waterBodyId && <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">Nova coleta · monitoramento</p>}
               <h1 className="font-heading text-[28px] font-bold leading-tight text-text-primary sm:text-[32px]">{waterBodyId ? "Inserir dados" : "Adicionar análise"}</h1>
               <p className="mt-2 max-w-3xl font-heading text-xs font-medium leading-relaxed text-text-secondary sm:text-[13px]">{waterBodyId
-                ? "Registre as medições e escolha entre salvar a coleta ou anexar uma imagem para salvar e analisar com IA."
-                : "Cadastre os indicadores e os metais medidos em uma coleta. Adicione uma imagem para analisar com IA."}</p>
+                ? "Registre as medições e escolha entre salvar a coleta ou analisar com IA. A imagem é opcional; sem anexo, será usada uma imagem salva no corpo hídrico."
+                : "Cadastre os indicadores e os metais medidos em uma coleta. A análise com IA pode usar uma imagem que você anexar ou buscar a mais recente já salva no corpo hídrico."}</p>
               {waterBodyId && <p className="mt-4 inline-flex max-w-full items-center gap-2 rounded-lg border border-primary/15 bg-white px-3 py-2 text-xs font-semibold text-text-primary"><LuMapPin aria-hidden="true" className="shrink-0 text-primary" /><span className="break-words">{selectedWaterBody?.label ?? "Carregando corpo hídrico..."}</span></p>}
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3 lg:justify-end">
               <Button variant="ghost" className="w-full sm:w-auto" disabled={isBusy} onClick={() => router.push(monitoringPath ? `${monitoringPath}/dashboard` : "/water-bodies")}>{savedCollectionId ? waterBodyId ? "Voltar ao rio" : "Voltar" : "Cancelar"}</Button>
               {savedCollectionId && <Button variant="outline" className="w-full sm:w-auto" disabled={isBusy} onClick={() => { resetForm(); if (!waterBodyId) router.replace("/add-analysis"); }}>{waterBodyId ? "Nova coleta" : "Nova análise"}</Button>}
               {!savedCollectionId && <Button type="submit" name="action" value="save" variant={waterBodyId ? "primary" : "outline"} className="w-full sm:w-auto" disabled={cannotSubmit} isLoading={status === "saving"}>Salvar coleta</Button>}
-              {!prediction && <Button type="submit" name="action" value="analyze" className="w-full sm:w-auto" disabled={cannotSubmit || !image} isLoading={status === "analyzing"}>{status === "analyzing" ? savedCollectionId ? "Analisando..." : "Salvando e analisando..." : savedCollectionId ? "Analisar com IA" : "Salvar e analisar com IA"}</Button>}
+              {!prediction && <Button type="submit" name="action" value="analyze" className="w-full sm:w-auto" disabled={cannotSubmit} isLoading={status === "analyzing"}>{status === "analyzing" ? savedCollectionId ? "Analisando..." : "Salvando e analisando..." : savedCollectionId ? "Analisar com IA" : "Salvar e analisar com IA"}</Button>}
             </div>
           </header>
 
@@ -115,7 +115,7 @@ export function AddAnalysisPage({ resumeCollectionId = null, waterBodyId = null 
                 <legend className="sr-only">Imagem para análise com IA</legend>
                 <AnalysisImageCard imageName={image?.name ?? ""} imagePreviewUrl={imagePreviewUrl} onImageChange={updateImage} onRemoveImage={removeImage} error={errors.image} />
               </fieldset>
-              <p className="font-heading text-[11px] leading-relaxed text-text-secondary">A imagem é necessária somente para analisar com IA. Ao escolher “Salvar coleta”, ela não é enviada. Se a IA falhar, a coleta permanece salva.</p>
+              <p className="font-heading text-[11px] leading-relaxed text-text-secondary">A imagem é opcional para a análise com IA. Sem anexo, a API usa primeiro a imagem da coleta e depois a imagem mais recente do corpo hídrico. Ao escolher “Salvar coleta”, a imagem selecionada não é enviada. Se a IA falhar, a coleta permanece salva.</p>
             </aside>
           </section>
         </form>

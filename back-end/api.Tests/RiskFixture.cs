@@ -19,10 +19,19 @@ internal static class RiskFixture
         var alerts = records.Count(x => x.GetProperty("baseRiskLevel").GetInt32() >= 2);
         var baseLevel = 1 + (classes.Length > 0 ? 1 : 0) + (ph < 6 || ph > 9 || oxygen < 5 ? 1 : 0);
         var level = Math.Min(3, baseLevel + (alerts >= 3 ? 1 : 0));
+        var metals = new object[]
+        {
+            new { name = "Fe", value = 0.1, unit = "mg/L" }, new { name = "Mn", value = 0.1, unit = "mg/L" },
+            new { name = "Cr", value = 1d, unit = "µg/L" }, new { name = "Ni", value = 1d, unit = "µg/L" },
+            new { name = "Cu", value = 1d, unit = "µg/L" }, new { name = "Zn", value = 1d, unit = "µg/L" },
+            new { name = "Cd", value = 1d, unit = "µg/L" }, new { name = "Pb", value = 1d, unit = "µg/L" },
+        };
         return JsonSerializer.Serialize(new
         {
             detections = classes.Select((name, index) => new { classId = index, className = name, count = 1, indicatesRisk = true }),
-            totalObjects = classes.Length, metalPredictions = Array.Empty<object>(), visionModelVersion = "modelo-de-teste",
+            totalObjects = classes.Length, metalPredictions = metals, measuredMetals = Array.Empty<object>(),
+            estimatedMetals = metals, historicalMetalEstimates = Array.Empty<object>(), visionModelVersion = "modelo-de-teste",
+            metalModelVersion = "metals-v2-test",
             riskLevel = level, baseRiskLevel = baseLevel, riskLabel = level == 1 ? "baixo" : level == 2 ? "moderado" : "alto",
             riskRuleVersion = PredicaoIAService.VersaoRegraRisco, riskReasons = reasons ?? ["Sinal visual: Lixo."],
             riskInputs = new { ph, oxigenio_dissolvido = oxygen, visualClasses = classes.Order(StringComparer.Ordinal) },
