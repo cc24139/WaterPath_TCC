@@ -32,7 +32,7 @@ type HeaderLink = {
 const headerLinks: HeaderLink[] = [
     { label: "Sobre nós", href: "#" },
     { label: "Análises", href: "/water-bodies" },
-    { label: "Metodologias", href: "#" },
+    { label: "Metodologias", href: "/methodology" },
 ];
 
 const primaryActionClass =

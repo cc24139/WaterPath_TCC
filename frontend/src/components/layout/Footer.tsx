@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const footerLinks = [
   { label: "Sobre nós", href: "#" },
-  { label: "Metodologias", href: "#" },
+  { label: "Metodologias", href: "/methodology" },
   { label: "Rios", href: "/water-bodies" },
 ];
 
@@ -21,7 +21,7 @@ export function Footer() {
         <nav aria-label="Links do rodapé">
           <ul className="flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-text-secondary">
             {footerLinks.map((link) => (
-              <li key={link.href}>
+              <li key={link.label}>
                 {link.href.startsWith("/") ? (
                   <Link href={link.href}>{link.label}</Link>
                 ) : (
