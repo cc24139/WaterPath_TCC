@@ -1,6 +1,7 @@
 import type { InputHTMLAttributes } from "react";
 
 import { FormField } from "@/components/ui/FormField";
+import { DateTimeField } from "@/components/ui/date/DateTimeField";
 import type {
   AddAnalysisFieldName,
   SelectOption,
@@ -44,6 +45,9 @@ export function AddAnalysisField({
   isTextarea = false,
 }: AddAnalysisFieldProps) {
   const fieldId = `add-analysis-${name}`;
+
+  if (type === "datetime-local") return <DateTimeField id={fieldId} label={label} value={value}
+    onChange={next => onChange(name, next)} helper={helper} error={error} disabled={disabled} required={required} className={className} />;
 
   return (
     <FormField

@@ -3,16 +3,14 @@ import type { ReportConfig } from "../types/reportConfig";
 import { CheckboxList } from "./CheckboxList";
 import { RadioOptionGroup } from "./RadioOptionGroup";
 import { ReportOptionCard } from "./ReportOptionCard";
+import { DateRangeField } from "@/components/ui/date/DateRangeField";
 
 export function ReportSettingsPanel({ config, onChange, disabled }: { config: ReportConfig; onChange: (config: ReportConfig) => void; disabled: boolean }) {
-  const inputClass = "mt-2 h-11 w-full min-w-0 rounded-md border border-placeholder bg-white px-3 text-sm focus:outline-primary disabled:opacity-60";
   return <fieldset disabled={disabled} className="min-w-0 space-y-4">
     <legend className="sr-only">Configuração do relatório</legend>
     <ReportOptionCard number={1} title="Período analisado" description="Datas de Brasília. Até 366 dias e 200 coletas por documento.">
-      <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
-        <label className="min-w-0 text-xs font-semibold" htmlFor="report-start">De<input id="report-start" type="date" min="1900-01-01" max={config.endDate || undefined} value={config.startDate} onChange={e => onChange({ ...config, startDate: e.target.value })} className={inputClass} /></label>
-        <label className="min-w-0 text-xs font-semibold" htmlFor="report-end">Até<input id="report-end" type="date" min={config.startDate || "1900-01-01"} value={config.endDate} onChange={e => onChange({ ...config, endDate: e.target.value })} className={inputClass} /></label>
-      </div>
+      <DateRangeField id="report-period" label="Período das coletas" value={{ from: config.startDate, to: config.endDate }} disabled={disabled}
+        onChange={({ from, to }) => onChange({ ...config, startDate: from, endDate: to })} />
     </ReportOptionCard>
     <ReportOptionCard number={2} title="Nível de detalhamento" description="O modo técnico acrescenta método e rastreabilidade. A classificação e os valores são preservados em todos os modos.">
       <RadioOptionGroup name="report-detail" options={detailLevelOptions} value={config.detailLevel} onChange={detailLevel => onChange({ ...config, detailLevel })} />

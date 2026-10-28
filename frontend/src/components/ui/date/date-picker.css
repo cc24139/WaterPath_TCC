@@ -1,0 +1,30 @@
+.wp-calendar {
+  --rdp-accent-color: #17A6BF;
+  --rdp-accent-background-color: #E8F8FB;
+  --rdp-today-color: #14869B;
+  --rdp-day-width: 42px;
+  --rdp-day-height: 42px;
+  --rdp-day_button-width: 40px;
+  --rdp-day_button-height: 40px;
+  --rdp-day_button-border-radius: 10px;
+  --rdp-selected-border: 2px solid #17A6BF;
+  --rdp-disabled-opacity: 0.3;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  font-family: var(--font-heading);
+  font-size: 12px;
+}
+.wp-calendar .rdp-month_caption { font-size: 13px; }
+.wp-calendar .rdp-dropdown_root { border-radius: 6px; padding: 4px; }
+.wp-calendar .rdp-caption_label { gap: 4px; }
+.wp-calendar .rdp-selected:not(.rdp-range_middle) .rdp-day_button { background: #17A6BF; color: white; font-weight: 700; }
+.wp-calendar .rdp-today:not(.rdp-selected) .rdp-day_button { box-shadow: inset 0 0 0 1px #17A6BF; }
+.wp-calendar .rdp-day_button:hover:not(:disabled) { background: #E8F8FB; color: #116B7B; }
+.wp-calendar .rdp-day_button:focus-visible { outline: 2px solid #17A6BF; outline-offset: 2px; }
+.wp-calendar .rdp-weekday { color: var(--color-text-secondary); font-weight: 600; }
+.wp-date-input { min-width: 0; height: 44px; width: 100%; border-radius: 6px; border: 1px solid var(--color-placeholder); background: white; padding: 0 12px; font-family: var(--font-heading); font-size: 12px; color: var(--color-text-primary); }
+.wp-date-input:focus { border-color: var(--color-primary); outline: 2px solid #51DCF440; outline-offset: 0; }
+.wp-date-input[aria-invalid="true"] { border-color: var(--color-contrast); }
+.wp-date-input:disabled { cursor: not-allowed; opacity: .6; }
+@media (max-width: 360px) { .wp-calendar { --rdp-day-width: 37px; --rdp-day_button-width: 35px; } }

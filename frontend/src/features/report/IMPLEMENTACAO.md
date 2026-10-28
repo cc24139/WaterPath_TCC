@@ -106,6 +106,14 @@ Publicar a API atualizada antes do frontend, que depende de `/api/relatorios/pdf
 
 Não foi realizado deploy. O relatório é gerado sob demanda; o ID no cabeçalho identifica aquela geração, mas ainda não permite recuperar o documento no servidor.
 
+## Atualização de interface — seleção de período (28/10/2026)
+
+Os dois campos nativos foram substituídos pelo componente compartilhado `DateRangeField`, com calendário em português, digitação `DD/MM/AAAA` e atalhos de período. A alteração só é confirmada em “Aplicar período”; cancelar ou pressionar Escape mantém as datas anteriores. No celular, o calendário abre como painel inferior.
+
+Correção da integração de estilos: o servidor local com Turbopack estava servindo os componentes novos sem as regras do calendário, deixando meses e dias sem formatação. Os estilos da biblioteca passaram a ser importados diretamente por `WaterCalendar`, seguidos das personalizações em `date-picker.css`. Ambos os calendários foram conferidos no servidor local em execução, incluindo cor, tamanho dos dias e aplicação de período. A rota temporária de conferência foi removida ao concluir.
+
+Foram mantidos o contrato da API, o fuso de Brasília, o máximo de 366 dias e o bloqueio de datas futuras. A geração do relatório continua dependendo do botão de gerar. Os mesmos componentes de calendário também atendem à data da coleta, com horário separado. Detalhes de reutilização e verificações no [README dos componentes de data](../../components/ui/date/README.md).
+
 ## Etapa 5 - recursos adicionais e utilidade
 
 Conectar previsões já calculadas de 7/15 dias, com data de referência/alvo, método e evidência; definir catálogo revisado de recomendações e contramedidas associado aos achados; ampliar o detalhamento metodológico das versões dos modelos. Isso transforma a consolidação atual em apoio ao acompanhamento, mantendo a distinção entre medição, estimativa e projeção. Opções devem ficar disponíveis somente quando seus critérios e dados existirem. Exportar um relatório continuará sem disparar inferência silenciosa.
