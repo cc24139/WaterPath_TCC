@@ -10,5 +10,6 @@ export const routes = {
   qualidade: `${baseUrl}qualidade/`,
   qualidadeFutura: `${baseUrl}qualidadefutura/`,
   predicoes: `${baseUrl}ia/predicoes/`,
+  relatorios: `${baseUrl}relatorios/`,
   vision: `${baseUrl}vision/`,
 };

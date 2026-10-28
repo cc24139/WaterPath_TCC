@@ -26,7 +26,7 @@ export function RadioOptionGroup<T extends string>({
             onChange={() => onChange(option.value)}
             className="peer sr-only"
           />
-          <span className="flex h-4 w-4 items-center justify-center rounded-full border border-placeholder bg-white peer-checked:border-primary">
+          <span className="flex h-4 w-4 items-center justify-center rounded-full border border-placeholder bg-white peer-checked:border-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40">
             <span
               className={`h-2.5 w-2.5 rounded-full bg-primary ${
                 value === option.value ? "block" : "hidden"

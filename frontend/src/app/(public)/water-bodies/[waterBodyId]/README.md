@@ -1,5 +1,13 @@
 **Guia de implementação da área de um corpo hídrico**
 
+**Proteção de acesso — 28/10/2026**
+
+`src/proxy.ts` exige sessão na entrada `/water-bodies/{id}` e em todas as páginas filhas (`dashboard`, `analysis`, `history`, `report` e `insert`). Sem cookie de sessão ou com token expirado, redireciona para `/login?next=...`, preservando o caminho e os parâmetros da página solicitada. O `LoginForm` existente já utiliza `next` após autenticar. A listagem `/water-bodies` e `/water-bodies/demo` continuam públicas por correspondência exata, sem liberar as rotas individuais por prefixo.
+
+O grupo de diretórios `(public)` não define a autorização: a regra de navegação fica no proxy. A API continua responsável por validar o token e as permissões sobre o corpo hídrico; o proxy não verifica a assinatura do JWT. O tratamento de 401 no cliente continua útil quando a sessão é rejeitada pela API ou expira após a abertura da página.
+
+Verificação automatizada: `npm run test:proxy` cobre acessos diretos, páginas públicas, sessão não expirada/expirada e preservação do destino. As seções seguintes incluem o histórico e a proposta original de implementação.
+
 **Estado da implementação — etapas 1 a 4 concluídas**
 
 - O layout agora compartilha sidebar e área principal. `MonitoringSidebar` preserva o ID nos links; o relatório mantém seu conteúdo em `WaterBodyReport`, sem duplicar sidebar ou `<main>`.
@@ -336,7 +344,7 @@ aguardar getWaterBody(id)
 
 Não converta 401, 403 ou 500 em “corpo hídrico não encontrado”. Para tornar a consulta de detalhes pública, será necessário definir no backend quais registros e campos podem ser expostos. Trocar apenas a opção de autenticação no frontend não torna um endpoint público.
 
-Antes de conectar a ação de inserir dados, proteja também `/water-bodies/{id}/insert`, hoje alcançada pela regra pública de prefixo. Verifique autorização na API para a operação sobre aquele corpo hídrico. Esconder o item da sidebar é apenas uma decisão de interface.
+`/water-bodies/{id}/insert` também está protegida pelo proxy desde 28/10/2026. A autorização na API para a operação sobre aquele corpo hídrico continua necessária. Esconder o item da sidebar é apenas uma decisão de interface.
 
 **7. A entrada `page.tsx` e o fluxo completo**
 

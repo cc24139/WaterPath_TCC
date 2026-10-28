@@ -3,7 +3,6 @@ import { type MiddlewareConfig, NextRequest, NextResponse } from "next/server";
 type PublicRoute = {
   path: string;
   whenAuthenticated: "next" | "redirect";
-  match?: "exact" | "prefix";
 };
 
 const publicRoutes: PublicRoute[] = [
@@ -12,7 +11,8 @@ const publicRoutes: PublicRoute[] = [
   { path: "/", whenAuthenticated: "next" },
   { path: "/about-us", whenAuthenticated: "next" },
   { path: "/methodology", whenAuthenticated: "next" },
-  { path: "/water-bodies", whenAuthenticated: "next", match: "prefix" },
+  { path: "/water-bodies", whenAuthenticated: "next" },
+  { path: "/water-bodies/demo", whenAuthenticated: "next" },
 ];
 
 const redirectWhenNotAuthenticatedRoute = "/login";
@@ -20,7 +20,7 @@ const redirectWhenAuthenticatedRoute = "/";
 const authCookieName = "token";
 
 export function proxy(request: NextRequest) {
-  const path = request.nextUrl.pathname;
+  const path = request.nextUrl.pathname.replace(/\/+$/, "") || "/";
   const publicRoute = findPublicRoute(path);
   const authToken = request.cookies.get(authCookieName)?.value;
 
@@ -44,13 +44,7 @@ export function proxy(request: NextRequest) {
 }
 
 function findPublicRoute(path: string) {
-  return publicRoutes.find((route) => {
-    if (route.match === "prefix") {
-      return path === route.path || path.startsWith(`${route.path}/`);
-    }
-
-    return path === route.path;
-  });
+  return publicRoutes.find((route) => path === route.path);
 }
 
 function handleExpiredSession(
@@ -69,6 +63,11 @@ function handleExpiredSession(
 function redirectTo(request: NextRequest, pathname: string) {
   const redirectUrl = request.nextUrl.clone();
   redirectUrl.pathname = pathname;
+  redirectUrl.search = "";
+
+  if (pathname === redirectWhenNotAuthenticatedRoute) {
+    redirectUrl.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+  }
 
   return NextResponse.redirect(redirectUrl);
 }

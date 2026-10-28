@@ -85,6 +85,10 @@ builder.Services.AddScoped<IQualidadeRepository, QualidadeRepository>();
 builder.Services.AddScoped<IQualidadeFuturaRepository, QualidadeFuturaRepository>();
 builder.Services.AddScoped<PredicaoIAService>();
 builder.Services.AddScoped<ResourceAuthorizationService>();
+builder.Services.AddScoped<back_end.src.Relatorios.ReportDataService>();
+builder.Services.AddSingleton<back_end.src.Relatorios.ReportPdfDocument>();
+// Projeto acadêmico: revisar a licença se o contexto de uso mudar.
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 var configuredIaUrl = builder.Configuration["IA:BaseUrl"];
 if (!Uri.TryCreate(configuredIaUrl, UriKind.Absolute, out var iaUrl)
     || (iaUrl.Scheme != Uri.UriSchemeHttp && iaUrl.Scheme != Uri.UriSchemeHttps))
