@@ -1,0 +1,13 @@
+﻿amostra_id,corpo_hidrico,ponto,camada,campanha_inicio,campanha_fim,data_exata,latitude,longitude,profundidade_m,referencia_profundidade,elegivel_entrada
+JIANGHAN-202109-HH1-surface,Honghu,HH1,surface,2021-09-23,2021-09-26,,,,0.5,abaixo da superficie,True
+JIANGHAN-202109-HH1-bottom,Honghu,HH1,bottom,2021-09-23,2021-09-26,,,,,0.5 m acima do fundo; profundidade absoluta nao publicada,True
+JIANGHAN-202109-HH2-surface,Honghu,HH2,surface,2021-09-23,2021-09-26,,,,0.5,abaixo da superficie,True
+JIANGHAN-202109-HH2-bottom,Honghu,HH2,bottom,2021-09-23,2021-09-26,,,,,0.5 m acima do fundo; profundidade absoluta nao publicada,True
+JIANGHAN-202109-LZ-surface,Liangzi,LZ,surface,2021-09-23,2021-09-26,,,,0.5,abaixo da superficie,True
+JIANGHAN-202109-LZ-bottom,Liangzi,LZ,bottom,2021-09-23,2021-09-26,,,,,0.5 m acima do fundo; profundidade absoluta nao publicada,True
+JIANGHAN-202109-DY-surface,Daye,DY,surface,2021-09-23,2021-09-26,,,,0.5,abaixo da superficie,True
+JIANGHAN-202109-DY-bottom,Daye,DY,bottom,2021-09-23,2021-09-26,,,,,0.5 m acima do fundo; profundidade absoluta nao publicada,True
+JIANGHAN-202109-DH1-surface,Donghu,DH1,surface,2021-09-23,2021-09-26,,,,0.5,abaixo da superficie,True
+JIANGHAN-202109-DH1-bottom,Donghu,DH1,bottom,2021-09-23,2021-09-26,,,,,0.5 m acima do fundo; profundidade absoluta nao publicada,True
+JIANGHAN-202109-DH2-surface,Donghu,DH2,surface,2021-09-23,2021-09-26,,,,0.5,abaixo da superficie,True
+JIANGHAN-202109-DH2-bottom,Donghu,DH2,bottom,2021-09-23,2021-09-26,,,,,0.5 m acima do fundo; profundidade absoluta nao publicada,True

@@ -1,0 +1,19 @@
+{
+  "source_name": "PMQQS / Monitoramento Rio Doce",
+  "accessed_on": "2026-10-25",
+  "source_page": "https://monitoramentoriodoce.org/download-dos-dados/",
+  "layer_url": "https://gis.samarco.com/arcgis/rest/services/R01_Camadas/REP_PMQQS_Matriz_Invertida_Manual/FeatureServer/0",
+  "query_filter": "CodigoDoPonto='RDO-15' AND Matriz='Agua' AND TipoDeAmostra='Superficial'",
+  "files": {
+    "pmqqs_rdo15_raw.json": "Resposta JSON original da API para o ponto e filtro acima; 110 registros, com DataAmostra, HoraAmostra, coordenadas, Fe dissolvido, pH e status.",
+    "pmqqs_rdo15.csv": "Derivacao CSV para teste: 8 linhas recentes nao censuradas, com DataAmostra + HoraAmostra e campos de importacao; resposta JSON preservada."
+  },
+  "measurement_fields": {
+    "Q_107_Fe_D": "Ferro dissolvido, mg/L (alias do FeatureServer)",
+    "Q_107_S_Fe_D": "Campo de status preservado no CSV; foram selecionadas linhas com codigo de status 1.",
+    "Q_211_pH_L": "pH de laboratorio (alias do FeatureServer)"
+  },
+  "location": "Ponto RDO-15, ponte sobre o Rio Doce na BR-101, Linhares/ES; coordenadas do servico: -19.41011, -40.05896.",
+  "time_handling": "DataAmostra (data em epoch) combinada com HoraAmostra (hora local, HH:MM) do mesmo registro. As oito datas selecionadas sao de 2025-2026, fora de horario de verao no ES; o CSV conserva offset -03:00 e precisao de minuto.",
+  "body_length": "850 km aproximados segundo a ANA; URL da BHO6 incluida como referencia hidrografica. O comprimento nao foi recalculado a partir de uma feicao BHO."
+}

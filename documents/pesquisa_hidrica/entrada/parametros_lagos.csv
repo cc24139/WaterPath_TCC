@@ -1,0 +1,13 @@
+﻿amostra_id                 , temperatura, ph  , condutividade_eletrica, oxigenio_dissolvido, solidos_suspensos_totais, carbono_organico_total, nitrogenio_total, fosforo_total
+JIANGHAN-202109-HH1-surface,       28.67, 9.09,                  306.6,                 ,                         ,                       ,             1.3 ,          90.0
+JIANGHAN-202109-HH1-bottom ,       28.22, 8.88,                  306.0,                9.54,                         ,                       ,             1.07,         120.0
+JIANGHAN-202109-HH2-surface,       29.51, 8.63,                  414.0,               10.54,                         ,                       ,             0.95,         190.0
+JIANGHAN-202109-HH2-bottom ,       29.01, 8.55,                  412.6,                8.92,                         ,                       ,             0.83,         130.0
+JIANGHAN-202109-LZ-surface ,       29.99, 8.37,                  386.1,                7.75,                         ,                       ,             0.65,         120.0
+JIANGHAN-202109-LZ-bottom  ,       29.59, 8.18,                  388.0,                7.34,                         ,                       ,             0.73,         130.0
+JIANGHAN-202109-DY-surface ,       32.24, 9.27,                  186.0,               10.51,                         ,                       ,             0.78,          90.0
+JIANGHAN-202109-DY-bottom  ,       32.09, 9.15,                  192.5,               10.0 ,                         ,                       ,             0.72,          80.0
+JIANGHAN-202109-DH1-surface,       32.13, 9.24,                  243.5,               11.52,                         ,                       ,             0.97,         250.0
+JIANGHAN-202109-DH1-bottom ,       31.2 , 9.13,                  194.3,                9.46,                         ,                       ,             1.0 ,         240.0
+JIANGHAN-202109-DH2-surface,       29.92, 9.03,                  266.2,                8.91,                         ,                       ,             0.65,         120.0
+JIANGHAN-202109-DH2-bottom ,       29.14, 8.83,                  252.4,                7.86,                         ,                       ,             0.74,         100.0

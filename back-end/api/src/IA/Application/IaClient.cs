@@ -54,8 +54,21 @@ public class IaClient
             using (response)
             {
                 var status = (int)response.StatusCode;
-                logger.LogWarning("Serviço de IA rejeitou a operação. Operacao={Operation} Status={StatusCode} DuracaoMs={ElapsedMs}",
-                    route, status, elapsed.ElapsedMilliseconds);
+                if (status == 429)
+                {
+                    var retryAfter = response.Headers.RetryAfter?.ToString();
+                    var providerRequestId = response.Headers.TryGetValues("x-request-id", out var requestIds)
+                        ? requestIds.FirstOrDefault()
+                        : null;
+                    logger.LogWarning(
+                        "Serviço de IA atingiu o limite de solicitações. Operacao={Operation} Status={StatusCode} RetryAfter={RetryAfter} ProviderRequestId={ProviderRequestId} DuracaoMs={ElapsedMs}",
+                        route, status, retryAfter, providerRequestId, elapsed.ElapsedMilliseconds);
+                }
+                else
+                {
+                    logger.LogWarning("Serviço de IA rejeitou a operação. Operacao={Operation} Status={StatusCode} DuracaoMs={ElapsedMs}",
+                        route, status, elapsed.ElapsedMilliseconds);
+                }
                 if (status is 400 or 413 or 422)
                     throw new IaException(status, IaErrorCodes.InvalidInput,
                         "A imagem ou os dados da amostra foram rejeitados.");

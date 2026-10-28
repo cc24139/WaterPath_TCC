@@ -1,0 +1,97 @@
+﻿amostra_id                 , metal, valor_fonte, unidade_fonte, valor_convertido, unidade_modelo, qualificacao          , usar_em_metricas, fracao                                       , tabela_fonte
+JIANGHAN-202109-HH1-surface, Fe   ,        0.00, µg/L         ,          0.0    , mg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-surface, Cr   ,        0.38, µg/L         ,          0.38   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-surface, Ni   ,        0.89, µg/L         ,          0.89   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-surface, Cu   ,        1.19, µg/L         ,          1.19   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-surface, Zn   ,        3.79, µg/L         ,          3.79   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-surface, Cd   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-surface, Pb   ,        0.29, µg/L         ,          0.29   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-surface, Mn   ,        1.31, µg/L         ,          0.00131, mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-bottom , Fe   ,        0.00, µg/L         ,          0.0    , mg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-bottom , Cr   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-bottom , Ni   ,        0.51, µg/L         ,          0.51   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-bottom , Cu   ,        1.15, µg/L         ,          1.15   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-bottom , Zn   ,        2.41, µg/L         ,          2.41   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-bottom , Cd   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-bottom , Pb   ,        0.19, µg/L         ,          0.19   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH1-bottom , Mn   ,        0.53, µg/L         ,          0.00053, mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-surface, Fe   ,        0.00, µg/L         ,          0.0    , mg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-surface, Cr   ,        0.54, µg/L         ,          0.54   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-surface, Ni   ,        1.12, µg/L         ,          1.12   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-surface, Cu   ,        1.56, µg/L         ,          1.56   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-surface, Zn   ,        3.05, µg/L         ,          3.05   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-surface, Cd   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-surface, Pb   ,        0.46, µg/L         ,          0.46   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-surface, Mn   ,        3.71, µg/L         ,          0.00371, mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-bottom , Fe   ,        0.00, µg/L         ,          0.0    , mg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-bottom , Cr   ,        1.29, µg/L         ,          1.29   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-bottom , Ni   ,        1.52, µg/L         ,          1.52   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-bottom , Cu   ,        1.46, µg/L         ,          1.46   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-bottom , Zn   ,        3.32, µg/L         ,          3.32   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-bottom , Cd   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-bottom , Pb   ,        0.28, µg/L         ,          0.28   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-HH2-bottom , Mn   ,        1.76, µg/L         ,          0.00176, mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-surface , Fe   ,        0.00, µg/L         ,          0.0    , mg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-surface , Cr   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-surface , Ni   ,        1.23, µg/L         ,          1.23   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-surface , Cu   ,        2.16, µg/L         ,          2.16   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-surface , Zn   ,        2.68, µg/L         ,          2.68   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-surface , Cd   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-surface , Pb   ,        0.23, µg/L         ,          0.23   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-surface , Mn   ,        0.63, µg/L         ,          0.00063, mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-bottom  , Fe   ,        0.00, µg/L         ,          0.0    , mg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-bottom  , Cr   ,        0.26, µg/L         ,          0.26   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-bottom  , Ni   ,        2.59, µg/L         ,          2.59   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-bottom  , Cu   ,        3.01, µg/L         ,          3.01   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-bottom  , Zn   ,        3.64, µg/L         ,          3.64   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-bottom  , Cd   ,        0.06, µg/L         ,          0.06   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-bottom  , Pb   ,        0.24, µg/L         ,          0.24   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DY-bottom  , Mn   ,        1.50, µg/L         ,          0.0015 , mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-surface , Fe   ,       46.50, µg/L         ,          0.0465 , mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-surface , Cr   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-surface , Ni   ,        0.16, µg/L         ,          0.16   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-surface , Cu   ,        1.10, µg/L         ,          1.1    , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-surface , Zn   ,        4.33, µg/L         ,          4.33   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-surface , Cd   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-surface , Pb   ,        0.35, µg/L         ,          0.35   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-surface , Mn   ,        3.42, µg/L         ,          0.00342, mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-bottom  , Fe   ,        0.00, µg/L         ,          0.0    , mg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-bottom  , Cr   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-bottom  , Ni   ,        0.42, µg/L         ,          0.42   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-bottom  , Cu   ,        1.12, µg/L         ,          1.12   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-bottom  , Zn   ,        4.31, µg/L         ,          4.31   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-bottom  , Cd   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-bottom  , Pb   ,        0.61, µg/L         ,          0.61   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-LZ-bottom  , Mn   ,        3.04, µg/L         ,          0.00304, mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-surface, Fe   ,        0.00, µg/L         ,          0.0    , mg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-surface, Cr   ,        0.24, µg/L         ,          0.24   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-surface, Ni   ,        0.56, µg/L         ,          0.56   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-surface, Cu   ,        1.93, µg/L         ,          1.93   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-surface, Zn   ,        4.04, µg/L         ,          4.04   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-surface, Cd   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-surface, Pb   ,        0.16, µg/L         ,          0.16   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-surface, Mn   ,        0.33, µg/L         ,          0.00033, mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-bottom , Fe   ,        0.00, µg/L         ,          0.0    , mg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-bottom , Cr   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-bottom , Ni   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-bottom , Cu   ,        1.40, µg/L         ,          1.4    , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-bottom , Zn   ,        5.84, µg/L         ,          5.84   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-bottom , Cd   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-bottom , Pb   ,        0.86, µg/L         ,          0.86   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH1-bottom , Mn   ,        3.28, µg/L         ,          0.00328, mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-surface, Fe   ,        0.00, µg/L         ,          0.0    , mg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-surface, Cr   ,        0.25, µg/L         ,          0.25   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-surface, Ni   ,        0.45, µg/L         ,          0.45   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-surface, Cu   ,        1.49, µg/L         ,          1.49   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-surface, Zn   ,        4.54, µg/L         ,          4.54   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-surface, Cd   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-surface, Pb   ,        0.81, µg/L         ,          0.81   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-surface, Mn   ,        3.13, µg/L         ,          0.00313, mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-bottom , Fe   ,        0.00, µg/L         ,          0.0    , mg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-bottom , Cr   ,        0.35, µg/L         ,          0.35   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-bottom , Ni   ,        0.59, µg/L         ,          0.59   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-bottom , Cu   ,        1.23, µg/L         ,          1.23   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-bottom , Zn   ,        3.59, µg/L         ,          3.59   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-bottom , Cd   ,        0.00, µg/L         ,          0.0    , µg/L          , zero_reportado_ambiguo, False           , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-bottom , Pb   ,        0.34, µg/L         ,          0.34   , µg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5
+JIANGHAN-202109-DH2-bottom , Mn   ,        3.73, µg/L         ,          0.00373, mg/L          , quantificado          , True            , agua_digerida_acida_nao_comprovada_dissolvida, S5

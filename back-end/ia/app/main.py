@@ -3,6 +3,7 @@ import base64
 import logging
 import json
 import os
+from time import perf_counter
 
 import pandas as pd
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -22,6 +23,23 @@ from services.PredictGeral.predictor import prever
 
 app = FastAPI(title="API de IA", description="API para predição com YOLO e regressão de metais", version="2.0.0")
 logger = logging.getLogger(__name__)
+
+
+@app.middleware("http")
+async def log_rate_limited_responses(request, call_next):
+    started_at = perf_counter()
+    response = await call_next(request)
+    if response.status_code == 429:
+        logger.warning(
+            "Serviço de IA rejeitou a solicitação por limite de requisições. "
+            "Metodo=%s Rota=%s Status=%s RequestId=%s DuracaoMs=%.1f",
+            request.method,
+            request.url.path,
+            response.status_code,
+            request.headers.get("x-request-id"),
+            (perf_counter() - started_at) * 1000,
+        )
+    return response
 
 
 @app.exception_handler(Exception)

@@ -1,0 +1,1 @@
+Ainda sem resultados de inferência. As amostras RDO-15 não contêm temperatura, condutividade elétrica e oxigênio dissolvido, obrigatórios com pH para a entrada do modelo de metais. Não preencher predições ou métricas até executar uma inferência válida.

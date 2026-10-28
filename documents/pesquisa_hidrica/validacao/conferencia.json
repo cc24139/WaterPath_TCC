@@ -1,0 +1,10 @@
+{
+  "amostras": 12,
+  "lagos": 4,
+  "alvos": 96,
+  "alvos_positivos": 68,
+  "zeros_reportados": 28,
+  "pareamento": "ponto + camada dentro da mesma campanha; ordem LZ/DY corrigida entre tabelas",
+  "sha256_pdf": "6829e784d293d21f519d436f0660e8555435d90722829a1757e3c19cd76f4532",
+  "inferencia_executada": false
+}
